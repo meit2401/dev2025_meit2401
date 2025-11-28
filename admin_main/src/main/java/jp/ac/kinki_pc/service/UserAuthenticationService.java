@@ -59,6 +59,11 @@ public class UserAuthenticationService implements UserDetailsService {
 		
 		User user = userOptional.get();
 
+		// ★ アカウントが凍結されているかチェック (isFrozen == 1 の場合は認証失敗とする)
+		if (Boolean.TRUE.equals(user.getIsFrozen())) {
+			throw new UsernameNotFoundException("アカウントが凍結されています: " + username);
+		}
+
 		// PasswordRepositoryから共有パスワードを取得
 		// (DBにはハッシュ化済みの値が保存されている想定)
 		String password = passwordRepository.findPassword()
