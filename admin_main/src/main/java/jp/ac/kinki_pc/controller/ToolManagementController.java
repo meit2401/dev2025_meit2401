@@ -154,4 +154,21 @@ public class ToolManagementController {
 			return ResponseEntity.internalServerError().body(Map.of("error", "サーバー内部エラーが発生しました。"));
 		}
 	}
+
+	/**
+	 * 工具の無効化処理 (POST)
+	 */
+	@PostMapping("/freeze")
+	public String freezeTool(@RequestParam int basicToolId, Model model) {
+		try {
+			toolManagementService.freezeTool(basicToolId);
+		} catch (RuntimeException e) {
+			// 必要に応じてエラーハンドリング (例: ログ出力、エラー画面への遷移など)
+			// 現在は例外をスローしてSpringのデフォルトエラーハンドリングに任せるか、
+			// コンソールに出力してリダイレクトするなどの簡易実装とします。
+			e.printStackTrace();
+			// throw e; // 必要ならスローする
+		}
+		return "redirect:/tool";
+	}
 }

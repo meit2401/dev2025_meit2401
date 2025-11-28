@@ -16,8 +16,6 @@ public interface ToolAssignmentRepository extends JpaRepository<ToolAssignment, 
 
 	/**
 	 * 指定されたプログラムIDに紐づく全ての工具割り当て情報（エンティティ）を取得する
-	 * [修正] 戻り値を List<ToolAssignmentDto> から List<ToolAssignment> に変更。
-	 * JPQLを、エンティティ(ta)をSELECTするように変更。
 	 */
 	@Query("""
 		SELECT ta
@@ -27,8 +25,8 @@ public interface ToolAssignmentRepository extends JpaRepository<ToolAssignment, 
 			ta.programId = ?1
 		ORDER BY
 			ta.toolNum
-	""") // [修正] DTOコンストラクタ式を削除 / [修正] ORDER BY を TNN 形式対応
-	List<ToolAssignment> findByProgramId(Integer programId); // [修正] 戻り値を変更
+	""")
+	List<ToolAssignment> findByProgramId(Integer programId);
 
 	/**
 	 * 指定されたプログラムIDに紐づく全ての工具割り当て情報を削除する
@@ -49,4 +47,9 @@ public interface ToolAssignmentRepository extends JpaRepository<ToolAssignment, 
 	 * 指定されたプログラムIDのリストに紐づく全ての工具割り当てを削除する
 	 */
 	void deleteByProgramIdIn(List<Integer> programIds);
+
+	/**
+	 * 基本工具IDを使用している割り当てが存在するかチェックする
+	 */
+	boolean existsByBasicToolId(Integer basicToolId);
 }

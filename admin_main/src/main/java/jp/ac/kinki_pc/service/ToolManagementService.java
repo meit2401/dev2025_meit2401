@@ -27,6 +27,7 @@ import jp.ac.kinki_pc.entity.Tool;
 import jp.ac.kinki_pc.entity.UniqueTool;
 import jp.ac.kinki_pc.repository.AddressRepository;
 import jp.ac.kinki_pc.repository.StorageAreaRepository;
+import jp.ac.kinki_pc.repository.ToolAssignmentRepository; // 追加
 import jp.ac.kinki_pc.repository.ToolRepository;
 import jp.ac.kinki_pc.repository.UniqueToolRepository;
 
@@ -44,6 +45,9 @@ public class ToolManagementService {
 
 	@Autowired
 	private StorageAreaRepository storageAreaRepository;
+
+	@Autowired
+	private ToolAssignmentRepository toolAssignmentRepository; // 追加
 
 	/**
 	 * JpaSpecificationExecutor を使用した動的検索
@@ -101,7 +105,8 @@ public class ToolManagementService {
 						String toolMaterial, int stc, int rop, String buyer, String storageLocation) {
 		
 		// 1. Tool エンティティを作成 (IDは null)
-		Tool newTool = new Tool(null, toolName, maker, toolCategory, toolMaterial, stc, rop, buyer);
+		// [修正] コンストラクタの最後に isFrozen = false (0) を指定
+		Tool newTool = new Tool(null, toolName, maker, toolCategory, toolMaterial, stc, rop, buyer, false);
 		
 		// 2. save() を呼び出し、DBで採番されたIDを含むエンティティを受け取る
 		Tool savedTool = toolRepository.save(newTool);
@@ -124,15 +129,39 @@ public class ToolManagementService {
 	}
 
 	/**
-	 * 命名規則/規約ベースの delete メソッドを呼び出す
+	 * [修正] 削除処理の実装を変更
+	 * 物理削除は行わず、条件チェック後に isFrozen を true に更新(無効化)する。
+	 * 関連テーブル(UniqueTool, StorageArea)の削除も行わない。
 	 */
 	@Transactional
 	public void deleteTool(int basicToolId) {
-		uniqueToolRepository.deleteByBasicToolId(basicToolId);
-		storageAreaRepository.deleteByBasicToolId(basicToolId);
-		toolRepository.deleteById(basicToolId);
+		// (1) tool_assignmentにて自身を指しているデータがない
+		if (toolAssignmentRepository.existsByBasicToolId(basicToolId)) {
+			throw new RuntimeException("この工具はプログラムに割り当てられているため、削除できません。");
+		}
+		
+		// (2) 子のunique_toolのデータがすべて「保管中」でない
+		// (= 「保管中」のデータが1つでもあればNG)
+		if (uniqueToolRepository.existsByBasicToolIdAndStorageCondition(basicToolId, "保管中")) {
+			throw new RuntimeException("保管中の個別工具が存在するため、削除できません。");
+		}
+		
+		// (3) 子のstorage_areaのtoolcase_stc_numデータがすべて0である
+		// (= 0より大きいデータが1つでもあればNG)
+		if (storageAreaRepository.existsByBasicToolIdAndToolcaseStcNumGreaterThan(basicToolId, 0)) {
+			throw new RuntimeException("ケース在庫が存在するため、削除できません。");
+		}
+		
+		// 物理削除ではなく、無効化(isFrozen=true)を行う
+		Tool tool = toolRepository.findById(basicToolId)
+				.orElseThrow(() -> new RuntimeException("対象の工具が見つかりません。ID=" + basicToolId));
+		
+		tool.setIsFrozen(true);
+		toolRepository.save(tool);
 	}
 	
+	// freezeToolメソッドは deleteTool に統合したため削除
+
 	/**
 	 * IDの手動計算とエンティティ設定のロジックをサービス層に移行
 	 * (10桁IDフォーマット + 異常系チェック を反映)
