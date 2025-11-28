@@ -1,0 +1,67 @@
+<!-- 操作履歴絞り込みモーダル -->
+<div th:fragment="historyModal">
+	<div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title w-100 custom-text--large text-center">絞り込み条件を入力してください</h1>
+				</div>
+				<form th:action="@{/historyfiltering}" method="post" th:object="${historyFilterData}">
+					<div class="modal-body">
+						<div class="container mt-4">
+							<!-- 年度 -->
+							<div class="row mb-3 align-items-center justify-content-center">
+								<label for="year" class="col-sm-3 col-form-label custom-text text-center">年度</label>
+								<div class="col-sm-6">
+									<select th:field="*{year}" class="form-select custom-text form-select-lg" required
+											onchange="updateMonths(this.value)">
+										
+										<option selected value="">必ず選択してください</option>
+										
+										<option th:each="ym : ${yearMonthStructure}" 
+												th:value="${ym.year}" 
+												th:text="${ym.year}">
+										</option>
+										
+									 </select>
+								</div>
+							</div>
+							<!-- 月 -->
+							<div class="row mb-3 align-items-center justify-content-center">
+								<label for="period" class="col-sm-3 col-form-label custom-text text-center">月</label>
+								<div class="col-sm-6">
+									<select th:field="*{month}" id="monthSelect" class="form-select custom-text form-select-lg" required disabled>
+										
+										<option selected value="">必ず選択してください</option>
+										
+									</select>
+								</div>
+							</div>
+							<!-- 氏名 -->
+							<div class="row mb-3 align-items-center justify-content-center">
+								<label for="username" class="col-sm-3 col-form-label custom-text text-center">氏名</label>
+								<div class="col-sm-6">
+									<input type="text" th:field="*{username}" placeholder="氏名を入力"  class="form-control custom-text form-control-lg js-normalize-hankaku">
+								</div>
+							</div>	
+							<!-- 作業内容 -->
+							<div class="row mb-3 align-items-center justify-content-center">
+								<label for="Work_details" class="col-sm-3 col-form-label custom-text text-center">作業内容</label> <div class="col-sm-6">
+									 <select th:field="*{work_details}" id="Work_details" class="form-select custom-text form-select-lg">
+										 <option selected value="全て">全て</option>
+										 <option value="補充">補充</option>
+										 <option value="取出">取出</option>
+									 </select>
+								</div>
+							</div>			  
+							<div class="modal-footer d-flex justify-content-center gap-5">
+								<button type="submit" class="btn custom-btn-modal btn-outline-danger" style="width: 25%;">OK</button>
+								<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 25%;">キャンセル</button>									
+							</div>
+						</div>
+					</div>
+				</form>  
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,113 @@
+<!-- CSV出力モーダル -->
+<div th:fragment="makecsvModal">
+	<div class="modal fade" id="makecsvModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				<div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+					<div class="container-fluid">
+						<p class="custom-text--large text-center">以下のCSVファイルを作成します</p>
+					</div>
+				</div>
+				<!-- ファイル名入力欄 -->
+				<div class="row gx-5 ms-3">
+					<div class="col-3">
+						<label class="form-label custom-text">ファイル名</label>
+					</div>
+					<div class="col-9">
+						<input type="text" class="form-control custom-text" style="width: 90%" placeholder="">
+					</div>
+				</div>
+				<div class="modal-footer d-flex justify-content-center gap-4">
+					<button type="button" class="btn custom-btn-modal btn-danger" style="width: 25%">OK</button>
+					<button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- 工具分析絞り込みモーダル -->
+<div th:fragment="stockfilteringModal">
+	<div class="modal fade" id="stockfilteringModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title w-100 custom-text--large text-center">絞り込み条件を入力してください</h1>
+				</div>
+				<div class="modal-body">
+					<div class="container mt-4">
+						<!-- 年度 -->
+						<div class="row mb-3 align-items-center justify-content-center">
+							<label for="storage" class="col-sm-3 col-form-label custom-text text-center">年度</label>
+							<div class="col-sm-6">
+								<select id="storage" class="form-select custom-text">
+									<option selected></option>
+									<option value="1">選択肢1</option>
+									<option value="2">選択肢2</option>
+									<option value="3">選択肢3</option>
+								</select>
+							</div>
+						</div>
+						<!-- 期間 -->
+						<div class="row mb-3 align-items-center justify-content-center">
+							<label for="storage" class="col-sm-3 col-form-label custom-text text-center">期間</label>
+							<div class="col-sm-6">
+								<select id="storage" class="form-select custom-text">
+									<option selected></option>
+									<option value="1">選択肢1</option>
+									<option value="2">選択肢2</option>
+									<option value="3">選択肢3</option>
+								</select>
+							</div>
+						</div>
+						<!-- 分類 -->
+						<div class="row mb-3 align-items-center justify-content-center">
+							<label for="storage" class="col-sm-3 col-form-label custom-text text-center">分類</label>
+							<div class="col-sm-6">
+								<select id="storage" class="form-select custom-text">
+									<option selected></option>
+									<option value="1">インサート</option>
+									<option value="2">ドリル</option>
+									<option value="3">リーマー</option>
+								</select>
+							</div>
+						</div>
+						<!-- メーカー -->
+						<div class="row mb-3 align-items-center justify-content-center">
+							<label for="orderpoint" class="col-sm-3 col-form-label custom-text text-center">メーカー</label>
+							<div class="col-sm-6">
+								<input type="text" id="orderpoint" class="form-control custom-text">
+							</div>
+						</div>
+						<!-- 材質 -->
+						<div class="row mb-3 align-items-center justify-content-center">
+							<label for="storage" class="col-sm-3 col-form-label custom-text text-center">材質</label>
+							<div class="col-sm-6">
+								<select id="storage" class="form-select custom-text">
+									<option selected></option>
+									<option value="1">選択肢1</option>
+									<option value="2">選択肢2</option>
+								</select>
+							</div>
+						</div>
+						<!-- 商社 -->
+						<div class="row mb-3 align-items-center justify-content-center">
+							<label for="storage" class="col-sm-3 col-form-label custom-text text-center">商社</label>
+							<div class="col-sm-6">
+								<select id="storage" class="form-select custom-text">
+									<option selected></option>
+									<option value="1">選択肢1</option>
+									<option value="2">選択肢2</option>
+								</select>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer d-flex justify-content-center gap-5">
+					<button type="button" class="btn custom-btn-modal btn-danger" style="width: 25%">OK</button>
+					<button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

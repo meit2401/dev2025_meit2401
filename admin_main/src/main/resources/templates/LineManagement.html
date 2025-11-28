@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>admin_main ライン管理画面</title>
+
+	<!-- Bootstrap 標準CSS -->
+	<link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+	<link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet">
+
+	<!-- Bootstrap カスタムCSS -->
+	<link th:href="@{/css/custom.css}" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+	<!-- 共通メニュー呼び出し -->
+	<div th:replace="~{components/Components :: menu('line')}"></div>
+	
+	<main class="container my-5">
+		<div class="row">
+			<!-- 左カラム（ライン登録・プログラム登録） -->
+			<div class="col-12 col-md-6">
+				<!-- ライン登録/削除 -->
+				<div class="row my-2">
+					<div class="col-6">
+						<button type="button" class="btn custom-btn-common" style="width: 90%;" data-bs-toggle="modal" data-bs-target="#lineaddModal">ライン新規</button>
+					</div>
+					<div class="col-6">
+						<button type="button" id="delete-line-btn" class="btn custom-btn-common custom-btn-common--notselectable" style="width: 90%;" data-bs-toggle="modal" data-bs-target="#linedelModal" disabled>ライン削除</button>
+					</div>
+				</div>
+				
+				<!-- プログラム登録/削除 -->
+				<div class="row my-2">
+					<div class="col-6">
+						<button type="button" id="add-program-btn" class="btn custom-btn-common custom-btn-common--notselectable" style="width: 90%;" data-bs-toggle="modal" data-bs-target="#progaddModal" disabled>プログラム<br>新規</button>
+					</div>
+					<div class="col-6">
+						<button type="button" id="delete-program-btn" class="btn custom-btn-common custom-btn-common--notselectable" style="width: 90%;" data-bs-toggle="modal" data-bs-target="#progdelModal" disabled>プログラム<br>削除</button>
+					</div>
+				</div>
+				
+				<!-- ラインリスト -->
+				<div class="container my-4">
+					<div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+						<table id="lines-table" class="table table-bordered table-striped w-100" style="table-layout: fixed;">
+							<thead class="custom-list">
+								<tr>
+									<th class="text-center">ラ イン 名</th>
+								</tr>
+							</thead>
+							<tbody class="custom-text--short">
+								<tr th:each="line : ${lines}" th:data-line-id="${line.lineId}">
+									<td th:text="${line.lineName}"></td>
+								</tr>
+								<th:block th:if="${#lists.size(lines) < 7}">
+									<tr th:each="i : ${#numbers.sequence(1, 7 - #lists.size(lines))}">
+										<td>&nbsp;</td>
+									</tr>
+								</th:block>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<!-- 右カラム（工具割り当て・プログラム管理） -->
+			<div class="col-12 col-md-6">
+				<!-- 工具割り当て/インポート -->
+				<div class="row my-2">
+					<div class="col-6">
+						<button type="button" id="allocate-tool-btn" class="btn custom-btn-common custom-btn-common--notselectable" style="width: 90%;" data-bs-toggle="modal" data-bs-target="#allocationModal" disabled>工具割当</button>
+					</div>
+					<div class="col-6">
+						<button type="button" id="deallocate-tool-btn" class="btn custom-btn-common custom-btn-common--notselectable" style="width: 90%;" data-bs-toggle="modal" data-bs-target="#deallocationModal" disabled>工具割当<br>解除</button>
+					</div>
+				</div>
+				
+				<!-- QRコード再印刷 -->
+				<div class="row my-2">
+					<div class="col-6">
+						<button type="button" class="btn custom-btn-common" style="width: 90%;" data-bs-toggle="modal" data-bs-target="#importModal">インポート</button>
+					</div>
+					<div class="col-6">
+						<button type="button" id="reprint-qr-btn" class="btn custom-btn-common custom-btn-common--notselectable" style="width: 90%;" data-bs-toggle="modal" data-bs-target="#lineprintqrcodeModal" disabled>QRコード<br>再印刷</button>
+					</div>
+				</div>
+				
+				<!-- プログラム番号リスト -->
+				<div class="container my-4">
+					<div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+						<table id="programs-table" class="table table-bordered table-striped w-100" style="table-layout: fixed;">
+							<thead class="custom-list">
+								<tr>
+									<th class="text-center">プ ロ グ ラ ム 名</th>
+								</tr>
+							</thead>
+							<tbody id="programs-table-body" class="custom-text--short">
+								<tr><td>&nbsp;</td></tr>
+								<tr><td>&nbsp;</td></tr>
+								<tr><td>&nbsp;</td></tr>
+								<tr><td>&nbsp;</td></tr>
+								<tr><td>&nbsp;</td></tr>
+								<tr><td>&nbsp;</td></tr>
+								<tr><td>&nbsp;</td></tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 工具割り当て一覧表 -->
+		<div class="container my-4">
+			<div class="table-responsive" style="max-height: 680px; overflow-y: auto;">
+				<table id="tools-table" class="table table-bordered table-striped w-100"  style="table-layout: fixed;">
+					<thead class="custom-list">
+						<tr>
+							<th class="text-center" style="width: 20%">ツ ー ル 番 号</th>
+							<th class="text-center" style="width: 15%">分 類</th>
+							<th class="text-center" style="width: 15%">メ ー カ ー</th>
+							<th class="text-center" style="width: 35%;">型 番</th>
+							<th class="text-center" style="width: 15%;">材 質</th>
+						</tr>
+					</thead>
+					<tbody class="custom-text--short">
+						<tr><td>T01</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T02</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T03</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T04</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T05</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T06</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T07</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T08</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T09</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T10</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T11</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T12</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T13</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T14</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T15</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T16</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T17</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T18</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T19</td><td> </td><td> </td><td> </td><td> </td></tr>
+						<tr><td>T20</td><td> </td><td> </td><td> </td><td> </td></tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<div th:replace="~{modals/LineManagementModals :: lineaddModal}"></div>
+		<div th:replace="~{modals/LineManagementModals :: linedelModal}"></div>
+		<div th:replace="~{modals/LineManagementModals :: progaddModal}"></div>
+		<div th:replace="~{modals/LineManagementModals :: allocationModal}"></div>
+		<div th:replace="~{modals/LineManagementModals :: deallocationModal}"></div>
+		<div th:replace="~{modals/LineManagementModals :: importModal}"></div>
+		<div th:replace="~{modals/LineManagementModals :: progdelModal}"></div>
+		<div th:replace="~{modals/LineManagementModals :: lineprintqrcodeModal}"></div>
+		
+	</main>
+
+	<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+	<script th:src="@{/js/Components.js}"></script>
+	<script th:src="@{/js/QrCodePrinter.js}"></script>
+	<script th:src="@{/js/tepraprint.js}" defer></script>
+	<script th:src="@{/js/LineManagement.js}"></script>
+	
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!-- 共通メニュー fragment -->
+<div th:fragment="menu (currentPage)">
+	<!-- 上段 -->
+	<nav class="navbar navbar-expand-lg navbar-light bg-light">
+		<div class="container-fluid">
+			<!-- 日時表示 -->
+			<div id="real-time-display" class="custom-text ms-3">YYYY年MM月DD日 HH:MM</div>
+			<div class="d-flex ms-auto align-items-center">
+				<!-- ユーザーID表示 -->
+				<span class="custom-text px-2" sec:authorize="isAuthenticated()">ユーザーID:<span th:text="${#authentication.name}"></span></span>
+				<!-- ログインボタン -->
+				<div sec:authorize="isAnonymous()">
+					<button type="button" class="btn custom-btn-status m-3" data-bs-toggle="modal" data-bs-target="#loginModal">ログイン</button>
+				</div>
+				<!-- ログアウトボタン -->
+				<div sec:authorize="isAuthenticated()">
+					<button type="button" class="btn custom-btn-status m-3" data-bs-toggle="modal" data-bs-target="#logoutModal">ログアウト</button>
+				</div>
+				<!-- 日時設定ボタン -->
+				<button type="button" class="btn" 
+						data-bs-toggle="modal" data-bs-target="#settingModal"
+						th:disabled="${!#authorization.expression('hasRole(''SETTING'')')}"
+						th:style="${!#authorization.expression('hasRole(''SETTING'')')} ? 'pointer-events: none; opacity: 0.6;' : ''">
+					<i class="bi bi-gear"></i>
+				</button>
+			</div>
+		</div>
+	</nav>
+
+	<!-- 下段 -->
+	<nav class="navbar navbar-dark bg-light">
+		<div class="container-fluid">
+			<div class="d-flex justify-content-center align-items-center gap-4 w-100">
+				<!-- 不足工具 -->
+				<a th:href="@{/alert}"
+					class="btn custom-btn-menu col"
+					th:classappend="${currentPage == 'alert'} ? 'custom-btn-menu--selected' : 'custom-btn-menu--unselected'">
+					不 足<br>工 具
+				</a>
+				<!-- ユーザー管理 -->
+				<a th:href="@{/user}"
+					class="btn custom-btn-menu col"
+					th:classappend="${currentPage == 'user'} ? 'custom-btn-menu--selected' : 'custom-btn-menu--unselected'"
+					th:disabled="${!#authorization.expression('hasRole(''USERS'')')}"
+					th:style="${!#authorization.expression('hasRole(''USERS'')')} ? 'pointer-events: none; opacity: 0.6;' : ''">
+					ユ ー ザ ー<br>管 理
+				</a>
+				<!-- 工具管理 -->
+				<a th:href="@{/tool}"
+					class="btn custom-btn-menu col"
+					th:classappend="${currentPage == 'tool'} ? 'custom-btn-menu--selected' : 'custom-btn-menu--unselected'"
+					th:disabled="${!#authorization.expression('hasRole(''TOOLS'')')}"
+					th:style="${!#authorization.expression('hasRole(''TOOLS'')')} ? 'pointer-events: none; opacity: 0.6;' : ''">
+					工 具<br>管 理
+				</a>
+				<!-- ライン管理 -->
+				<a th:href="@{/line}"
+					class="btn custom-btn-menu col"
+					th:classappend="${currentPage == 'line'} ? 'custom-btn-menu--selected' : 'custom-btn-menu--unselected'"
+					th:disabled="${!#authorization.expression('hasRole(''LINE'')')}"
+					th:style="${!#authorization.expression('hasRole(''LINE'')')} ? 'pointer-events: none; opacity: 0.6;' : ''">
+					ラ イ ン<br>管 理
+				</a>
+				<!-- 工具分析 -->
+				<a th:href="@{/stock}"
+					class="btn custom-btn-menu col"
+					th:classappend="${currentPage == 'stock'} ? 'custom-btn-menu--selected' : 'custom-btn-menu--unselected'"
+					th:disabled="${!#authorization.expression('hasRole(''STOCK'')')}"
+					th:style="${!#authorization.expression('hasRole(''STOCK'')')} ? 'pointer-events: none; opacity: 0.6;' : ''">
+					工 具<br>分 析
+				</a>
+				<!-- 操作履歴 -->
+				<a th:href="@{/history}"
+					class="btn custom-btn-menu col"
+					th:classappend="${currentPage == 'history'} ? 'custom-btn-menu--selected' : 'custom-btn-menu--unselected'"
+					th:disabled="${!#authorization.expression('hasRole(''HISTORY'')')}"
+					th:style="${!#authorization.expression('hasRole(''HISTORY'')')} ? 'pointer-events: none; opacity: 0.6;' : ''">
+					操 作<br>履 歴
+				</a>
+				<!-- データベース管理 -->
+				<a th:href="@{/database}"
+					class="btn custom-btn-menu col"
+					th:classappend="${currentPage == 'database'} ? 'custom-btn-menu--selected' : 'custom-btn-menu--unselected'"
+					th:disabled="${!#authorization.expression('hasRole(''DATABASE'')')}"
+					th:style="${!#authorization.expression('hasRole(''DATABASE'')')} ? 'pointer-events: none; opacity: 0.6;' : ''">
+					データベース<br>管 理
+				</a>
+			</div>
+		</div>
+	</nav>
+	
+	<div th:replace="~{modals/ComponentsModals :: logoutModal}"></div>
+	<div th:replace="~{modals/ComponentsModals :: settingModal}"></div>
+	
+</div>
+
+<script src="/js/bootstrap.bundle.min.js"></script>

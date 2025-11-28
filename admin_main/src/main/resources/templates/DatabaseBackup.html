@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns="http://www.thymeleaf.org">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>admin_main データベース管理画面</title>
+
+		<!-- Bootstrap 標準CSS -->
+		<link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+		<link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet">
+
+		<!-- Bootstrap カスタムCSS -->
+		<link th:href="@{/css/custom.css}" rel="stylesheet">
+	</head>
+
+	<body>
+		<!-- 共通メニュー呼び出し -->
+		<div th:replace="~{components/Components :: menu('database')}"></div>
+
+		<main class="container my-5">
+			<!-- バックアップ案内メッセージ -->
+			<div class="d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
+				<div class="container-fluid">
+					<p class="custom-text--large text-center">バックアップ期間を入力してください</p>
+				</div>
+			</div>
+
+			<!-- 期間指定欄 -->
+			<div class="card p-4 mb-4 my-4">
+				<!-- 開始期間 -->
+				<div class="row g-3 align-items-center justify-content-center mb-3">
+					<div class="col-md-auto">
+						<label class="custom-text fs-1 me-3">開始</label>
+					</div>
+					<div class="col-md-5"> <div class="row g-2 align-items-center"> <div class="col-7">
+								<div class="d-flex align-items-center">
+									<span id="displayStartYear" class="form-control custom-text fs-1 me-1 bg-light"
+										  th:text="${defaultStartYear != -1 ? defaultStartYear : '----'}">YYYY</span>
+									<span class="custom-text fs-1 ms-2">年</span> </div>
+							</div>
+							<div class="col-5">
+								<div class="d-flex align-items-center">
+									<span id="displayStartMonth" class="form-control custom-text fs-1 me-1 bg-light"
+										  th:text="${defaultStartMonth != -1 ? #numbers.formatInteger(defaultStartMonth, 2) : '--'}">MM</span> <span class="custom-text fs-1 ms-2">月</span> </div>
+							</div>
+						</div>
+						<input type="hidden" id="startYear" name="startYear" th:value="${defaultStartYear}">
+						<input type="hidden" id="startMonth" name="startMonth" th:value="${defaultStartMonth}">
+						<input type="hidden" id="endYear" th:value="${defaultEndYear}">
+						<input type="hidden" id="endMonth" th:value="${defaultEndMonth}">
+					</div>
+				</div>
+
+				<!-- 終了期間 -->
+				<div class="row g-3 align-items-center justify-content-center">
+					<div class="col-md-auto">
+						<label class="custom-text fs-1 me-3">終了</label>
+					</div>
+					<div class="col-md-5">
+						<div class="row g-2 align-items-center">
+							<div class="col-7">
+								<div class="d-flex align-items-center">
+									<span id="displayEndYear" class="form-control custom-text fs-1 me-1 bg-light"
+										  th:text="${defaultEndYear != -1 ? defaultEndYear : '----'}">YYYY</span>
+									<span class="custom-text fs-1 ms-2">年</span>
+								</div>
+							</div>
+							<div class="col-5">
+								<div class="d-flex align-items-center">
+									<span id="displayEndMonth" class="form-control custom-text fs-1 me-1 bg-light"
+										  th:text="${defaultEndMonth != -1 ? #numbers.formatInteger(defaultEndMonth, 2) : '--'}">MM</span>
+									<span class="custom-text fs-1 ms-2">月</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 更新日時表示 -->
+			<div class="card p-4 mb-4">
+				<div class="mt-4 text-center">
+						<p class="custom-text">最終更新日： <span th:text="${lastBackupExecutionTime}">YYYY/MM/DD XX:XX</span></p> <p class="custom-text">バックアップ済日： <span th:text="${latestRecordIncludedTime}">YYYY/MM/DD XX:XX</span></p> </div>
+			</div>
+
+			<!-- バックアップボタン -->
+			<div class="container">
+				<div class="d-flex justify-content-end align-items-center custom-wrapper">
+					<button type="button" class="btn custom-btn-common custom-btn-common--notselectable" data-bs-toggle="modal" data-bs-target="#backupModal" disabled>バックアップ</button> </div>
+			</div>
+
+			<!-- 未バックアップ履歴一覧 -->
+			<div class="custom-text">未バックアップ履歴一覧</div>
+			<div class="container my-3">
+				<div class="table-responsive" style="max-height: 640px; overflow-y: auto;">
+					<table class="table table-bordered table-striped w-100" style="table-layout: fixed; width: 100%;">
+						<thead class="custom-list">
+							<tr>
+								<th class="text-center">日 付</th>
+								<th class="text-center">時 間</th>
+								<th class="text-center">氏 名</th>
+								<th class="text-center">作 業 内 容</th>
+							</tr>
+						</thead>
+						<tbody class="custom-text--short">
+							<tr th:each="history : ${historyList}"> <td class="text-center" th:text="${#temporals.format(history.procTime, 'yyyy/MM/dd')}"></td> <td class="text-center" th:text="${#temporals.format(history.procTime, 'HH:mm:ss')}"></td> <td class="text-center" th:text="${history.userName}"></td> <td class="text-center" th:text="${history.operationClass}"></td> </tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<div th:replace="~{modals/DatabaseBackupModals :: backupModal}"></div>
+		</main>
+
+		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+		<script th:src="@{/js/Components.js}"></script>
+		<script th:src="@{/js/DatabaseBackup.js}"></script>
+
+	</body>
+</html>

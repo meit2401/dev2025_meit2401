@@ -1,0 +1,132 @@
+<!-- ユーザー登録モーダル -->
+<div th:fragment="useraddModal">
+	<div class="modal fade" id="useraddModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog custom-modal modal-dialog-centered">
+			<div class="modal-content">
+				<form th:action="@{/user/add}" method="post" th:object="${newUser}">
+					<div class="modal-header">
+						<h1 class="modal-title custom-text--large text-center w-100">登録するユーザー情報を<br>入力してください</h1>
+					</div>
+					<div class="row">
+						<div class="col-12">
+							<div class="row m-4 align-items-center">
+								<div class="col-3">
+									<label class="form-label custom-text">登録氏名</label>
+								</div>
+								<div class="col-9">
+									<input type="text" class="form-control custom-text js-normalize-hankaku" th:field="*{userName}" placeholder="氏名" required>
+								</div>
+							</div>
+						</div>
+						<div class="col-12">
+							<div class="m-4">
+								<table class="table custom-text--short table-bordered align-middle text-center">
+									<tbody>
+										<tr><td>補 充 操 作</td><td><input type="checkbox" class="form-check-input" th:field="*{perAdd}" th:value="1"></td></tr>
+										<tr><td>棚 卸 し 操 作</td><td><input type="checkbox" class="form-check-input" th:field="*{perInventory}" th:value="1"></td></tr>
+										<tr><td>ユ ー ザ ー 管 理</td><td><input type="checkbox" class="form-check-input" th:field="*{perUser}" th:value="1"></td></tr>
+										<tr><td>工 具 管 理</td><td><input type="checkbox" class="form-check-input" th:field="*{perTool}" th:value="1"></td></tr>
+										<tr><td>ラ イ ン 管 理</td><td><input type="checkbox" class="form-check-input" th:field="*{perLine}" th:value="1"></td></tr>
+										<tr><td>工 具 分 析</td><td><input type="checkbox" class="form-check-input" th:field="*{perAnalysis}" th:value="1"></td></tr>
+										<tr><td>操 作 履 歴</td><td><input type="checkbox" class="form-check-input" th:field="*{perHistory}" th:value="1"></td></tr>
+										<tr><td>デ ー タ ベ ー ス 管 理</td><td><input type="checkbox" class="form-check-input" th:field="*{perDb}" th:value="1"></td></tr>
+										<tr><td>本 体 設 定</td><td><input type="checkbox" class="form-check-input" th:field="*{perSetting}" th:value="1"></td></tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="col-12">
+							<p class="text-danger custom-text text-center">※QRコード発行を行います</p>
+						</div>
+					</div>
+					<div class="modal-footer d-flex justify-content-center gap-5">
+						<button type="button" class="btn custom-btn-modal btn-danger" style="width: 20%">OK</button>
+						<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 20%">キャンセル</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- ユーザー削除モーダル -->
+<div th:fragment="userdelModal">
+	<div class="modal fade" id="userdelModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog custom-modal modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title custom-text--large text-center w-100">N の<br>ユーザー削除を行います</h1>
+				</div>
+				<div class="modal-footer d-flex justify-content-center gap-5">
+					<button type="button" class="btn custom-btn-modal btn-danger" style="width: 25%">OK</button>
+					<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- ユーザー編集モーダル -->
+<div th:fragment="usereditModal">
+	<div class="modal fade" id="usereditModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog custom-modal modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title custom-text--large text-center w-100">登録情報を編集してください</h1>
+				</div>
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-12">
+							<div class="row m-4 align-items-center">
+								<div class="col-3">
+									<label class="form-label custom-text ">登録氏名</label>
+								</div>
+								<div class="col-9">
+									<input type="text" class="form-control custom-text js-normalize-hankaku" placeholder="氏名">
+								</div>
+							</div>
+						</div>
+						<div class="col-12">
+							<div class="m-4">
+								<table class="table custom-text--short table-bordered align-middle text-center">
+									<tbody>
+										<tr><td>補 充 操 作</td><td><input type="checkbox" class="form-check-input"></td></tr>
+										<tr><td>棚 卸 し 操 作</td><td><input type="checkbox" class="form-check-input"></td></tr>
+										<tr><td>ユ ー ザ ー 管 理</td><td><input type="checkbox" class="form-check-input"></td></tr>
+										<tr><td>工 具 管 理</td><td><input type="checkbox" class="form-check-input"></td></tr>
+										<tr><td>ラ イ ン 管 理</td><td><input type="checkbox" class="form-check-input"></td></tr>
+										<tr><td>工 具 分 析</td><td><input type="checkbox" class="form-check-input"></td></tr>
+										<tr><td>操 作 履 歴</td><td><input type="checkbox" class="form-check-input"></td></tr>
+										<tr><td>デ ー タ ベ ー ス 管 理</td><td><input type="checkbox" class="form-check-input"></td></tr>
+										<tr><td>本 体 設 定</td><td><input type="checkbox" class="form-check-input"></td></tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer d-flex justify-content-center gap-5">
+					<button type="button" class="btn custom-btn-modal btn-danger" style="width: 20%">OK</button>
+					<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 20%">キャンセル</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- ユーザーQRコード再印刷モーダル -->
+<div th:fragment="userprintqrcodeModal">
+	<div class="modal fade" id="userprintqrcodeModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog custom-modal modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title custom-text--large text-center w-100">N の<br>QRコードを再印刷します</h1>
+				</div>
+				<div class="modal-footer d-flex justify-content-center gap-5">
+					<button type="button" class="btn custom-btn-modal btn-danger" style="width: 20%">OK</button>
+					<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 20%">キャンセル</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

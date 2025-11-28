@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>admin_main 操作履歴画面</title>
+		
+		<!-- Bootstrap 標準CSS -->
+		<link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+		<link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet">
+		
+		<!-- Bootstrap カスタムCSS -->
+		<link th:href="@{/css/custom.css}" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	</head>
+
+	<body>
+		<!-- 共通メニュー呼び出し -->
+		<div th:replace="~{components/Components :: menu('history')}"></div>
+
+		<main class="container my-5">
+			<!-- 履歴絞り込み条件表示 -->
+			<div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+				<div th:if="${絞り込み条件表示 == null}" class="container-fluid bg-light">
+					<div class="custom-text d-flex justify-content-center">期間：YYYY年MM月中</div>
+					<div class="custom-text d-flex justify-content-center">　　氏名：○○○○</div>
+					<div class="custom-text d-flex justify-content-center">作業内容：○○○○</div>
+				</div>
+				<div th:if="${絞り込み条件表示 != null}" th:object="${絞り込み条件表示}" class="container-fluid bg-light">
+					<div class="custom-text d-flex justify-content-center"
+					th:text="'期間：' + *{period}"></div>
+					<div class="custom-text d-flex justify-content-center"
+					th:text="'氏名：' + *{username}"></div>
+					<div class="custom-text d-flex justify-content-center"
+					th:text="'作業内容：' + *{work_details}"></div>
+				</div>
+			</div>
+
+			<!-- 履歴絞り込みボタン -->
+			<div class="container my-4">
+				<div class="d-flex justify-content-end align-items-center">
+					<button type="button" class="btn custom-btn-common" style="width: 200px" data-bs-toggle="modal" data-bs-target="#historyModal">絞り込み</button>
+				</div>
+			</div>
+			
+			<div class="container border rounded p-3 mb-4">
+				<div class="row g-4">
+					<div class="col-lg-9">
+						<!-- 入出庫録画表示 -->
+						<div class="custom-video-wrapper pt-3">
+							<video id="player" title="ローカル動画"></video>
+						</div>	
+						<div class="container">
+							<input type="range" class="form-range" id="seek-bar" value="0" min="0" max="100" step="0.1">
+							<div class="d-flex justify-content-between">
+								<span id="current-time" class="custom-text--short text-muted small">0:00</span>
+								<span id="total-time" class="custom-text--short text-muted small">0:00</span>
+							</div>
+						</div>
+						<!-- 再生ツール -->
+						<div class="container-fluid text-center">
+							<div id="status-display" class="custom-text mb-2">&nbsp;</div>
+							<div class="row justify-content-center g-2 mb-3">
+								<div class="col">
+									<button type="button" id="skip-backward-btn" class="btn custom-btn-video w-100">戻る</button>
+								</div>
+								<div class="col">
+									<button type="button" id="play-btn" class="btn custom-btn-video w-100">再生</button>
+								</div>
+								<div class="col">
+									<button type="button" id="skip-forward-btn" class="btn custom-btn-video w-100">進む</button>
+								</div>
+								<div class="col">
+									<button type="button" id="pause-btn" class="btn custom-btn-video w-100">一時停止</button>
+								</div>
+								<div class="col">
+									<button type="button" id="stop-btn" class="btn custom-btn-video w-100">停止</button>
+								</div>
+							</div>
+							<div class="row justify-content-center g-2">
+								<div class="col">
+									<button type="button" id="speed-0.5-btn" class="btn custom-btn-video w-100">0.5x</button>
+								</div>
+								<div class="col">
+									<button type="button" id="speed-1.0-btn" class="btn custom-btn-video w-100">標準</button>
+								</div>
+								<div class="col">
+									<button type="button" id="speed-1.5-btn" class="btn custom-btn-video w-100">1.5x</button>
+								</div>
+								<div class="col">
+									<button type="button" id="speed-2.5-btn" class="btn custom-btn-video w-100">2.5x</button>
+								</div>
+								<div class="col">
+									<button type="button" id="speed-5.0-btn" class="btn custom-btn-video w-100">5.0x</button>
+								</div>
+							</div>
+						</div>
+					</div> 
+					<!-- 履歴詳細表示 -->
+					<div class="col-lg-3">
+						<div class="container-fluid p-3 h-100">
+							<div class="row gy-2 mb-3">
+								<div class="col-12">
+									<div class="custom-text">工具詳細</div>
+								</div>
+								<div class="col-12">
+									<div class="custom-text--short custom-text--wrap" id="detail-category">分類：○○○</div>
+								</div>
+								<div class="col-12">
+									<div class="custom-text--short custom-text--wrap" id="detail-maker">メーカー：○○○</div>
+								</div>
+								<div class="col-12">
+									<div class="custom-text--short custom-text--wrap" id="detail-name">型番：○○○</div>
+								</div>
+								<div class="col-12">
+									<div class="custom-text--short custom-text--wrap" id="detail-material">材質：○○○</div>
+								</div>
+							</div>
+						</div>
+					</div> 
+				</div>
+			</div>
+			<div class="container">
+				<!-- 操作履歴リスト -->
+				<div class="table-responsive" style="max-height: 390px; overflow-y: auto;">
+					<table id="historyTable" class="table table-bordered table-striped w-100" style="table-layout: fixed;">
+						<thead class="custom-list">
+							<tr>
+								<th class="text-center">日 付</th>
+								<th class="text-center">時 間</th>
+								<th class="text-center">氏 名</th>
+								<th class="text-center">作 業 内 容</th>
+							</tr>
+						</thead>
+						<tbody class="custom-text--short">
+							<tr th:if="${絞り込みボタン結果表示 != null}"
+								th:each="item : ${絞り込みボタン結果表示}"
+								th:data-category="${item.toolCategory}"
+								th:data-maker="${item.maker}"
+								th:data-name="${item.toolName}"
+								th:data-material="${item.toolMaterial}"
+								th:data-video-path="${item.video_path}" 
+								style="cursor: pointer;"> 
+								<td th:text="${#temporals.format(item.processingTime, 'yyyy-MM-dd')}"></td>
+								<td th:text="${#temporals.format(item.processingTime, 'HH:mm:ss')}"></td>
+								<td th:text="${item.userName}"></td>
+								<td th:text="${item.operationContent}"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<div th:replace="~{modals/OperationHistoryModals :: historyModal}"></div>
+			
+		</main>
+		
+		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+		<script th:src="@{/js/Components.js}"></script>
+		<script th:src="@{/js/OperationHistory.js}"></script>
+		<script th:inline="javascript">
+			/*<![CDATA[*/ const yearMonthData = /*[[${yearMonthStructure}]]*/ []; /*]]>*/
+		</script>
+		
+	</body>
+</html>

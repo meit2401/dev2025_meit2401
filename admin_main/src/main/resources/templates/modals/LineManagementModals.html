@@ -1,0 +1,214 @@
+<!-- ライン新規登録モーダル -->
+<div th:fragment="lineaddModal">
+	<div class="modal fade" id="lineaddModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				<form id="line-add-form">
+					<div class="modal-body custom-text--large text-center">ライン名を入力してください</div>
+					<div class="row gx-5 ms-3">
+						<div class="col-3">
+							<label class="form-label custom-text">ライン名</label>
+						</div>
+						<div class="col-9">
+							<input type="text" name="lineName" class="form-control custom-text js-normalize-hankaku" style="width: 90%" placeholder="" required>
+						</div>
+					</div>
+					<div class="modal-footer d-flex justify-content-center gap-3">
+						<button type="button" class="btn custom-btn-modal btn-danger" style="width: 20%">OK</button>
+						<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 20%">キャンセル</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- ライン削除モーダル -->
+<div th:fragment="linedelModal">
+	<div class="modal fade" id="linedelModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				<div class="modal-body custom-text--large text-center">ライン名N 及び、<br>それに紐づくプログラム番号、<br>工具割当情報の削除を行います</div>
+				<div class="modal-footer d-flex justify-content-center gap-3">
+					<button type="button" class="btn custom-btn-modal btn-danger" style="width: 20%">OK</button>
+					<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 20%">キャンセル</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- プログラム新規登録モーダル -->
+<div th:fragment="progaddModal">
+	<div class="modal fade" id="progaddModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				<form id="program-add-form">
+					<div class="modal-body custom-text--large text-center">プログラム名を<br>入力してください</div>
+					<div class="row gx-5 ms-3">
+						<div class="col-3">
+							<label class="form-label custom-text">プログラム名</label>
+						</div>
+						<div class="col-9">
+							<input type="text" name="programName" class="form-control custom-text js-normalize-hankaku" style="width: 90%" placeholder="" required>
+						</div>
+					</div>
+					<p class="text-danger custom-text text-center">※QRコード発行を行います</p>
+					<div class="modal-footer d-flex justify-content-center gap-3">
+						<button type="button" class="btn custom-btn-modal btn-danger" style="width: 20%">OK</button>
+						<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 20%">キャンセル</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- プログラム削除モーダル -->
+<div th:fragment="progdelModal">
+	<div class="modal fade" id="progdelModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				<div class="modal-body custom-text--large text-center">プログラム番号N 及び、<br>それに紐づく工具割当情報の<br>削除を行います</div>
+				<div class="modal-footer d-flex justify-content-center gap-3">
+					<button type="button" class="btn custom-btn-modal btn-danger" style="width: 20%">OK</button>
+					<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 20%">キャンセル</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- 工具割り当てモーダル -->
+<div th:fragment="allocationModal">
+	<div class="modal fade" id="allocationModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered custom-modal modal-lg">
+			<div class="modal-content">
+				<div class="modal-body custom-text--large text-center" id="allocationModalTitle">ツール番号Tn に<br>工具を登録します</div>
+				<div class="modal-body">
+					<div class="container mt-4">
+						<!-- 分類 -->
+						<div class="row mb-3 align-items-center justify-content-center">
+							<label for="filterCategory" class="col-sm-3 col-form-label custom-text text-center">分類</label>
+							<div class="col-sm-6">
+								<select id="filterCategory" name="category" class="form-select custom-text">
+									<option value="">すべて</option>
+									<option value="ドリル">ドリル</option>
+									<option value="インサート">インサート</option>
+									<option value="タップ">タップ</option>
+									<option value="リーマー">リーマ</option>
+									<option value="エンドミル">エンドミル</option>
+								</select>
+							</div>
+						</div>
+						<!-- メーカー -->
+						<div class="row mb-3 align-items-center justify-content-center">
+							<label for="filterMaker" class="col-sm-3 col-form-label custom-text text-center">メーカー</label>
+							<div class="col-sm-6">
+								<input type="text" id="filterMaker" name="maker" class="form-control custom-text js-normalize-hankaku">
+							</div>
+						</div>
+						<!-- 型番 -->
+						<div class="row mb-3 align-items-center justify-content-center">
+							<label for="filterToolName" class="col-sm-3 col-form-label custom-text text-center">型番</label>
+							<div class="col-sm-6">
+								<input type="text" id="filterToolName" name="toolName" class="form-control custom-text js-normalize-hankaku">
+							</div>
+						</div>
+						<!-- 材質 -->
+						<div class="row mb-3 align-items-center justify-content-center">
+							<label for="filterMaterial" class="col-sm-3 col-form-label custom-text text-center">材質</label>
+							<div class="col-sm-6">
+								<input type="text" id="filterMaterial" name="material" class="form-control custom-text js-normalize-hankaku">
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="container">
+					<div class="d-flex justify-content-end align-items-center custom-wrapper">
+						<button type="button" id="filter-tools-btn" class="btn custom-btn-modal">絞り込み</button>
+					</div>
+				</div>
+				
+				<div class="container my-4">
+					<div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+						<table id="tool-candidates-table" class="table table-bordered table-striped w-100" style="table-layout: fixed;">
+							<thead class="custom-list">
+								<tr>
+									<th class="text-center">分 類</th>
+									<th class="text-center">メ ー カ ー</th>
+									<th class="text-center">型 番</th>
+									<th class="text-center">材 質</th>
+								</tr>
+							</thead>
+							<tbody id="tool-candidates-body" class="fs-3">
+								<tr><td>&nbsp;</td><td> </td><td> </td><td> </td></tr>
+								<tr><td> </td><td> </td><td> </td><td> </td></tr>
+								<tr><td> </td><td> </td><td> </td><td> </td></tr>
+								<tr><td> </td><td> </td><td> </td><td> </td></tr>
+								<tr><td> </td><td> </td><td> </td><td> </td></tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				
+				<div class="modal-footer d-flex justify-content-center gap-3">
+					<button type="button" id="assign-tool-confirm-btn" class="btn custom-btn-modal btn-danger" style="width: 20%">確定</button>
+					<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 20%">キャンセル</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- 工具割り当て解除モーダル -->
+<div th:fragment="deallocationModal">
+	<div class="modal fade" id="deallocationModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				<div class="modal-body custom-text--large text-center" id="deallocationModalBody">ツール番号T(n) の<br>工具割り当てを解除します</div>
+				<div class="modal-footer d-flex justify-content-center gap-3">
+					<button type="button" id="deallocate-tool-confirm-btn" class="btn custom-btn-modal btn-danger" style="width: 20%">OK</button>
+					<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 20%">キャンセル</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- インポートファイル指定モーダル -->
+<div th:fragment="importModal">
+	<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				<form id="import-form" enctype="multipart/form-data">
+					<div class="modal-body custom-text--large text-center">以下のファイルから<br>工具割り当てデータを抽出します</div>
+					<div class="row mb-3 align-items-center justify-content-center">
+						<input type="file" id="import-file-input" name="file" class="form-control custom-text" style="width: 90%" required>
+					</div>
+					<p class="text-danger custom-text text-center">※QRコード発行を行います</p>
+					<div class="modal-footer d-flex justify-content-center gap-3">
+						<button type="button" id="import-confirm-btn" class="btn custom-btn-modal btn-danger" style="width: 20%">OK</button>
+						<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 20%">キャンセル</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- 工具割り当てQRコード再印刷モーダル -->
+<div th:fragment="lineprintqrcodeModal">
+	<div class="modal fade" id="lineprintqrcodeModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				<div class="modal-body custom-text--large text-center">プログラム番号N の<br>QRコードを再印刷します</div>
+				<div class="modal-footer d-flex justify-content-center gap-3">
+					<button type="button" class="btn custom-btn-modal btn-danger" style="width: 20%">OK</button>
+					<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 20%">キャンセル</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

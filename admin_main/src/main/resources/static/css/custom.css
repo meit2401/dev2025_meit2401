@@ -1,0 +1,189 @@
+/* https://jfly.uni-koeln.de/colorset/CUD_color_set_GuideBook_2018_for_print_cs4.pdf参照 */
+
+/* カラーパレット */
+:root {
+	--color-black		: #000000;	/* 黒　　　　　 */
+	--color-red			: #ff4b00;	/* 赤　　　　　 */
+	--color-orange		: #f6aa00;	/* 橙　　　　　 */
+	--color-yellow		: #ffff80;	/* 黄　　　　　 */
+	--color-green		: #03af7a;	/* 緑　　　　　 */
+	--color-blue		: #005aff;	/* 青　　　　　 */
+	--color-gray		: #84919e;	/* グレー　　　 */
+	--color-white		: #ffffff;	/* 白　　　　　 */
+	
+	--font-size-s		: 30px;		/* 小　　　　　 */
+	--font-size-m		: 40px;		/* 標準　　　　 */
+	--font-size-l		: 45px;		/* 大　　　　　 */
+	--font-size-xl		: 60px;		/* 特大　　　　 */
+}
+
+/* 標準テキスト */
+/* font-size	: 文字の大きさ */
+/* font-weight	: 文字の太さ */
+/* white-space	: 改行の許可 */
+.custom-text {
+	font-size			: var(--font-size-l);
+	font-weight			: bold;
+	white-space			: nowrap;
+}
+
+/* 小文字テキスト */
+.custom-text--short {
+	font-size			: var(--font-size-s);
+	font-weight			: bold;
+	white-space			: nowrap;
+}
+
+/* タイトルテキスト */
+.custom-text--large {
+	font-size			: var(--font-size-xl);
+	font-weight			: bold;
+	white-space			: nowrap;
+}
+
+.custom-text--wrap {
+	white-space			: normal;
+}
+
+/* ボタン標準設定 */
+/* color		: 文字の色 */
+/* border-color	: 枠線の色 */
+/* border-width	: 枠線の太さ */
+.btn {
+	font-size			: var(--font-size-s);
+	font-weight			: bold;
+	color				: var(--color-black);
+	border-color		: var(--color-black);
+	border-width		: 3px;
+	white-space			: nowrap;
+}
+
+/* ログイン/ログアウトボタン */
+.custom-btn-status {
+	color				: var(--color-red);
+	border-color		: var(--color-red);
+}
+
+/* 画面遷移ボタン */
+/* border-redius	: 枠線の丸め */
+.custom-btn-menu {
+	border-radius		: 10px;
+}
+
+/* 画面遷移ボタン選択状態 */
+/* background-color	: 背景の色 */
+.custom-btn-menu--selected {
+	color				: var(--color-white);
+	background-color	: var(--color-red);
+}
+
+/* 画面遷移ボタン未選択状態 */
+.custom-btn-menu--unselected {
+	color 				: var(--color-white);
+	background-color	: var(--color-gray);
+}
+
+/* 汎用ボタン */
+.custom-btn-common {
+	font-size			: var(--font-size-m);
+	border-color		: var(--color-blue);
+	border-width		: 6px;
+	border-radius		: 20px;
+	background-color	: var(--color-white);
+	height				: 135px;
+}
+
+/* 選択不可の汎用ボタン */
+.custom-btn-common--notselectable {
+	border-color		: var(--color-gray);
+}
+
+/* ダイアログボタン */
+.custom-btn-modal {
+	font-size			: var(--font-size-m);
+	border-color		: var(--color-red);
+	border-width		: 6px;
+	border-radius		: 20px;
+	background-color	: var(--color-white);
+	height				: 135px;
+	max-height			: 135px;
+}
+
+/* 映像ウィンドウボタン */
+.custom-btn-video {
+	color				: var(--color-white);
+	border-radius		: 10px;
+	background-color	: var(--color-gray);
+}
+
+/* テーブル */
+/* position: sticky	: 要素をテーブル上端に固定する */
+/* top				: 要素が固定される位置 */
+/* z-index			: 重なりの優先度 */
+.custom-list {
+	font-size			: var(--font-size-s);
+	position			: sticky;
+	top					: 0;
+	z-index				: 10;
+	color				: var(--color-white);
+	background-color	: var(--color-blue);
+}
+
+/* テーブル行選択状態 */
+.custom-list--selected {
+	background-color	: var(--color-yellow);
+}
+
+/* 映像ウィンドウ */
+.custom-video-wrapper {
+	width				: 100%;
+	aspect-ratio		: 16 / 9;
+}
+
+/* 映像ウィンドウ倍率 */
+.custom-video-wrapper video {
+	width				: 100%;
+	height				: 100%; 
+}
+
+/* カスタムモーダルサイズ */
+.custom-modal {
+	width				: 1000px;
+	max-width			: 1000px;
+}
+
+/* オリジナルチェックボックス */
+.form-check-input {
+	width				: 1.5em;
+	height				: 1.5em;
+}
+
+/* シークバーの進捗表示 */
+#seek-bar {
+	--seek-progress-percentage: 0%;
+	background: transparent;
+}
+
+/* Webkit系(Chrome, Safari, Edge)ブラウザのトラック */
+#seek-bar::-webkit-slider-runnable-track {
+	background: linear-gradient(to right, 
+		  var(--color-blue), 
+		  var(--color-blue) var(--seek-progress-percentage), 
+		  #dee2e6 var(--seek-progress-percentage), 
+		  #dee2e6 100%);
+	height: 0.5rem;
+	border-radius: 0.25rem;
+}
+
+/* Firefox系ブラウザのトラック */
+#seek-bar::-moz-range-track {
+  background: linear-gradient(to right, 
+		  var(--color-blue), 
+		  var(--color-blue) var(--seek-progress-percentage), 
+		  #dee2e6 var(--seek-progress-percentage), 
+		  #dee2e6 100%);
+  
+  height: 0.5rem;
+  border-radius: 0.25rem;
+  border: none;
+}

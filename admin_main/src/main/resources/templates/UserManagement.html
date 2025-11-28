@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns="http://www.thymeleaf.org">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>admin_main ユーザー管理画面</title>
+		
+		<!-- Bootstrap 標準CSS -->
+		<link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+		<link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet">
+	
+		<!-- Bootstrap カスタムCSS -->
+		<link th:href="@{/css/custom.css}" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	</head>
+	<body>
+		<!-- 共通メニュー呼び出し -->
+		<div th:replace="~{components/Components :: menu('user')}"></div>
+	
+		<main class="container my-5">
+			<div class="container-fluid">
+				<div class="d-flex justify-content-between align-items-center w-100 gap-4">
+					<!-- 新規ユーザー登録ボタン -->
+					<button type="button" class="btn custom-btn-common col" data-bs-target="#useraddModal" data-bs-toggle="modal">新 規</button>
+					<!-- ユーザー削除ボタン -->
+					<button type="button" id="delete-user-btn" class="btn custom-btn-common col custom-btn-common--notselectable" data-bs-target="#userdelModal" data-bs-toggle="modal" disabled>削 除</button>
+					<!-- ユーザー編集ボタン -->
+					<button type="button" id="edit-user-btn" class="btn custom-btn-common col custom-btn-common--notselectable" data-bs-target="#usereditModal" data-bs-toggle="modal" disabled>編 集</button>
+					<!-- ユーザー氏名検索欄  -->
+					<div class="input-group mx-3">
+						<input type="text" id="userName-search" class="form-control custom-text--large js-normalize-hankaku" placeholder="氏名...">
+					</div>
+					<!-- ユーザーQRコード再印刷ボタン -->
+					<button type="button" id="print-qr-btn" class="btn custom-btn-common custom-btn-common--notselectable" style="width: 20%" data-bs-target="#userprintqrcodeModal" data-bs-toggle="modal">QRコード<br>再印刷</button>
+				</div>
+			</div>
+			
+			<!-- ユーザーリスト -->
+			<div class="container my-4">
+				<div class="table-responsive" style="max-height: 1430px; overflow-y: auto;">
+					<table id="users-table" class="table table-bordered table-striped w-100" style="table-layout: fixed;">
+						<thead class="custom-list">
+							<tr>
+								<th class="text-center" style="width: 20%;">ユ ー ザ ー ID</th>
+								<th class="text-center" style="width: 20%;">氏 名</th>
+								<th class="text-center">補<br>充<br>操<br>作</th>
+								<th class="text-center">棚<br>卸<br>し<br>操<br>作</th>
+								<th class="text-center">ユ<br>|<br>ザ<br>|<br>管<br>理</th>
+								<th class="text-center">工<br>具<br>管<br>理</th>
+								<th class="text-center">ラ<br>イ<br>ン<br>管<br>理</th>
+								<th class="text-center">工<br>具<br>分<br>析</th>
+								<th class="text-center">操<br>作<br>履<br>歴</th>
+								<th class="text-center">デ<br>|<br>タ<br>ベ<br>|<br>ス<br>管<br>理</th>
+								<th class="text-center">本<br>体<br>設<br>定</th>
+							</tr>
+						</thead>
+						<tbody class="custom-text--short">
+							<tr th:each="user : ${users}">
+								<td th:text="${user.userId}" class="text-center"></td>
+								<td th:text="${user.userName}"></td> 
+								<td class="text-center">
+									<span th:if="${user.perAdd == 1}">〇</span>
+									<span th:unless="${user.perAdd == 1}">×</span>
+								</td>
+								<td class="text-center">
+									<span th:if="${user.perInventory == 1}">〇</span>
+									<span th:unless="${user.perInventory == 1}">×</span>
+								</td>
+								<td class="text-center">
+									<span th:if="${user.perUser == 1}">〇</span>
+									<span th:unless="${user.perUser == 1}">×</span>
+								</td>
+								<td class="text-center">
+									<span th:if="${user.perTool == 1}">〇</span>
+									<span th:unless="${user.perTool == 1}">×</span>
+								</td>
+								<td class="text-center">
+									<span th:if="${user.perLine == 1}">〇</span>
+									<span th:unless="${user.perLine == 1}">×</span>
+								</td>
+								<td class="text-center">
+									<span th:if="${user.perAnalysis == 1}">〇</span>
+									<span th:unless="${user.perAnalysis == 1}">×</span>
+								</td>
+								<td class="text-center">
+									<span th:if="${user.perHistory == 1}">〇</span>
+									<span th:unless="${user.perHistory == 1}">×</span>
+								</td>
+								<td class="text-center">
+									<span th:if="${user.perDb == 1}">〇</span>
+									<span th:unless="${user.perDb == 1}">×</span>
+								</td>
+								<td class="text-center">
+									<span th:if="${user.perSetting == 1}">〇</span>
+									<span th:unless="${user.perSetting == 1}">×</span>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			
+			<div th:replace="~{modals/UserManagementModals :: useraddModal}"></div>
+			<div th:replace="~{modals/UserManagementModals :: userdelModal}"></div>
+			<div th:replace="~{modals/UserManagementModals :: usereditModal}"></div>
+			<div th:replace="~{modals/UserManagementModals :: userprintqrcodeModal}"></div>
+			
+		</main>
+		
+		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+		<script th:src="@{/js/Components.js}"></script>
+		<script th:src="@{/js/QrCodePrinter.js}"></script>
+		<script th:src="@{/js/tepraprint.js}" defer></script>
+		<script th:src="@{/js/UserManagement.js}"></script>
+		
+	</body>
+</html>

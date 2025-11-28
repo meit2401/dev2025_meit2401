@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns="http://www.thymeleaf.org">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>admin_main 不足工具画面</title>
+
+		<!-- Bootstrap 標準CSS -->
+		<link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+		<link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet">
+
+		<!-- Bootstrap カスタムCSS -->
+		<link th:href="@{/css/custom.css}" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	</head>
+	<body>
+		<!-- 共通メニュー呼び出し -->
+		<div th:replace="~{components/Components :: menu('alert')}"></div>
+
+		<main class="container my-5"
+			  th:data-count-url="@{/api/tool-shortages/count}"
+			  th:data-list-url="@{/api/tool-shortages}">
+		<div class="d-flex justify-content-center align-items-center bg-light" style="height: 200px;">
+				<div class="container-fluid">
+					<p class="custom-text--large text-center" id="tool-shortage-count"
+					   th:text="'発注が必要な工具が ' + ${件数} + ' 件あります'">発注が必要な工具が N 件あります</p>
+				</div>
+			</div>
+
+			<!-- 通知詳細リスト表示 -->
+			<div class="container my-4">
+				<div class="table-responsive" style="max-height: 1360px; overflow-y: auto;">
+					<table class="table table-bordered table-striped w-100" style="table-layout: fixed;">
+						<thead class="custom-list">
+							<tr>
+								<th class="text-center" style="width: 12%;">分 類</th>
+								<th class="text-center" style="width: 15%;">メ ー カ ー</th>
+								<th class="text-center" style="width: 35%;">型 番</th>
+								<th class="text-center" style="width: 12%;">材 質</th>
+								<th class="text-center" style="width: 12%;">商 社</th>
+								<th class="text-center" >発<br>注<br>点</th>
+								<th class="text-center">現<br>在<br>在<br>庫<br>数</th>
+							</tr>
+						</thead>
+						<tbody class="custom-text--short" id="tool-shortage-tbody">
+							<tr th:each="tool : ${不足工具リスト}">
+								<td th:text="${tool.toolCategory}">分類</td>
+								<td th:text="${tool.maker}">メーカー</td>
+								<td th:text="${tool.toolName}">型番</td>
+								<td th:text="${tool.toolMaterial}">材質</td>
+								<td th:text="${tool.buyer}">商社</td>
+								<td th:text="${tool.rop}" class="text-end">発注点</td>
+								<td th:text="${tool.currentStock}" class="text-end" style="color: var(--color-red); font-weight: bold;">現在在庫数</td>
+							</tr>
+							<tr th:if="${#lists.isEmpty(不足工具リスト)}">
+								<td colspan="7" class="text-center">発注が必要な工具はありません</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</main>
+
+		<div th:fragment="content">
+			<div th:replace="~{modals/componentsModals :: loginModal}"></div>
+			<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+		</div>
+
+		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+		<script th:src="@{/js/Components.js}"></script>
+		<script th:src="@{/js/UserAuthentication.js}"></script>
+		<script th:src="@{/js/ToolShortageAlert.js}"></script>
+		</body>
+</html>

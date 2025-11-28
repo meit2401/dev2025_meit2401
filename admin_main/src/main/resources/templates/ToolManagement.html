@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns="http://www.thymeleaf.org">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>admin_main 工具管理画面</title>
+		
+		<!-- Bootstrap 標準CSS -->
+		<link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+		<link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet">
+	
+		<!-- Bootstrap カスタムCSS -->
+		<link th:href="@{/css/custom.css}" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	</head>
+	<body>
+		<!-- 共通メニュー呼び出し -->
+		<div th:replace="~{components/Components :: menu('tool')}"></div>
+
+		<main class="container my-5">
+			<!-- 絞り込み条件表示 -->
+			<div class="d-flex justify-content-center align-items-center bg-light" style="height: 200px;">
+				<div class="container-fluid">
+					<div class="row gx-5">
+						<div class="col-6">
+							<div class="custom-text d-flex justify-content-end">
+								分類：<span th:text="${categoryFilter != null and categoryFilter != '' ? categoryFilter : 'すべて'}"></span>
+							</div>
+						</div>
+						<div class="col-6">
+							<div class="custom-text d-flex">
+								メーカー：<span th:text="${makerFilter != null and makerFilter != '' ? makerFilter : 'すべて'}"></span>
+							</div>
+						</div>
+					</div>
+					<div class="row gx-5">
+						<div class="col-6">
+							<div class="custom-text d-flex justify-content-end">
+								材質：<span th:text="${materialFilter != null and materialFilter != '' ? materialFilter : 'すべて'}"></span>
+							</div>
+						</div>
+						<div class="col-6">
+							<div class="custom-text d-flex">
+								商社：<span th:text="${traderFilter != null and traderFilter != '' ? traderFilter : 'すべて'}"></span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="container my-4 d-flex justify-content-end align-items-center">
+				<!-- 型番入力欄 -->
+				<div class="input-group me-4" style="width: 40%;">
+					<input type="text" id="toolNameSearchInput" class="form-control custom-text--large js-normalize-hankaku" placeholder="型番...">
+				</div>
+				<!-- 絞り込みボタン-->
+				<button type="button" class="btn custom-btn-common" style="width: 200px" data-bs-toggle="modal" data-bs-target="#modelsfilteringModal">絞り込み</button>
+			</div>
+
+			<div class="container-fluid my-4">
+				<div class="d-flex justify-content-between align-items-center gap-4 w-100">
+					<!-- 基本工具登録ボタン -->
+					<button type="button" class="btn custom-btn-common col" data-bs-toggle="modal" data-bs-target="#modelsaddModal">新 規</button>
+					<!-- 基本工具削除ボタン -->
+					<button id="deleteButton" type="button" class="btn custom-btn-common col custom-btn-common--notselectable" data-bs-toggle="modal" data-bs-target="#modelsdelModal" disabled>削 除</button>
+					<!-- 基本工具編集ボタン -->
+					<button id="editButton" type="button" class="btn custom-btn-common col custom-btn-common--notselectable" data-bs-toggle="modal" data-bs-target="#modelseditModal" disabled>編 集</button>
+					<!-- 個別工具登録ボタン-->
+					<button id="individualToolAddButton" type="button" class="btn custom-btn-common custom-btn-common--notselectable" style="width: 200px" data-bs-toggle="modal" data-bs-target="#toolsaddModal" 
+						disabled>個別工具<br>登録</button>
+					<!-- 個別工具詳細ボタン -->
+					<button id="individualToolDetailButton" type="button" class="btn custom-btn-common custom-btn-common--notselectable" style="width: 200px" data-bs-toggle="modal" data-bs-target="#toolsdataModal" 
+						disabled>個別工具<br>詳細</button>
+					<!-- QRコード再印刷ボタン-->
+					<button type="button" class="btn custom-btn-common" style="width: 200px" data-bs-toggle="modal" data-bs-target="#printqrcodeModal">QRコード<br>再印刷</button>
+				</div>
+			</div>
+			
+			<!-- 基本工具詳細リスト -->
+			<div class="container my-4">
+				<div class="table-responsive" style="max-height: 1040px; overflow-y: auto;">
+					<table id="toolsTable" class="table table-bordered table-striped w-100" style="table-layout: fixed; width: 100%;">
+						<thead class="custom-list">
+							<tr>
+								<th class="text-center" style="width: 12%;">分 類</th>
+								<th class="text-center" style="width: 15%;">メ ー カ ー</th>
+								<th class="text-center" style="width: 35%;">型 番</th>
+								<th class="text-center" style="width: 12%;">材 質</th>
+								<th class="text-center" style="width: 12%;">商 社</th>
+								<th class="text-center">発<br>注<br>点</th>
+								<th class="text-center">現<br>在<br>在<br>庫<br>数</th>
+							</tr>
+						</thead>
+						<tbody class="custom-text--short">
+							<tr th:each="tool : ${toolList}"
+								th:data-tool-id="${tool.basicToolId}"
+								class="selectable-row">
+								<td th:text="${tool.toolCategory}"></td>
+								<td th:text="${tool.maker}"></td>
+								<td th:text="${tool.toolName}"></td>
+								<td th:text="${tool.toolMaterial}"></td>
+								<td th:text="${tool.buyer}"></td>
+								<td th:text="${tool.rop}"></td>
+								<td th:text="${tool.stc}"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<div th:replace="~{modals/ToolManagementModals :: modelsfilteringModal}"></div>
+			<div th:replace="~{modals/ToolManagementModals :: modelsaddModal}"></div>
+			<div th:replace="~{modals/ToolManagementModals :: modelsdelModal}"></div>
+			<div th:replace="~{modals/ToolManagementModals :: modelseditModal}"></div>
+			<div th:replace="~{modals/ToolManagementModals :: toolsaddModal}"></div>
+			<div th:replace="~{modals/ToolManagementModals :: toolsdataModal}"></div>
+			<div th:replace="~{modals/ToolManagementModals :: printqrcodeModal}"></div>
+			<div th:replace="~{modals/ToolManagementModals :: toolassignmentModal}"></div>
+			
+		</main>
+		
+		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+		<script th:src="@{/js/TepraPrint.js}"></script>
+		<script th:src="@{/js/QrCodePrinter.js}"></script>
+		<script th:src="@{/js/Components.js}"></script>
+		<script th:src="@{/js/ToolManagement.js}"></script>
+		
+		<script th:inline="javascript">
+			// 各格納場所の現在の使用数をJS変数に格納
+			const storageUsageCounts = /*[[${storageCounts}]]*/ {};
+			
+			// ページ読み込み時の選択中ID (nullの可能性あり)
+			const initialSelectedId = /*[[${selectedId}]]*/ null;
+			
+			// 印刷完了した工具ID (nullの可能性あり)
+			const printedToolId = /*[[${printedToolId}]]*/ null;
+		</script>		
+	</body>
+</html>

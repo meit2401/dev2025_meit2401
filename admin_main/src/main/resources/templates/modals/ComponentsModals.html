@@ -1,0 +1,133 @@
+<!-- ログインモーダル -->
+<div th:fragment="loginModal">
+	<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				
+				<!-- QRコードリーダー認証 -->
+				<!--
+				<div id="qrScanStep">
+					<div class="modal-header">
+						<h5 class="modal-title custom-text--large text-center w-100" id="loginModalLabel">QRコードを読み取ってください</h5>
+					</div>
+					<div class="modal-body text-center">
+						<img th:src="@{/images/qrcode_icon.png}" alt="QR Code Icon" style="width: 300px; height: 300px; margin-bottom: 20px;">
+						<div id="loginError" class="alert alert-danger" style="display:none;"></div>
+						<input type="text" id="authCodeInput" class="visually-hidden" autofocus>
+					</div>
+					<div class="modal-footer d-flex justify-content-center">
+						<button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
+					</div>
+				</div>
+				-->
+				
+				<!-- キーボード認証 -->
+				<div id="qrScanStep">
+					<div class="modal-header">
+						<h5 class="modal-title custom-text--large text-center w-100" id="loginModalLabel">ユーザーIDを入力してください</h5>
+					</div>
+					<div class="modal-body d-flex flex-column gap-3">
+						<div id="loginError" class="alert alert-danger" style="display:none;"></div>
+						
+						<div class="row align-items-center justify-content-center">
+							<label for="usernameInput" class="col-sm-3 col-form-label custom-text text-center">ユーザーID</label>
+							<div class="col-sm-6">
+								<input type="text" class="form-control custom-text js-normalize-hankaku" id="usernameInput" autofocus>
+								<input type="text" id="authCodeInput" class="visually-hidden js-normalize-hankaku">
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer d-flex justify-content-center gap-4">
+						<button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
+						<button type="button" id="nextToPasswordBtn" class="btn custom-btn-modal btn-primary" style="width: 25%">次へ</button>
+					</div>
+				</div>
+
+				<!-- パスワード認証 -->
+				<div id="passwordStep" style="display: none;">
+					<div>
+						<div class="modal-header">
+							<h5 class="modal-title custom-text--large text-center w-100">パスワードを入力してください</h5>
+						</div>
+						<div class="modal-body d-flex flex-column gap-3">
+							<div id="passwordError" class="alert alert-danger custom-text" style="display: none;">
+								パスワードが正しくありません。
+							</div>
+							<input type="hidden" id="username" name="username">
+							
+							<div class="row align-items-center justify-content-center">
+								<label for="password" class="col-sm-3 col-form-label custom-text text-center">パスワード</label>
+								<div class="col-sm-6">
+									<input type="password" class="form-control custom-text js-normalize-hankaku" id="password" name="password" required>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer d-flex justify-content-center gap-4">
+							<button type="button" id="backToQrScanBtn" class="btn custom-btn-modal btn-info" style="width: 25%">戻る</button>
+							<button type="button" id="loginSubmitBtn" class="btn custom-btn-modal btn-primary" style="width: 25%">ログイン</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- ログアウトモーダル -->
+<div th:fragment="logoutModal">
+	<div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title custom-text--large text-center w-100">本当にログアウトしますか？</h1>
+				</div>
+				<form action="/logout" method="post">
+					<div class="modal-footer d-flex justify-content-center gap-4">
+						<button type="submit" class="btn custom-btn-modal btn-danger" style="width: 25%">ログアウト</button>
+						<button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+	
+<!-- 本体設定モーダル -->
+<div th:fragment="settingModal">
+	<div class="modal fade" id="settingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+		<div class="modal-dialog modal-dialog-centered custom-modal">
+			<div class="modal-content">
+				<form id="passwordUpdateForm">
+					<div class="modal-header">
+						<h1 class="modal-title custom-text--large text-center w-100">パスワード設定</h1>
+					</div>
+					<div class="modal-body d-flex flex-column gap-3">
+						<div id="passwordUpdateSuccess" class="alert alert-success custom-text" style="display: none;">
+							パスワードが更新されました。
+						</div>
+						<div id="passwordUpdateError" class="alert alert-danger custom-text" style="display: none;">
+							エラーが発生しました。
+						</div>
+						
+						<div class="row align-items-center justify-content-center">
+							<label for="newPassword" class="col-sm-4 col-form-label custom-text text-center js-normalize-hankaku">新規パスワード</label>
+							<div class="col-sm-7">
+								<input type="password" class="form-control custom-text" id="newPassword" name="newPassword" required>
+							</div>
+						</div>
+						<div class="row align-items-center justify-content-center">
+							<label for="confirmPassword" class="col-sm-4 col-form-label custom-text text-center js-normalize-hankaku">確認</label>
+							<div class="col-sm-7">
+								<input type="password" class="form-control custom-text" id="confirmPassword" name="confirmPassword" required>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer d-flex justify-content-center gap-4">
+						<button type="submit" class="btn custom-btn-modal btn-primary" style="width: 25%">更 新</button>
+						<button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>

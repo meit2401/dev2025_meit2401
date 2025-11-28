@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns="http://www.thymeleaf.org">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>admin_main 工具分析画面</title>
+	
+		<!-- Bootstrap 標準CSS -->
+		<link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+		<link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet">
+	
+		<!-- Bootstrap カスタムCSS -->
+		<link th:href="@{/css/custom.css}" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	</head>
+	
+	<body>
+		<!-- 共通メニュー呼び出し -->
+		<div th:replace="~{components/Components :: menu('stock')}"></div>
+	
+		<main class="container my-5">
+			<!-- 工具分析 絞り込み条件表示 -->
+			<div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+				<div class="container-fluid bg-light">
+					<div class="row gy-2">
+						<div class="col-6 mx-auto">
+							<div class="custom-text d-flex justify-content-center">期間：YY/MM ～ YY/MM</div>
+						</div>
+					</div>
+					<div class="row gx-5">
+						<div class="col-6">
+							<div class="custom-text d-flex justify-content-end">分類：○○○○</div>
+						</div>
+						<div class="col-6">
+							<div class="custom-text d-flex justify-content-start">メーカー：○○○○</div>
+						</div>
+					</div>
+					<div class="row gx-5">
+						<div class="col-6">
+							<div class="custom-text d-flex justify-content-end">ライン名：○○○○</div>
+						</div>
+						<div class="col-6">
+							<div class="custom-text d-flex justify-content-start">商社：○○○○</div>
+						</div>
+					</div>
+				</div>
+			</div>
+	
+			<!-- CSV出力・絞り込みボタン -->
+			<div class="container my-4">
+				<div class="d-flex justify-content-end align-items-center">
+					<!-- CSV出力ボタン -->
+					<button type="button" class="btn custom-btn-common" style="width: 200px" data-bs-toggle="modal" data-bs-target="#makecsvModal">CSV出力</button>
+					<!-- 絞り込みボタン -->
+					<button type="button" class="btn custom-btn-common ms-3" style="width: 200px" data-bs-toggle="modal" data-bs-target="#stockfilteringModal">絞り込み</button>
+				</div>
+			</div>
+	
+			<!-- 工具分析リスト表示 -->
+			<div class="container my-4">
+				<div class="table-responsive" style="max-height: 580px; overflow-y: auto;">
+					<table class="table table-bordered table-striped w-100" style="table-layout: fixed;">
+						<thead class="custom-list">
+							<tr>
+								<th class="text-center">分 類</th>
+								<th class="text-center">メ ー カ ー</th>
+								<th class="text-center">型 番</th>
+								<th class="text-center">材 質</th>
+								<th class="text-center" style="width: 25%;">取 り 出 し 個 数</th>
+								<th class="text-center" style="width: 25%;">期 間 末 在 庫 数</th>
+							</tr>
+						</thead>
+						<tbody class="custom-text--short">
+							<tr><td>000</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>001</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>002</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>003</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>004</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>005</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>006</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>007</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>008</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>009</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>00a</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>00b</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>00c</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>00d</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>00e</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>00f</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>010</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>011</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>012</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>013</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>014</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>015</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>016</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>017</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>018</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>019</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>01a</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>01b</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>01c</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+							<tr><td>01d</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+	
+			<div class="d-flex justify-content-center rounded custom-image-wrapper">
+				<img th:src="@{/images/photo.png}" class="img-fluid rounded" alt="商品写真">
+			</div>
+	
+			<div th:replace="~{modals/StockAnalysisModals :: makecsvModal}"></div>
+			<div th:replace="~{modals/StockAnalysisModals :: stockfilteringModal}"></div>
+		</main>
+	
+		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+		<script th:src="@{/js/Components.js}"></script>
+	</body>
+</html>
