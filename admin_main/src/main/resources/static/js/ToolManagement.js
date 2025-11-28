@@ -872,4 +872,84 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 	// 再印刷処理ここまで
 
+	// 7. 新規登録モーダル UI制御 (新規追加)
+	const storageCountSelect = document.getElementById('storageCount');
+	const assignStorageBtn = document.getElementById('assignStorageBtn'); // HTMLでID付与が必要
+	const storageLocationInput = document.getElementById('storageLocation');
+	const addToolForm = document.querySelector('#modelsaddModal form'); // フォームの取得
+
+	if (storageCountSelect && assignStorageBtn && storageLocationInput) {
+		
+		const updateStorageUI = () => {
+			const val = storageCountSelect.value;
+			if (val === '5') {
+				// 装置外保管場所: ボタン無効化、入力可
+				assignStorageBtn.disabled = true;
+				
+				// [変更] パッシブな見た目へ (OKボタンの非選択状態と同じクラスを適用)
+				assignStorageBtn.classList.remove('custom-btn-modal');
+				assignStorageBtn.classList.add('custom-btn-common');
+				assignStorageBtn.classList.add('custom-btn-common--notselectable');
+				
+				// [追加] コンテナアドレスが入っている場合はリセットする
+				// A/B/C + 数字2桁 (カンマ区切り含む) の形式であればクリア
+				// (例: "A11", "B02,A89" など)
+				const currentVal = storageLocationInput.value;
+				if (/^([ABC]\d{2})(,[ABC]\d{2})*$/.test(currentVal)) {
+					storageLocationInput.value = "";
+				}
+				
+				storageLocationInput.readOnly = false;
+				storageLocationInput.placeholder = "保管場所を入力…";
+				
+			} else {
+				// コンテナ (1-5): ボタン有効化、入力不可(readonly)
+				assignStorageBtn.disabled = false;
+				
+				// [変更] 元のクラスに戻す
+				assignStorageBtn.classList.remove('custom-btn-common');
+				assignStorageBtn.classList.remove('custom-btn-common--notselectable');
+				assignStorageBtn.classList.add('custom-btn-modal');
+
+				storageLocationInput.readOnly = true;
+				storageLocationInput.placeholder = "";
+			}
+		};
+
+		// イベントリスナー追加
+		storageCountSelect.addEventListener('change', updateStorageUI);
+        
+        // モーダル表示時の初期化処理
+        const modelsAddModal = document.getElementById('modelsaddModal');
+        if (modelsAddModal) {
+            modelsAddModal.addEventListener('show.bs.modal', () => {
+                // 初期状態にリセット
+                assignStorageBtn.disabled = false;
+                assignStorageBtn.classList.remove('custom-btn-common');
+                assignStorageBtn.classList.remove('custom-btn-common--notselectable');
+                assignStorageBtn.classList.add('custom-btn-modal');
+                
+                storageLocationInput.readOnly = true;
+                storageLocationInput.placeholder = "";
+            });
+        }
+        
+        // [追加] フォーム送信時のバリデーション
+        if (addToolForm) {
+            addToolForm.addEventListener('submit', function(e) {
+                // 装置外保管場所が選択されている場合のみチェック
+                if (storageCountSelect.value === '5') {
+                    const locationVal = storageLocationInput.value.trim().toUpperCase(); // 大文字に変換して比較
+                    
+                    // AXX, BXX, CXX のパターンチェック (A, B, C に続いて数字2桁)
+                    // 正規表現: ^[ABC]\d{2}$
+                    if (/^[ABC]\d{2}$/.test(locationVal)) {
+                        e.preventDefault(); // 送信キャンセル
+                        alert("名称が装置内コンテナアドレスと重複しているため登録できません。");
+                    }
+                }
+            });
+        }
+	}
+	// 新規登録モーダル UI制御ここまで
 });

@@ -70,7 +70,6 @@
 				<form th:action="@{/tool/add}" method="post">
 					<div class="modal-body">
 						<div class="container mt-4">
-							<!-- 分類 -->
 							<div class="row mb-3 align-items-center justify-content-center">
 								<label for="toolCategory" class="col-sm-3 col-form-label fs-2 custom-text text-center">分類</label>
 								<div class="col-sm-6">
@@ -84,55 +83,50 @@
 									</select>
 								</div>
 							</div>
-							<!-- メーカー -->
 							<div class="row mb-3 align-items-center justify-content-center">
 								<label for="maker" class="col-sm-3 col-form-label fs-2 custom-text text-center">メーカー</label>
 								<div class="col-sm-6">
 									<input type="text" name="maker" id="maker" class="form-control custom-text js-normalize-hankaku" required>
 								</div>
 							</div>
-							<!-- 型番 -->
 							<div class="row mb-3 align-items-center justify-content-center">
 								<label for="toolName" class="col-sm-3 col-form-label fs-2 custom-text text-center">型番</label>
 								<div class="col-sm-6">
 									<input type="text" name="toolName" id="toolName" class="form-control custom-text js-normalize-hankaku" required>
 								</div>
 							</div>
-							<!-- 材質 -->
 							<div class="row mb-3 align-items-center justify-content-center">
 								<label for="toolMaterial" class="col-sm-3 col-form-label fs-2 custom-text text-center">材質</label>
 								<div class="col-sm-6">
 									<input type="text" name="toolMaterial" id="toolMaterial" class="form-control custom-text js-normalize-hankaku" required>
 								</div>
 							</div>
-							<!-- 商社 -->
 							<div class="row mb-3 align-items-center justify-content-center">
 								<label for="buyer" class="col-sm-3 col-form-label fs-2 custom-text text-center">商社</label>
 								<div class="col-sm-6">
 									<input type="text" name="buyer" id="buyer" class="form-control custom-text js-normalize-hankaku" required>
 								</div>
 							</div>
-							<!-- 発注点 -->
 							<div class="row mb-3 align-items-center justify-content-center">
 								<label for="rop" class="col-sm-3 col-form-label fs-2 custom-text text-center">発注点</label>
 								<div class="col-sm-6">
 									<input type="number" name="rop" id="rop" value="0" min="0" class="form-control custom-text js-normalize-hankaku" required>
 								</div>
 							</div>
-							<!-- 格納数 -->
 							<div class="row mb-3 align-items-center justify-content-center">
 								<label for="storageCount" class="col-sm-3 col-form-label fs-2 custom-text text-center">格納コンテナ数</label>
 								<div class="col-sm-6">
 									<div class="input-group">
 										<select name="storageCount" id="storageCount" class="form-select custom-text" required>
 											<option value="" disabled selected>選択してください</option>
-											<option value="1">1</option>
-											<option value="2">2</option>
-											<option value="3">3</option>
-											<option value="4">4</option>
-											<option value="5">5</option>
+											<option value="0">1</option>
+											<option value="1">2</option>
+											<option value="2">3</option>
+											<option value="3">4</option>
+											<option value="4">5</option>
+											<option value="5">装置外</option>
 										</select>
-										<button type="button" class="btn custom-btn-modal" style="height: 1%" data-bs-toggle="modal" data-bs-target="#toolassignmentModal">割当</button>
+										<button type="button" id="assignStorageBtn" class="btn custom-btn-modal" style="height: 1%" data-bs-toggle="modal" data-bs-target="#toolassignmentModal">割当</button>
 									</div>
 								</div>
 							</div>

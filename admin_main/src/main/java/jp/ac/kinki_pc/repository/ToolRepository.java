@@ -28,7 +28,8 @@ public interface ToolRepository extends JpaRepository<Tool, Integer>, JpaSpecifi
 			b.tool_category,
 			b.maker,
 			b.tool_material,
-			b.buyer
+			b.buyer,
+			is_frozen
 		FROM
 			mst_tool b
 		WHERE
