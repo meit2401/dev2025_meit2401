@@ -319,3 +319,24 @@ document.addEventListener("DOMContentLoaded", function () {
 	updateButtonStates();
 	adjustTableRows(16);
 });
+
+// モーダル閉鎖時のフォームリセット処理
+document.addEventListener('DOMContentLoaded', () => {
+	
+	// リセット対象となるモーダルのIDを指定
+	// ※実際のHTML上のIDと異なる場合は適宜修正してください
+	const modalsToReset = ['useraddModal']; 
+
+	modalsToReset.forEach(modalId => {
+		const modalEl = document.getElementById(modalId);
+		if (modalEl) {
+			modalEl.addEventListener('hidden.bs.modal', () => {
+				// モーダル内のフォームを探してリセット
+				const form = modalEl.querySelector('form');
+				if (form) {
+					form.reset();
+				}
+			});
+		}
+	});
+});

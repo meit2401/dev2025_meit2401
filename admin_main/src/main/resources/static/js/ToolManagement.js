@@ -952,4 +952,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 	}
 	// 新規登録モーダル UI制御ここまで
+
+	// 8. モーダル閉鎖時のフォームリセット処理 (新規追加)
+	// 対象となるモーダルのIDを指定
+	const modalsToReset = ['modelsaddModal', 'modelsfilteringModal']; 
+
+	modalsToReset.forEach(modalId => {
+		const modalEl = document.getElementById(modalId);
+		if (modalEl) {
+			modalEl.addEventListener('hidden.bs.modal', () => {
+				// モーダル内のフォームを探してリセット
+				const form = modalEl.querySelector('form');
+				if (form) {
+					form.reset();
+				}
+				// ※ ボタンの活性/非活性などの見た目のリセットは、
+				//    各モーダルの show.bs.modal イベント側で処理されています。
+			});
+		}
+	});
 });
