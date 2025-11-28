@@ -54,6 +54,9 @@ public class ToolManagementService {
 		Specification<Tool> spec = (root, query, builder) -> {
 			List<Predicate> predicates = new ArrayList<>();
 			
+			// isFrozenが0(false)のデータのみを検索対象とする
+			predicates.add(builder.equal(root.get("isFrozen"), false));
+
 			if (StringUtils.hasText(category)) {
 				predicates.add(builder.equal(root.get("toolCategory"), category));
 			}

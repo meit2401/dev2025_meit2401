@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 public class AddressDto {
 	
 	private String displayAddress;
-	private int controlAddress;
+	private String controlAddress;
 }
