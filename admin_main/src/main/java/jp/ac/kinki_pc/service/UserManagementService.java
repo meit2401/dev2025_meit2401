@@ -23,7 +23,7 @@ import jp.ac.kinki_pc.repository.UserRepository;
 public class UserManagementService {
 
 	@Autowired
-	private UserRepository userRepository; // [修正] JPA化されたリポジトリがインジェクションされる
+	private UserRepository userRepository;
 
 	// ロガーを取得して、コンソールに出力できるようにする
 	private static final Logger logger = LoggerFactory.getLogger(UserManagementService.class);
@@ -40,10 +40,10 @@ public class UserManagementService {
 
 	/**
 	 * 全ユーザーのリストを取得し、DTOに変換して返す
-	 * (変更不要)
+	 * [修正] 凍結されていないユーザーのみを取得するように変更
 	 */
 	public List<UserDto> findAllUsers() {
-		return userRepository.findAll().stream()
+		return userRepository.findByIsFrozenFalse().stream()
 			.map(this::convertToDto)
 			.collect(Collectors.toList());
 	}
@@ -70,8 +70,8 @@ public class UserManagementService {
 	}
 	
 	/**
-	 * 指定されたユーザーIDのユーザーを削除する
-	 * (変更不要)
+	 * 指定されたユーザーIDのユーザーを削除(論理削除/凍結)する
+	 * [修正] 物理削除から論理削除(isFrozen=true)に変更
 	 */
 	public void deleteUser(Integer userId) {
 		// Administrator(userId: 0)は削除させない
@@ -79,7 +79,17 @@ public class UserManagementService {
 			logger.warn("Administratorアカウント(userId: 0)の削除が試みられましたが、処理は拒否されました。");
 			return;
 		}
-		userRepository.deleteById(userId);
+		
+		// 論理削除の実装: isFrozenフラグを立てて更新する
+		Optional<User> userOptional = userRepository.findById(userId);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			user.setIsFrozen(true); // 凍結(削除扱い)
+			userRepository.save(user);
+			logger.info("ユーザーを論理削除(凍結)しました。 UserID: {}", userId);
+		} else {
+			logger.warn("削除対象のユーザーが見つかりません。 UserID: {}", userId);
+		}
 	}
 	
 	/**
@@ -101,6 +111,7 @@ public class UserManagementService {
 			
 			// 2. DTOから受け取った情報で、変更するフィールドのみを更新します
 			//	u_datetime は元の値を維持します
+			// isFrozen はここでは変更しないため、元の値(論理削除されていない状態)が維持されます
 			userToUpdate.setUserName(editedUserDto.getUserName());
 			// setPerOutを削除
 			userToUpdate.setPerAdd(editedUserDto.getPerAdd() != null ? editedUserDto.getPerAdd() : 0);
@@ -114,23 +125,22 @@ public class UserManagementService {
 			userToUpdate.setPerSetting(editedUserDto.getPerSetting() != null ? editedUserDto.getPerSetting() : 0);
 
 			// 3. 更新した情報でデータベースを更新します
-			// [修正] JpaRepository の規約に従い、save() を使用する
 			userRepository.save(userToUpdate);
 			
 			logger.info("ユーザー情報を更新しました。 UserID: {}", editedUserDto.getUserId());
 			
 		} else {
 			// 更新対象のユーザーが見つかったなかった場合の処理
-			logger.warn("更新対象のユーザーが見つかりません。 UserID: {}", editedUserDto.getUserId()); // 修正: 見つかったなかった -> 見つかりません
+			logger.warn("更新対象のユーザーが見つかりません。 UserID: {}", editedUserDto.getUserId());
 		}
 	}
 	
 	/**
 	 * ユーザー名を部分一致で検索する
-	 * (変更不要)
+	 * [修正] 凍結されていないユーザーのみを検索対象とする
 	 */
 	public List<UserDto> findUsersByUserName(String userName) {
-		return userRepository.findByUserNameContaining(userName).stream()
+		return userRepository.findByUserNameContainingAndIsFrozenFalse(userName).stream()
 			.map(this::convertToDto)
 			.collect(Collectors.toList());
 	}
@@ -169,7 +179,7 @@ public class UserManagementService {
 
 	/**
 	 * UserDto を User (Entity) に変換する
-	 * (変更不要)
+	 * [修正] Userエンティティのコンストラクタ変更に対応し、isFrozenにfalse(0)を設定
 	 */
 	private User convertToEntity(UserDto userDto) {
 		return new User(
@@ -185,7 +195,8 @@ public class UserManagementService {
 			userDto.getPerAnalysis() != null ? userDto.getPerAnalysis() : 0,
 			userDto.getPerHistory() != null ? userDto.getPerHistory() : 0,
 			userDto.getPerDb() != null ? userDto.getPerDb() : 0,
-			userDto.getPerSetting() != null ? userDto.getPerSetting() : 0
+			userDto.getPerSetting() != null ? userDto.getPerSetting() : 0,
+			false // isFrozen: 新規作成時やDTOからの変換時はデフォルトでfalse(有効)とする
 		);
 	}
 	
@@ -205,7 +216,6 @@ public class UserManagementService {
 			userToUpdate.setUserPrintTime(newDatetime);
 			
 			// DBを更新
-			// [修正] JpaRepository の規約に従い、save() を使用する
 			userRepository.save(userToUpdate);
 			
 			// ログ出力のフォーマットを変更します
