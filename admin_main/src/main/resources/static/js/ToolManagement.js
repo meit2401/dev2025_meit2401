@@ -840,7 +840,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						throw new Error('IDの抽出に失敗');
 					}
 				} catch (err) {
-	console.error("QRコード解析エラー:", err);
+					console.error("QRコード解析エラー:", err);
 					alert('QRコードの形式が正しくありません。');
 					qrScanInput.value = '';
 					qrScanInput.focus();
@@ -882,7 +882,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		
 		const updateStorageUI = () => {
 			const val = storageCountSelect.value;
-			if (val === '5') {
+			if (val === '6') {
 				// 装置外保管場所: ボタン無効化、入力可
 				assignStorageBtn.disabled = true;
 				
