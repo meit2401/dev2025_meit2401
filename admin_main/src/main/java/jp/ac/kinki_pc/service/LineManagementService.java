@@ -146,7 +146,8 @@ public class LineManagementService {
 	 * @return 工具DTOのリスト
 	 */
 	public List<ToolDto> findFilteredTools(String category, String maker, String toolName, String material) { // 戻り値を List<ToolDto> に変更
-		StringBuilder sql = new StringBuilder("SELECT * FROM mst_tool WHERE 1=1");
+		// [修正] is_frozen = 0 (有効) のレコードのみ抽出するように変更
+		StringBuilder sql = new StringBuilder("SELECT * FROM mst_tool WHERE is_frozen = 0");
 		List<Object> params = new java.util.ArrayList<>();
 
 		if (category != null && !category.isEmpty()) {
@@ -179,7 +180,8 @@ public class LineManagementService {
 					rs.getString("tool_material"),
 					rs.getInt("stc"),
 					rs.getInt("rop"),
-					rs.getString("buyer")
+					rs.getString("buyer"),
+					rs.getBoolean("is_frozen") // [修正] isFrozenを追加
 				);
 			}
 		};
@@ -606,7 +608,8 @@ public class LineManagementService {
 					rs.getString("tool_material"),
 					rs.getInt("stc"),
 					rs.getInt("rop"),
-					rs.getString("buyer")
+					rs.getString("buyer"),
+					rs.getBoolean("is_frozen") // [修正] isFrozenを追加
 				);
 			}
 		};

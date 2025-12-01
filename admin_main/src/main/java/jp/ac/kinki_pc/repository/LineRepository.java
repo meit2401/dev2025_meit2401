@@ -1,5 +1,6 @@
 package jp.ac.kinki_pc.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,4 +22,10 @@ public interface LineRepository extends JpaRepository<Line, Integer> {
 	 * @return 見つかったライン情報 (Optional)
 	 */
 	Optional<Line> findByLineName(String lineName);
+
+	/**
+	 * 凍結されていない（有効な）ラインのリストを検索します。
+	 * @return isFrozenがfalseのラインリスト
+	 */
+	List<Line> findByIsFrozenFalse();
 }
