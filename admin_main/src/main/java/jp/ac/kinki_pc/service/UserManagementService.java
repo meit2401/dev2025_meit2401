@@ -1,5 +1,3 @@
-// src/main/java/jp/ac/kinki_pc/service/UserManagementService.java
-
 package jp.ac.kinki_pc.service;
 
 import java.time.LocalDateTime;
@@ -48,9 +46,22 @@ public class UserManagementService {
 			.collect(Collectors.toList());
 	}
 
+	public List<UserDto> findUsersByUserName(String userName) {
+		return userRepository.findByUserNameContainingAndIsFrozenFalse(userName).stream()
+			.map(this::convertToDto)
+			.collect(Collectors.toList());
+	}
+
+	/**
+	 * ユーザーIDでユーザーエンティティを検索する
+	 * (変更不要)
+	 */
+	public Optional<User> findUserEntityById(Integer userId) {
+		return userRepository.findById(userId);
+	}
+
 	/**
 	 * 新規ユーザーを登録する
-	 * (変更不要)
 	 */
 	public UserDto addUser(UserDto newUserDto) {
 		User userToSave = convertToEntity(newUserDto);
@@ -63,17 +74,13 @@ public class UserManagementService {
 		// DBに保存し、自動採番されたIDを含むUserオブジェクトを受け取る
 		User savedUser = userRepository.save(userToSave);
 		
-		// ログ出力のフォーマットを変更します
-		logger.info("【新規ユーザー登録】ユーザーが登録されました。 UserID: {}, UserUpdated: {}", savedUser.getUserId(), savedUser.getUserPrintTime().format(QR_LOG_FORMATTER));
-		
 		return convertToDto(savedUser); // DTOに変換して返す
 	}
 	
 	/**
 	 * 指定されたユーザーIDのユーザーを削除(論理削除/凍結)する
-	 * [修正] 物理削除から論理削除(isFrozen=true)に変更
 	 */
-	public void deleteUser(Integer userId) {
+	public void disableUser(Integer userId) {
 		// Administrator(userId: 0)は削除させない
 		if (Integer.valueOf(0).equals(userId)) {
 			logger.warn("Administratorアカウント(userId: 0)の削除が試みられましたが、処理は拒否されました。");
@@ -86,7 +93,6 @@ public class UserManagementService {
 			User user = userOptional.get();
 			user.setIsFrozen(true); // 凍結(削除扱い)
 			userRepository.save(user);
-			logger.info("ユーザーを論理削除(凍結)しました。 UserID: {}", userId);
 		} else {
 			logger.warn("削除対象のユーザーが見つかりません。 UserID: {}", userId);
 		}
@@ -94,7 +100,6 @@ public class UserManagementService {
 	
 	/**
 	 * 既存のユーザー情報を更新する
-	 * [修正] repository.update() を repository.save() に変更
 	 */
 	public void updateUser(UserDto editedUserDto) {
 		// Administrator(userId: 0)は編集させない
@@ -127,30 +132,10 @@ public class UserManagementService {
 			// 3. 更新した情報でデータベースを更新します
 			userRepository.save(userToUpdate);
 			
-			logger.info("ユーザー情報を更新しました。 UserID: {}", editedUserDto.getUserId());
-			
 		} else {
 			// 更新対象のユーザーが見つかったなかった場合の処理
 			logger.warn("更新対象のユーザーが見つかりません。 UserID: {}", editedUserDto.getUserId());
 		}
-	}
-	
-	/**
-	 * ユーザー名を部分一致で検索する
-	 * [修正] 凍結されていないユーザーのみを検索対象とする
-	 */
-	public List<UserDto> findUsersByUserName(String userName) {
-		return userRepository.findByUserNameContainingAndIsFrozenFalse(userName).stream()
-			.map(this::convertToDto)
-			.collect(Collectors.toList());
-	}
-
-	/**
-	 * ユーザーIDでユーザーエンティティを検索する
-	 * (変更不要)
-	 */
-	public Optional<User> findUserEntityById(Integer userId) {
-		return userRepository.findById(userId);
 	}
 
 	/**
@@ -202,7 +187,6 @@ public class UserManagementService {
 	
 	/**
 	 * ユーザーのQRコード情報（タイムスタンプ）を更新する
-	 * [修正] repository.update() を repository.save() に変更
 	 */
 	public UserDto updateUserTimestamp(Integer userId) {
 		// Administrator(userId: 0)の更新を妨げていたifブロックを削除します
@@ -218,8 +202,6 @@ public class UserManagementService {
 			// DBを更新
 			userRepository.save(userToUpdate);
 			
-			// ログ出力のフォーマットを変更します
-			logger.info("ユーザーのタイムスタンプを更新しました。 UserID: {}, New UserUpdated: {}", userId, newDatetime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
 			return convertToDto(userToUpdate); // DTOに変換して返す
 			
 		} else {
