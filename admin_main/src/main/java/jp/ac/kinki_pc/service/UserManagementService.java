@@ -23,22 +23,17 @@ public class UserManagementService {
 	@Autowired
 	private UserRepository userRepository;
 
-	// ロガーを取得して、コンソールに出力できるようにする
 	private static final Logger logger = LoggerFactory.getLogger(UserManagementService.class);
 
-	// 画面表示用のフォーマッタ(可読性を重視)
 	private static final DateTimeFormatter DTO_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	
-	// QRコードやログ出力用のフォーマッタ
 	private static final DateTimeFormatter QR_LOG_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 	
-	// 認証コード検証用のフォーマッタ
 	private static final DateTimeFormatter AUTH_CODE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
-
 	/**
-	 * 全ユーザーのリストを取得し、DTOに変換して返す
-	 * [修正] 凍結されていないユーザーのみを取得するように変更
+	 * 凍結されていない全ユーザーのリストを取得する。
+	 * @return ユーザーDTOのリスト
 	 */
 	public List<UserDto> findAllUsers() {
 		return userRepository.findByIsFrozenFalse().stream()
@@ -46,6 +41,11 @@ public class UserManagementService {
 			.collect(Collectors.toList());
 	}
 
+	/**
+	 * ユーザー名を部分一致で検索する。凍結されたユーザーは対象外。
+	 * @param userName 検索するユーザー名
+	 * @return 検索結果のユーザーDTOリスト
+	 */
 	public List<UserDto> findUsersByUserName(String userName) {
 		return userRepository.findByUserNameContainingAndIsFrozenFalse(userName).stream()
 			.map(this::convertToDto)
@@ -53,45 +53,46 @@ public class UserManagementService {
 	}
 
 	/**
-	 * ユーザーIDでユーザーエンティティを検索する
-	 * (変更不要)
+	 * ユーザーIDでユーザーエンティティを検索する。
+	 * @param userId 検索するユーザーID
+	 * @return ユーザーエンティティを含むOptional
 	 */
 	public Optional<User> findUserEntityById(Integer userId) {
 		return userRepository.findById(userId);
 	}
 
 	/**
-	 * 新規ユーザーを登録する
+	 * 新規ユーザーを登録する。
+	 * @param newUserDto 登録するユーザー情報のDTO
+	 * @return 登録されたユーザー情報のDTO
 	 */
 	public UserDto addUser(UserDto newUserDto) {
 		User userToSave = convertToEntity(newUserDto);
-		userToSave.setUserId(null); // IDはDBで自動採番するためnullをセット
+		userToSave.setUserId(null); 
 
-		// user_updatedとしてタイムスタンプ(LocalDateTime)を生成
 		LocalDateTime uDatetime = LocalDateTime.now();
 		userToSave.setUserPrintTime(uDatetime);
 
-		// DBに保存し、自動採番されたIDを含むUserオブジェクトを受け取る
 		User savedUser = userRepository.save(userToSave);
 		
-		return convertToDto(savedUser); // DTOに変換して返す
+		return convertToDto(savedUser); 
 	}
 	
 	/**
-	 * 指定されたユーザーIDのユーザーを削除(論理削除/凍結)する
+	 * 指定されたユーザーIDのユーザーを論理削除する。
+	 * Administratorアカウントは削除できない。
+	 * @param userId 削除するユーザーID
 	 */
 	public void disableUser(Integer userId) {
-		// Administrator(userId: 0)は削除させない
 		if (Integer.valueOf(0).equals(userId)) {
 			logger.warn("Administratorアカウント(userId: 0)の削除が試みられましたが、処理は拒否されました。");
 			return;
 		}
 		
-		// 論理削除の実装: isFrozenフラグを立てて更新する
 		Optional<User> userOptional = userRepository.findById(userId);
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
-			user.setIsFrozen(true); // 凍結(削除扱い)
+			user.setIsFrozen(true); 
 			userRepository.save(user);
 		} else {
 			logger.warn("削除対象のユーザーが見つかりません。 UserID: {}", userId);
@@ -99,26 +100,22 @@ public class UserManagementService {
 	}
 	
 	/**
-	 * 既存のユーザー情報を更新する
+	 * 既存のユーザー情報を更新する。
+	 * Administratorアカウントは編集できない。
+	 * @param editedUserDto 編集されたユーザー情報のDTO
 	 */
 	public void updateUser(UserDto editedUserDto) {
-		// Administrator(userId: 0)は編集させない
 		if (Integer.valueOf(0).equals(editedUserDto.getUserId())) {
 			logger.warn("Administratorアカウント(userId: 0)の編集が試みられましたが、処理は拒否されました。");
 			return;
 		}
 
-		// 1. まず、データベースから現在のユーザー情報を取得します
 		Optional<User> currentUserOptional = userRepository.findById(editedUserDto.getUserId());
 		
 		if (currentUserOptional.isPresent()) {
 			User userToUpdate = currentUserOptional.get();
 			
-			// 2. DTOから受け取った情報で、変更するフィールドのみを更新します
-			//	u_datetime は元の値を維持します
-			// isFrozen はここでは変更しないため、元の値(論理削除されていない状態)が維持されます
 			userToUpdate.setUserName(editedUserDto.getUserName());
-			// setPerOutを削除
 			userToUpdate.setPerAdd(editedUserDto.getPerAdd() != null ? editedUserDto.getPerAdd() : 0);
 			userToUpdate.setPerInventory(editedUserDto.getPerInventory() != null ? editedUserDto.getPerInventory() : 0);
 			userToUpdate.setPerUser(editedUserDto.getPerUser() != null ? editedUserDto.getPerUser() : 0);
@@ -129,26 +126,23 @@ public class UserManagementService {
 			userToUpdate.setPerDb(editedUserDto.getPerDb() != null ? editedUserDto.getPerDb() : 0);
 			userToUpdate.setPerSetting(editedUserDto.getPerSetting() != null ? editedUserDto.getPerSetting() : 0);
 
-			// 3. 更新した情報でデータベースを更新します
 			userRepository.save(userToUpdate);
 			
 		} else {
-			// 更新対象のユーザーが見つかったなかった場合の処理
 			logger.warn("更新対象のユーザーが見つかりません。 UserID: {}", editedUserDto.getUserId());
 		}
 	}
 
 	/**
-	 * User (Entity) を UserDto に変換する
-	 * (変更不要)
+	 * UserエンティティをUserDtoに変換する。
+	 * @param user 変換元のUserエンティティ
+	 * @return 変換後のUserDto
 	 */
 	public UserDto convertToDto(User user) {
-		// LocalDateTimeを指定のフォーマット(yyyy-MM-dd HH:mm:ss)の文字列に変換します
 		String formattedTimestamp = (user.getUserPrintTime() != null) ? user.getUserPrintTime().format(DTO_FORMATTER) : null;
 		return new UserDto(
 			user.getUserId(),
 			user.getUserName(),
-			// フォーマットした文字列をDTOにセットします
 			formattedTimestamp,
 			user.getPerAdd(),
 			user.getPerInventory(),
@@ -163,14 +157,14 @@ public class UserManagementService {
 	}
 
 	/**
-	 * UserDto を User (Entity) に変換する
-	 * [修正] Userエンティティのコンストラクタ変更に対応し、isFrozenにfalse(0)を設定
+	 * UserDtoをUserエンティティに変換する。
+	 * @param userDto 変換元のUserDto
+	 * @return 変換後のUserエンティティ
 	 */
 	private User convertToEntity(UserDto userDto) {
 		return new User(
 			userDto.getUserId(),
 			userDto.getUserName(),
-			// userUpdatedはサーバー側で生成するため、DTOからは設定しません (nullを渡します)
 			null,
 			userDto.getPerAdd() != null ? userDto.getPerAdd() : 0,
 			userDto.getPerInventory() != null ? userDto.getPerInventory() : 0,
@@ -181,28 +175,26 @@ public class UserManagementService {
 			userDto.getPerHistory() != null ? userDto.getPerHistory() : 0,
 			userDto.getPerDb() != null ? userDto.getPerDb() : 0,
 			userDto.getPerSetting() != null ? userDto.getPerSetting() : 0,
-			false // isFrozen: 新規作成時やDTOからの変換時はデフォルトでfalse(有効)とする
+			false 
 		);
 	}
 	
 	/**
-	 * ユーザーのQRコード情報（タイムスタンプ）を更新する
+	 * ユーザーのQRコード情報（タイムスタンプ）を更新する。
+	 * @param userId 更新するユーザーID
+	 * @return 更新後のユーザー情報のDTO、見つからない場合はnull
 	 */
 	public UserDto updateUserTimestamp(Integer userId) {
-		// Administrator(userId: 0)の更新を妨げていたifブロックを削除します
-
 		Optional<User> currentUserOptional = userRepository.findById(userId);
 		if (currentUserOptional.isPresent()) {
 			User userToUpdate = currentUserOptional.get();
 			
-			// 新しいタイムスタンプ(LocalDateTime)を生成
 			LocalDateTime newDatetime = LocalDateTime.now();
 			userToUpdate.setUserPrintTime(newDatetime);
 			
-			// DBを更新
 			userRepository.save(userToUpdate);
 			
-			return convertToDto(userToUpdate); // DTOに変換して返す
+			return convertToDto(userToUpdate); 
 			
 		} else {
 			logger.warn("タイムスタンプ更新対象のユーザーが見つかりません。 UserID: {}", userId);
@@ -211,8 +203,9 @@ public class UserManagementService {
 	}
 	
 	/**
-	 * QRコード印刷用のデータを取得する
-	 * (変更不要)
+	 * QRコード印刷用のデータを取得する。
+	 * @param userId データを取得するユーザーID
+	 * @return 表示テキストとQRコードデータを含むマップ、ユーザーが見つからない場合はnull
 	 */
 	public Map<String, String> getQrDataForUser(Integer userId) {
 		Optional<User> userOptional = userRepository.findById(userId);
@@ -232,19 +225,23 @@ public class UserManagementService {
 	}
 
 	/**
-	 * QRコード用のデータ文字列を生成する
-	 * (変更不要)
+	 * QRコード用のデータ文字列を生成する。
+	 * @param prefix プレフィックス
+	 * @param id ID
+	 * @param timestamp タイムスタンプ
+	 * @return フォーマットされたQRコードデータ文字列
 	 */
 	private String generateQrCodeData(String prefix, Integer id, LocalDateTime timestamp) {
 		String formattedId = String.format("%s%04d", prefix, id);
-		// QRコード用のフォーマッタ
 		String formattedTimestamp = (timestamp != null) ? timestamp.format(QR_LOG_FORMATTER) : "";
 		return formattedId + "-" + formattedTimestamp;
 	}
 	
 	/**
-	 * QRコード認証コードを検証する
-	 * (変更不要)
+	 * QRコード認証コードを検証する。
+	 * @param submittedCredential 提出された認証コード
+	 * @return 認証に成功した場合はユーザーIDを含むOptional、失敗した場合は空のOptional
+	 * @throws IllegalArgumentException 認証コードの形式が不正な場合
 	 */
 	public Optional<Integer> verifyAuthCode(String submittedCredential) throws IllegalArgumentException {
 		if (submittedCredential == null || submittedCredential.trim().isEmpty()) {
@@ -254,9 +251,7 @@ public class UserManagementService {
 		String usernameToProcess;
 		String timestampToProcess;
 
-		// '-'で分割してユーザーIDとタイムスタンプを取得
 		if (submittedCredential.contains("-")) {
-			// splitの第二引数に2を指定することで、分割数を最大2に制限します
 			String[] parts = submittedCredential.split("-", 2);
 			if (parts.length == 2) {
 				usernameToProcess = parts[0];
@@ -269,7 +264,6 @@ public class UserManagementService {
 		}
 
 		Integer userIdToFind;
-		// ユーザーIDのプレフィックス'U'を除去してIntegerに変換
 		if (usernameToProcess.startsWith("U")) {
 			try {
 				userIdToFind = Integer.parseInt(usernameToProcess.substring(1));
@@ -282,21 +276,16 @@ public class UserManagementService {
 
 		Optional<User> userOptional = userRepository.findById(userIdToFind);
 		if (userOptional.isEmpty()) {
-			// ユーザーが見つからない
 			return Optional.empty();
 		}
 
 		User user = userOptional.get();
-		// ユーザーの最終更新日時を"yyyyMMddHHmmss"形式にフォーマット
 		String storedTimestamp = user.getUserPrintTime().format(AUTH_CODE_FORMATTER);
 
-		// フォーマットした文字列とQRコードから読み取ったタイムスタンプ文字列を比較
 		if (!timestampToProcess.equals(storedTimestamp)) {
-			// タイムスタンプが一致しない
 			return Optional.empty();
 		}
 
-		// 認証成功
 		return Optional.of(user.getUserId());
 	}
 }
