@@ -1,5 +1,3 @@
-// src/main/java/jp/ac/kinki_pc/repository/UserRepository.java
-
 package jp.ac.kinki_pc.repository;
 
 import java.util.List;
@@ -14,7 +12,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 	
 	/**
 	 * ユーザー名を部分一致で検索する
-	 * (Spring Data JPA の命名規則により自動実装)
 	 */
 	List<User> findByUserNameContaining(String userName);
 	

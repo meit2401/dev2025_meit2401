@@ -25,11 +25,14 @@ public class UserManagementService {
 
 	private static final Logger logger = LoggerFactory.getLogger(UserManagementService.class);
 
+	// 日時フォーマット定義
 	private static final DateTimeFormatter DTO_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-	
-	private static final DateTimeFormatter QR_LOG_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-	
-	private static final DateTimeFormatter AUTH_CODE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+	private static final DateTimeFormatter QR_TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
+	// システム設定定数
+	private static final Integer ADMIN_USER_ID = 0;      // 管理者ID
+	private static final String USER_ID_PREFIX = "U";    // QRコード等のユーザーIDプレフィックス
+	private static final String QR_DATA_SEPARATOR = "-"; // QRコードデータの区切り文字
 
 	/**
 	 * 凍結されていない全ユーザーのリストを取得する。
@@ -84,8 +87,9 @@ public class UserManagementService {
 	 * @param userId 削除するユーザーID
 	 */
 	public void disableUser(Integer userId) {
-		if (Integer.valueOf(0).equals(userId)) {
-			logger.warn("Administratorアカウント(userId: 0)の削除が試みられましたが、処理は拒否されました。");
+
+		if (ADMIN_USER_ID.equals(userId)) {
+			logger.warn("Administratorアカウント(userId: {})の削除が試みられましたが、処理は拒否されました。", ADMIN_USER_ID);
 			return;
 		}
 		
@@ -105,8 +109,9 @@ public class UserManagementService {
 	 * @param editedUserDto 編集されたユーザー情報のDTO
 	 */
 	public void updateUser(UserDto editedUserDto) {
-		if (Integer.valueOf(0).equals(editedUserDto.getUserId())) {
-			logger.warn("Administratorアカウント(userId: 0)の編集が試みられましたが、処理は拒否されました。");
+
+		if (ADMIN_USER_ID.equals(editedUserDto.getUserId())) {
+			logger.warn("Administratorアカウント(userId: {})の編集が試みられましたが、処理は拒否されました。", ADMIN_USER_ID);
 			return;
 		}
 
@@ -215,7 +220,7 @@ public class UserManagementService {
 		User user = userOptional.get();
 		
 		String displayText = user.getUserName();
-		String qrCodeData = generateQrCodeData("U", user.getUserId(), user.getUserPrintTime());
+		String qrCodeData = generateQrCodeData(USER_ID_PREFIX, user.getUserId(), user.getUserPrintTime());
 
 		Map<String, String> qrData = new HashMap<>();
 		qrData.put("displayText", displayText);
@@ -233,8 +238,8 @@ public class UserManagementService {
 	 */
 	private String generateQrCodeData(String prefix, Integer id, LocalDateTime timestamp) {
 		String formattedId = String.format("%s%04d", prefix, id);
-		String formattedTimestamp = (timestamp != null) ? timestamp.format(QR_LOG_FORMATTER) : "";
-		return formattedId + "-" + formattedTimestamp;
+		String formattedTimestamp = (timestamp != null) ? timestamp.format(QR_TIMESTAMP_FORMATTER) : "";
+		return formattedId + QR_DATA_SEPARATOR + formattedTimestamp;
 	}
 	
 	/**
@@ -251,8 +256,8 @@ public class UserManagementService {
 		String usernameToProcess;
 		String timestampToProcess;
 
-		if (submittedCredential.contains("-")) {
-			String[] parts = submittedCredential.split("-", 2);
+		if (submittedCredential.contains(QR_DATA_SEPARATOR)) {
+			String[] parts = submittedCredential.split(QR_DATA_SEPARATOR, 2);
 			if (parts.length == 2) {
 				usernameToProcess = parts[0];
 				timestampToProcess = parts[1];
@@ -264,9 +269,9 @@ public class UserManagementService {
 		}
 
 		Integer userIdToFind;
-		if (usernameToProcess.startsWith("U")) {
+		if (usernameToProcess.startsWith(USER_ID_PREFIX)) {
 			try {
-				userIdToFind = Integer.parseInt(usernameToProcess.substring(1));
+				userIdToFind = Integer.parseInt(usernameToProcess.substring(USER_ID_PREFIX.length()));
 			} catch (NumberFormatException e) {
 				throw new IllegalArgumentException("ユーザーIDの形式が正しくありません。");
 			}
@@ -280,7 +285,7 @@ public class UserManagementService {
 		}
 
 		User user = userOptional.get();
-		String storedTimestamp = user.getUserPrintTime().format(AUTH_CODE_FORMATTER);
+		String storedTimestamp = user.getUserPrintTime().format(QR_TIMESTAMP_FORMATTER);
 
 		if (!timestampToProcess.equals(storedTimestamp)) {
 			return Optional.empty();

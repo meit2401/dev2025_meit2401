@@ -1,5 +1,3 @@
-// jp/ac/kinki_pc/controller/UserManagementController.java
-
 package jp.ac.kinki_pc.controller;
 
 import java.util.List;
