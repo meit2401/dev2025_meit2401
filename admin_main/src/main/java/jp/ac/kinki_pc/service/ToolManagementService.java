@@ -1,4 +1,3 @@
-// jp/ac/kinki_pc/service/ToolManagementService.java
 package jp.ac.kinki_pc.service;
 
 import java.time.LocalDateTime;
@@ -114,7 +113,7 @@ public class ToolManagementService {
      */
     @Transactional
     public void addTool(String toolName, String maker, String toolCategory,
-                        String toolMaterial, int stc, int rop, String buyer, String storageLocation) {
+						String toolMaterial, Integer stc, Integer rop, String buyer, String storageLocation) {
         
         Tool newTool = new Tool(null, toolName, maker, toolCategory, toolMaterial, stc, rop, buyer, false);
         
@@ -151,7 +150,7 @@ public class ToolManagementService {
      * @param basicToolId 削除対象の基本工具ID
      */
     @Transactional
-    public void deleteTool(int basicToolId) {
+    public void disableTool(int basicToolId) {
         uniqueToolRepository.deleteByBasicToolId(basicToolId);
         storageAreaRepository.deleteByBasicToolId(basicToolId);
         toolRepository.deleteById(basicToolId);

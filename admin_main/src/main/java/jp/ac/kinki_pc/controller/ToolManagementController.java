@@ -85,24 +85,29 @@ public class ToolManagementController {
 		return toolManagementService.getIndividualTools(basicToolId);
 	}
 
+	/**
+	 * 基本工具を追加する処理
+	 * 格納場所が「装置外」の場合は、JS側でdisabledにされるためパラメータが送信されない。
+	 * そのため、在庫数(stc)と発注点(rop)は required = false とし、nullとして受け取る。
+	 */
 	@PostMapping("/add")
 	public String addTool(
 			@RequestParam String toolName,
 			@RequestParam String maker,
 			@RequestParam String toolCategory,
 			@RequestParam String toolMaterial,
-			@RequestParam int rop,
+			@RequestParam(required = false) Integer rop, // 変更: 必須解除, Integer化
 			@RequestParam String buyer,
 			@RequestParam String storageLocation,
-			@RequestParam(defaultValue = "0") int stc) { 
+			@RequestParam(required = false) Integer stc) { // 変更: 必須解除, Integer化
 		
 		toolManagementService.addTool(toolName, maker, toolCategory, toolMaterial, stc, rop, buyer, storageLocation);
 		return "redirect:/tool";
 	}
 
 	@PostMapping("/delete")
-	public String deleteTool(@RequestParam int basicToolId) {
-		toolManagementService.deleteTool(basicToolId);
+	public String disableTool(@RequestParam int basicToolId) {
+		toolManagementService.disableTool(basicToolId);
 		return "redirect:/tool";
 	}
 	

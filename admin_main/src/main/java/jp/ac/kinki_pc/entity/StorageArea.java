@@ -1,5 +1,3 @@
-// jp/ac/kinki_pc/entity/StorageArea.java
-
 package jp.ac.kinki_pc.entity;
 
 import java.time.LocalDateTime;
@@ -22,7 +20,7 @@ import lombok.NoArgsConstructor;
 public class StorageArea {
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)	// AUTO_INCREMENTに対応
 	private Integer storageAreaId;
 	private Integer basicToolId;
 	private Integer toolcaseStcNum;

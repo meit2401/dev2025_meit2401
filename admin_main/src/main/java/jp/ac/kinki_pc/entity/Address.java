@@ -1,5 +1,3 @@
-// jp/ac/kinki_pc/entity/Address.java
-
 package jp.ac.kinki_pc.entity;
 
 import jakarta.persistence.Entity;

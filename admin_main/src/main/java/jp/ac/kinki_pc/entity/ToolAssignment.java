@@ -1,5 +1,3 @@
-// jp/ac/kinki_pc/entity/ToolAssignment.java
-
 package jp.ac.kinki_pc.entity;
 
 import jakarta.persistence.Entity;
@@ -20,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class ToolAssignment {
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)	// AUTO_INCREMENTに対応
 	private Integer toolAssignmentId;
 	private Integer programId;
 	private String toolNum;

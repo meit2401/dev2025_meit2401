@@ -903,6 +903,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			const updateStorageUI = (shouldClearInput = false) => {
 				const val = storageCountSelect.value;
+				const ropInput = document.getElementById('rop');
+				
+				// stc (在庫数) の hidden input 制御
+				let stcInput = addToolForm.querySelector('input[name="stc"]');
+				if (!stcInput) {
+					stcInput = document.createElement('input');
+					stcInput.type = 'hidden';
+					stcInput.name = 'stc';
+					addToolForm.appendChild(stcInput);
+				}
 				
 				if (val === '6') {
 					// 装置外保管場所: 割当ボタン無効化、入力可
@@ -910,6 +920,14 @@ document.addEventListener('DOMContentLoaded', () => {
 					assignStorageBtn.classList.remove('custom-btn-modal');
 					assignStorageBtn.classList.add('custom-btn-common');
 					assignStorageBtn.classList.add('custom-btn-common--notselectable');
+
+					ropInput.disabled = true;
+					ropInput.value = '';
+					ropInput.removeAttribute('required');
+					
+					// stcをnull (送信しない) に設定
+					stcInput.disabled = true;
+					stcInput.value = '';
 					
 					// 切り替え時に既存の自動割当アドレス(A11など)があればクリア
 					if (shouldClearInput) {
@@ -937,6 +955,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 					storageLocationInput.readOnly = true;
 					storageLocationInput.placeholder = "";
+
+					ropInput.disabled = false;
+					ropInput.setAttribute('required', '');
+					
+					// stcを0で送信設定
+					stcInput.disabled = false;
+					stcInput.value = '0';
 					
 					// 追加ボタンは常に有効
 					setAddButtonState(true);
