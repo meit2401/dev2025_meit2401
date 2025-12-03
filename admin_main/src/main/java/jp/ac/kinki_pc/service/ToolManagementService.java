@@ -26,6 +26,7 @@ import jp.ac.kinki_pc.entity.Tool;
 import jp.ac.kinki_pc.entity.UniqueTool;
 import jp.ac.kinki_pc.repository.AddressRepository;
 import jp.ac.kinki_pc.repository.StorageAreaRepository;
+import jp.ac.kinki_pc.repository.ToolAssignmentRepository;
 import jp.ac.kinki_pc.repository.ToolRepository;
 import jp.ac.kinki_pc.repository.UniqueToolRepository;
 
@@ -44,6 +45,9 @@ public class ToolManagementService {
     @Autowired
     private StorageAreaRepository storageAreaRepository;
 
+    @Autowired
+    private ToolAssignmentRepository toolAssignmentRepository;
+
     /**
      * 検索条件に基づいて工具を検索する。
      * @param maker メーカー名(部分一致)
@@ -57,6 +61,8 @@ public class ToolManagementService {
         
         Specification<Tool> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(builder.equal(root.get("isFrozen"), false));
             
             if (StringUtils.hasText(category)) {
                 predicates.add(builder.equal(root.get("toolCategory"), category));
@@ -145,16 +151,35 @@ public class ToolManagementService {
     }
 
     /**
-     * 指定された基本工具IDに関連する情報をすべて削除する。
-     * 個別工具情報および保管場所情報も削除されます。
-     * @param basicToolId 削除対象の基本工具ID
+     * 指定された基本工具IDを無効化する。
+     * 工具割当、保管中工具の有無、在庫数を確認してから無効化を実行する。
+     * @param basicToolId 無効化対象の基本工具ID
      */
     @Transactional
-    public void disableTool(int basicToolId) {
-        uniqueToolRepository.deleteByBasicToolId(basicToolId);
-        storageAreaRepository.deleteByBasicToolId(basicToolId);
-        toolRepository.deleteById(basicToolId);
-    }
+	public void disableTool(int basicToolId) {
+		// 1. ToolAssignment check
+		if (toolAssignmentRepository.existsByBasicToolId(basicToolId)) {
+			throw new RuntimeException("プログラムに割り当てられているため、凍結できません。");
+		}
+		
+		// 2. UniqueTool check (保管中 check)
+		// ここは UniqueToolRepository を使います
+		if (uniqueToolRepository.existsByBasicToolIdAndStorageCondition(basicToolId, "保管中")) {
+			throw new RuntimeException("保管中の個体が存在するため、凍結できません。");
+		}
+		
+		// 3. StorageArea check (toolcase_stc_num > 0)
+		// ここは StorageAreaRepository を使います
+		if (storageAreaRepository.existsByBasicToolIdAndToolcaseStcNumGreaterThan(basicToolId, 0)) {
+			throw new RuntimeException("保管場所の在庫数が0ではないため、凍結できません。");
+		}
+		
+		Tool tool = toolRepository.findById(basicToolId)
+			.orElseThrow(() -> new RuntimeException("対象の工具が見つかりません。basicToolId=" + basicToolId));
+		
+		tool.setIsFrozen(true);
+		toolRepository.save(tool);
+	}
     
     /**
      * 個別工具を作成し、登録する。

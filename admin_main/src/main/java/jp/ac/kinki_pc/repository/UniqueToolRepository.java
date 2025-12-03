@@ -42,7 +42,7 @@ public interface UniqueToolRepository extends JpaRepository<UniqueTool, Long> {
 	List<UniqueTool> findByBasicToolId(int basicToolId);
 
 	/**
-	 * 基本工具IDと保管状況による存在チェック
+	 * 指定された基本工具IDと保管状況を持つ個体が存在するかチェックする
 	 */
 	boolean existsByBasicToolIdAndStorageCondition(Integer basicToolId, String storageCondition);
 }

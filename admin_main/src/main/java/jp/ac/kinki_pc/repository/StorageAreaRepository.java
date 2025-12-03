@@ -34,7 +34,8 @@ public interface StorageAreaRepository extends JpaRepository<StorageArea, Intege
 	List<Map<String, Object>> getStorageAddressCounts();
 
 	/**
-	 * 指定した数より多いケース在庫数を持つレコードが存在するかチェック
+	 * 指定された基本工具IDで、在庫数(toolcase_stc_num)が指定数より大きいレコードが存在するかチェックする
+	 * (storageCondition のチェックはここではなく UniqueToolRepository で行います)
 	 */
-	boolean existsByBasicToolIdAndToolcaseStcNumGreaterThan(Integer basicToolId, Integer toolcaseStcNum);
+	boolean existsByBasicToolIdAndToolcaseStcNumGreaterThan(Integer basicToolId, int toolcaseStcNum);
 }

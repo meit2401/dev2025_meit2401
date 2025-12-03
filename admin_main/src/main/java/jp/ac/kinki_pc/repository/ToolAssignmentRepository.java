@@ -49,7 +49,7 @@ public interface ToolAssignmentRepository extends JpaRepository<ToolAssignment, 
 	void deleteByProgramIdIn(List<Integer> programIds);
 
 	/**
-	 * 基本工具IDを使用している割り当てが存在するかチェックする
+	 * 指定された基本工具IDを持つ割り当てが存在するかチェックする
 	 */
 	boolean existsByBasicToolId(Integer basicToolId);
 }
