@@ -1,6 +1,6 @@
 <!-- ユーザー登録モーダル -->
 <div th:fragment="useraddModal">
-	<div class="modal fade" id="useraddModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="useraddModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog custom-modal modal-dialog-centered">
 			<div class="modal-content">
 				<form th:action="@{/user/add}" method="post" th:object="${newUser}">
@@ -51,7 +51,7 @@
 
 <!-- ユーザー削除モーダル -->
 <div th:fragment="userdelModal">
-	<div class="modal fade" id="userdelModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="userdelModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog custom-modal modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -68,7 +68,7 @@
 
 <!-- ユーザー編集モーダル -->
 <div th:fragment="usereditModal">
-	<div class="modal fade" id="usereditModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="usereditModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog custom-modal modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -116,7 +116,7 @@
 
 <!-- ユーザーQRコード再印刷モーダル -->
 <div th:fragment="userprintqrcodeModal">
-	<div class="modal fade" id="userprintqrcodeModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="userprintqrcodeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog custom-modal modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">

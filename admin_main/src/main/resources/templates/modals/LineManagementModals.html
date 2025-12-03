@@ -1,6 +1,6 @@
 <!-- ライン新規登録モーダル -->
 <div th:fragment="lineaddModal">
-	<div class="modal fade" id="lineaddModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="lineaddModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-dialog-centered custom-modal">
 			<div class="modal-content">
 				<form id="line-add-form">
@@ -25,7 +25,7 @@
 
 <!-- ライン削除モーダル -->
 <div th:fragment="linedelModal">
-	<div class="modal fade" id="linedelModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="linedelModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-dialog-centered custom-modal">
 			<div class="modal-content">
 				<div class="modal-body custom-text--large text-center">ライン名N 及び、<br>それに紐づくプログラム番号、<br>工具割当情報の削除を行います</div>
@@ -40,7 +40,7 @@
 
 <!-- プログラム新規登録モーダル -->
 <div th:fragment="progaddModal">
-	<div class="modal fade" id="progaddModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="progaddModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-dialog-centered custom-modal">
 			<div class="modal-content">
 				<form id="program-add-form">
@@ -66,7 +66,7 @@
 
 <!-- プログラム削除モーダル -->
 <div th:fragment="progdelModal">
-	<div class="modal fade" id="progdelModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="progdelModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-dialog-centered custom-modal">
 			<div class="modal-content">
 				<div class="modal-body custom-text--large text-center">プログラム番号N 及び、<br>それに紐づく工具割当情報の<br>削除を行います</div>
@@ -81,7 +81,7 @@
 
 <!-- 工具割り当てモーダル -->
 <div th:fragment="allocationModal">
-	<div class="modal fade" id="allocationModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="allocationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-dialog-centered custom-modal modal-lg">
 			<div class="modal-content">
 				<div class="modal-body custom-text--large text-center" id="allocationModalTitle">ツール番号Tn に<br>工具を登録します</div>
@@ -164,7 +164,7 @@
 
 <!-- 工具割り当て解除モーダル -->
 <div th:fragment="deallocationModal">
-	<div class="modal fade" id="deallocationModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="deallocationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-dialog-centered custom-modal">
 			<div class="modal-content">
 				<div class="modal-body custom-text--large text-center" id="deallocationModalBody">ツール番号T(n) の<br>工具割り当てを解除します</div>
@@ -179,7 +179,7 @@
 
 <!-- インポートファイル指定モーダル -->
 <div th:fragment="importModal">
-	<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-dialog-centered custom-modal">
 			<div class="modal-content">
 				<form id="import-form" enctype="multipart/form-data">
@@ -200,7 +200,7 @@
 
 <!-- 工具割り当てQRコード再印刷モーダル -->
 <div th:fragment="lineprintqrcodeModal">
-	<div class="modal fade" id="lineprintqrcodeModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="lineprintqrcodeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-dialog-centered custom-modal">
 			<div class="modal-content">
 				<div class="modal-body custom-text--large text-center">プログラム番号N の<br>QRコードを再印刷します</div>

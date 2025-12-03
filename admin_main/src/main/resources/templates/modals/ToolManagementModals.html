@@ -1,6 +1,6 @@
 <!-- 絞り込みモーダル -->
 <div th:fragment="modelsfilteringModal">
-	<div class="modal fade" id="modelsfilteringModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="modelsfilteringModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog custom-modal modal-dialog-centered">
 			<div class="modal-content">
 				<form th:action="@{/tool}" method="get">
@@ -61,7 +61,7 @@
 
 <!-- 新規登録モーダル -->
 <div th:fragment="modelsaddModal">
-	<div class="modal fade" id="modelsaddModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="modelsaddModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog custom-modal modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -150,7 +150,7 @@
 
 <!-- コンテナ選択画面 -->
 <div th:fragment="toolassignmentModal">
-	<div class="modal fade" id="toolassignmentModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="toolassignmentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-xl modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -244,7 +244,7 @@
 
 <!-- 基本工具削除モーダル -->
 <div th:fragment="modelsdelModal">
-	<div class="modal fade" id="modelsdelModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="modelsdelModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog custom-modal modal-dialog-centered">
 			<div class="modal-content">
 				<form th:action="@{/tool/delete}" method="post">
@@ -266,7 +266,7 @@
 
 <!-- 発注点編集モーダル -->
 <div th:fragment="modelseditModal">
-	<div class="modal fade" id="modelseditModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="modelseditModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog custom-modal modal-dialog-centered">
 			<div class="modal-content">
 				<form th:action="@{/tool/edit}" method="post">
@@ -322,7 +322,7 @@
 
 <!-- 個別工具登録モーダル -->
 <div th:fragment="toolsaddModal">
-	<div class="modal fade" id="toolsaddModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="toolsaddModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog custom-modal modal-dialog-centered">
 			<div class="modal-content">
 				<form th:action="@{/tool/createIndividual}" method="post" id="createIndividualToolForm">
@@ -388,7 +388,7 @@
 
 <!-- 工具詳細表示モーダル -->
 <div th:fragment="toolsdataModal">
-	<div class="modal fade" id="toolsdataModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="toolsdataModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog custom-modal modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -426,7 +426,7 @@
   
 <!-- QRコード再印刷モーダル -->
 <div th:fragment="printqrcodeModal" th:remove="tag">
-	<div class="modal fade" id="printqrcodeModal" tabindex="-1" aria-hidden="true">
+	<div class="modal fade" id="printqrcodeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog custom-modal modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">

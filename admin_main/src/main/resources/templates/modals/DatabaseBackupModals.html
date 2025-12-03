@@ -1,7 +1,7 @@
 <!-- バックアップモーダル -->
 <div th:fragment="backupModal">
 	<form th:action="@{/database/backup}" method="post">
-		<div class="modal fade" id="backupModal" tabindex="-1" aria-hidden="true">
+		<div class="modal fade" id="backupModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 			<div class="modal-dialog modal-dialog-centered custom-modal">
 				<div class="modal-content">
 					<div class="modal-body custom-text text-center">
