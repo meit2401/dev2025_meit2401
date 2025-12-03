@@ -963,6 +963,11 @@ document.addEventListener('DOMContentLoaded', () => {
 					stcInput.disabled = false;
 					stcInput.value = '0';
 					
+					// 装置外などからコンテナ保管へ切り替わった場合、入力値をクリア
+					if (shouldClearInput) {
+						storageLocationInput.value = "";
+					}
+					
 					// 追加ボタンは常に有効
 					setAddButtonState(true);
 				}
@@ -1017,4 +1022,60 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 		}
 	});
+
+	// 7. 削除モーダルのAjax処理 (新規追加)
+    const executeDeleteBtn = document.getElementById('executeDeleteBtn');
+    const deleteErrorAlert = document.getElementById('deleteErrorAlert');
+    const deleteToolForm = document.getElementById('deleteToolForm');
+
+    if (executeDeleteBtn && deleteErrorAlert && deleteToolForm) {
+        
+        // モーダルが閉じたときにエラーメッセージをリセットする処理
+        const modelsdelModalEl = document.getElementById('modelsdelModal');
+        if (modelsdelModalEl) {
+            modelsdelModalEl.addEventListener('hidden.bs.modal', () => {
+                deleteErrorAlert.style.display = 'none';
+                deleteErrorAlert.textContent = '';
+            });
+        }
+
+        executeDeleteBtn.addEventListener('click', async () => {
+            // エラー表示を一旦クリア
+            deleteErrorAlert.style.display = 'none';
+            deleteErrorAlert.textContent = '';
+            
+            // ボタンを無効化（二重送信防止）
+            executeDeleteBtn.disabled = true;
+            executeDeleteBtn.textContent = '削除中...';
+
+            const formData = new FormData(deleteToolForm);
+
+            try {
+                const response = await fetch('/tool/delete', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // 成功時: 画面をリロードして反映
+                    location.reload();
+                } else {
+                    // エラー時: サーバーからのメッセージを表示
+                    // サーバーがテキストを返すと想定
+                    const errorMessage = await response.text(); 
+                    deleteErrorAlert.textContent = errorMessage || '削除に失敗しました。';
+                    deleteErrorAlert.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error('削除リクエストエラー:', error);
+                deleteErrorAlert.textContent = '通信エラーが発生しました。';
+                deleteErrorAlert.style.display = 'block';
+            } finally {
+                // ボタンの状態を戻す
+                executeDeleteBtn.disabled = false;
+                executeDeleteBtn.textContent = '削除';
+            }
+        });
+    }
 });

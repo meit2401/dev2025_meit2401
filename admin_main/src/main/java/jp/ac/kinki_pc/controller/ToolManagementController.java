@@ -106,9 +106,24 @@ public class ToolManagementController {
 	}
 
 	@PostMapping("/delete")
-	public String disableTool(@RequestParam int basicToolId) {
-		toolManagementService.disableTool(basicToolId);
-		return "redirect:/tool";
+	@ResponseBody // 文字列(HTML)ではなくデータ(メッセージ)を返すために必要
+	public ResponseEntity<String> deleteTool(@RequestParam int basicToolId) {
+		try {
+			toolManagementService.deleteTool(basicToolId);
+			// 成功時は 200 OK を返す
+			return ResponseEntity.ok("削除完了"); 
+		} catch (DataIntegrityViolationException e) {
+			// 外部キー制約違反（使用中のため削除不可）
+			// 409 Conflict: リソースの状態と矛盾するためリクエストを完了できない
+			return ResponseEntity.status(HttpStatus.CONFLICT)
+					.body("この工具は履歴や在庫に関連付けられているため削除できません。");
+		} catch (Exception e) {
+			// その他のエラー
+			e.printStackTrace();
+			// 500 Internal Server Error
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("サーバーエラーが発生しました: " + e.getMessage());
+		}
 	}
 	
 	@PostMapping("/edit")
