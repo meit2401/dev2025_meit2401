@@ -6,6 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 年（単数）と、その年に属する月（複数）のリストを
+ * 保持するためのデータ転送オブジェクト(DTO)。
+ */
 @Data
 @AllArgsConstructor // 全ての引数を持つコンストラクタを自動生成
 @NoArgsConstructor  // 引数のないコンストラクタを自動生成

@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jp.ac.kinki_pc.dto.OperationHistory; // Service層はDTOを扱う
+import jp.ac.kinki_pc.repository.HistoryProjection; // ★これが必要です
 import jp.ac.kinki_pc.repository.OperationRepository;
 
 @Service
@@ -72,7 +73,7 @@ public class DatabaseBackupService {
 		}
 
 		// 4. Repository を呼び出す (Projectionのリストが返る)
-		List<OperationRepository.OperationHistoryProjection> projections = 
+		List<HistoryProjection> projections = 
 			operationRepository.findOperationHistory(null, newerThanTimestamp);
 
 		// 5. Projection を DTO (OperationHistory) にマッピングして返す
@@ -201,7 +202,7 @@ public class DatabaseBackupService {
 		LocalDateTime endTimestamp = endDateTime;
 
 		// Repository呼び出し (Projectionのリストが返る)
-		List<OperationRepository.OperationHistoryProjection> projections = 
+		List<HistoryProjection> projections = 
 			operationRepository.findOperationHistory(endTimestamp, newerThanTimestamp);
 
 		// Projection を DTO (OperationHistory) にマッピング

@@ -15,6 +15,8 @@
 	--font-size-m		: 40px;		/* 標準　　　　 */
 	--font-size-l		: 45px;		/* 大　　　　　 */
 	--font-size-xl		: 60px;		/* 特大　　　　 */
+	
+	--font-size-n 		: 35px;
 }
 
 /* 標準テキスト */
@@ -30,6 +32,13 @@
 /* 小文字テキスト */
 .custom-text--short {
 	font-size			: var(--font-size-s);
+	font-weight			: bold;
+	white-space			: nowrap;
+}
+
+/*中文字テキスト*/
+.custom-text--normal{
+	font-size			: var(--font-size-n);
 	font-weight			: bold;
 	white-space			: nowrap;
 }
