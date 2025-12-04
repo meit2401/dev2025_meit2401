@@ -27,7 +27,7 @@
 							<div class="row mb-3 align-items-center justify-content-center">
 								<label for="filterMaker" class="col-sm-3 col-form-label custom-text text-center">メーカー</label>
 								<div class="col-sm-6">
-									<input type="text" id="filterMaker" name="maker" class="form-control custom-text js-normalize-hankaku" 
+									<input type="text" id="filterMaker" name="maker" class="form-control custom-text js-normalize-hankaku"
 										   th:value="${makerFilter}">
 								</div>
 							</div>
@@ -35,7 +35,7 @@
 							<div class="row mb-3 align-items-center justify-content-center">
 								<label for="filterMaterial" class="col-sm-3 col-form-label custom-text text-center">材質</label>
 								<div class="col-sm-6">
-									<input type="text" id="filterMaterial" name="material" class="form-control custom-text js-normalize-hankaku" 
+									<input type="text" id="filterMaterial" name="material" class="form-control custom-text js-normalize-hankaku"
 										   th:value="${materialFilter}">
 								</div>
 							</div>
@@ -43,7 +43,7 @@
 							<div class="row mb-3 align-items-center justify-content-center">
 								<label for="filterTrader" class="col-sm-3 col-form-label custom-text text-center">商社</label>
 								<div class="col-sm-6">
-									<input type="text" id="filterTrader" name="trader" class="form-control custom-text js-normalize-hankaku" 
+									<input type="text" id="filterTrader" name="trader" class="form-control custom-text js-normalize-hankaku"
 										   th:value="${traderFilter}">
 								</div>
 							</div>
@@ -169,7 +169,7 @@
 								<tbody>
 									<tr th:each="i : ${#numbers.sequence(1, 9)}">
 										<td th:each="j : ${#numbers.sequence(1, 8)}" style="padding: 2px;">
-											<button type="button" class="btn btn-outline-secondary grid-button" 
+											<button type="button" class="btn btn-outline-secondary grid-button"
 													style="width: 100px; height: 60px;"
 													data-segment="A"
 													th:data-row-index="${i}"
@@ -186,7 +186,7 @@
 								<tbody>
 									<tr th:each="i : ${#numbers.sequence(1, 9)}">
 										<td th:each="j : ${#numbers.sequence(1, 3)}" style="padding: 2px;">
-											<button type="button" class="btn btn-outline-secondary grid-button" 
+											<button type="button" class="btn btn-outline-secondary grid-button"
 													style="width: 100px; height: 60px;"
 													data-segment="B"
 													th:data-row-index="${i}"
@@ -203,7 +203,7 @@
 								<tbody>
 									<tr th:each="i : ${#numbers.sequence(1, 9)}">
 										<td th:each="j : ${#numbers.sequence(1, 3)}" style="padding: 2px;">
-											<button type="button" class="btn btn-outline-secondary grid-button" 
+											<button type="button" class="btn btn-outline-secondary grid-button"
 													style="width: 100px; height: 60px;"
 													data-segment="C"
 													th:data-row-index="${i}"
@@ -252,13 +252,13 @@
                         <div class="container-fluid">
                             <p class="modal-title custom-text--large text-center w-100">選択された基本工具情報を<br>本当に削除しますか？</p>
                         </div>
-                        
+
                         <div id="deleteErrorAlert" class="alert alert-danger custom-text w-75 mt-3" style="display: none;" role="alert">
                             </div>
                         </div>
                     <div class="modal-footer d-flex justify-content-center gap-4">
                         <input type="hidden" name="basicToolId" id="deleteBasicToolIdInput">
-                        
+
                         <button type="button" id="executeDeleteBtn" class="btn custom-btn-modal btn-danger" style="width: 25%">削除</button>
                         <button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
                     </div>
@@ -305,7 +305,7 @@
 									</tbody>
 							</table>
 						</div>
-					
+
 					<div class="row mb-3 align-items-center justify-content-center">
 						<h2 class="modal-title custom-text w-100 text-center">発注点を入力してください</h2>
 						<label for="orderpoint" class="col-sm-3 custom-text col-form-label text-center">発注点</label>
@@ -377,7 +377,7 @@
 						<div id="insertCountSection" class="row mb-3 align-items-center justify-content-center"></div>
 						<!-- ラベル -->
 						<label class="custom-text text-center text-danger w-100">※QRコード発行を行います</label>
-						
+
 						<input type="hidden" name="basicToolId" id="addModalBasicToolIdInput">
 						</div>
 					<div class="modal-footer d-flex justify-content-center gap-5">
@@ -427,7 +427,7 @@
 		</div>
 	</div>
 </div>
-  
+
 <!-- QRコード再印刷モーダル -->
 <div th:fragment="printqrcodeModal" th:remove="tag">
 	<div class="modal fade" id="printqrcodeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -447,7 +447,7 @@
 					<div class="row mb-3 align-items-center justify-content-center">
 						<label for="qrNumber" class="col-4 custom-text col-form-label text-center">工具ラベルコード</label>
 						<div class="col-7">
-							<input type="text" id="qrNumber" class="form-control form-control-lg custom-text js-normalize-hankaku" maxlength="10">
+							<input type="text" id="qrNumber" class="form-control form-control-lg custom-text js-normalize-hankaku" maxlength="9">
 						</div>
 					</div>
 				</div>
