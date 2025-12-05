@@ -1,6 +1,8 @@
 package jp.ac.kinki_pc.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -60,8 +62,8 @@ public class UserManagementController {
 	 */
 	@PostMapping("/delete")
 	@ResponseBody
-	public ResponseEntity<String> disableUser(@RequestParam("userId") Integer userId) { // 型をIntegerに変更
-		userManagementService.disableUser(userId);
+	public ResponseEntity<String> deleteUser(@RequestParam("userId") Integer userId) { // 型をIntegerに変更
+		userManagementService.deleteUser(userId);
 		return ResponseEntity.ok("deleted");
 	}
 	
@@ -90,21 +92,42 @@ public class UserManagementController {
 	}
 	
 	/**
-	 * QRコード再印刷のためにタイムスタンプを更新し、更新後のユーザー情報を返す
+	 * QRコード再印刷のためにタイムスタンプを更新し、更新後のユーザー情報と更新前のタイムスタンプを返す
 	 * @param userId ユーザーID
-	 * @return 更新後のユーザー情報を含むResponseEntity
+	 * @return 更新後のユーザー情報と旧タイムスタンプを含むMap
 	 */
 	@PostMapping("/reprint-qr")
 	@ResponseBody
-	public ResponseEntity<UserDto> reprintQrCode(@RequestParam("userId") Integer userId) {
+	public ResponseEntity<Map<String, Object>> reprintQrCode(@RequestParam("userId") Integer userId) {
+		// ロールバック用に更新前の情報を取得しておく
+		UserDto oldUser = userManagementService.findUserEntityById(userId)
+				.map(userManagementService::convertToDto)
+				.orElse(null);
+
 		// Serviceから直接DTOを受け取る
 		UserDto updatedUserDto = userManagementService.updateUserTimestamp(userId);
 		
-		if (updatedUserDto != null) { // DTOでnullチェック
-			// UserDto updatedUserDto = userManagementService.convertToDto(updatedUser); // 削除
-			return ResponseEntity.ok(updatedUserDto);
+		if (updatedUserDto != null && oldUser != null) {
+			Map<String, Object> response = new HashMap<>();
+			response.put("user", updatedUserDto);
+			response.put("oldTimestamp", oldUser.getUserPrintTime());
+			return ResponseEntity.ok(response);
 		} else {
 			return ResponseEntity.notFound().build();
 		}
+	}
+	
+	/**
+	 * 印刷失敗時にタイムスタンプを元に戻す処理
+	 * @param userId ユーザーID
+	 * @param oldTimestampStr 戻したいタイムスタンプ文字列
+	 * @return 処理結果
+	 */
+	@PostMapping("/restore-timestamp")
+	@ResponseBody
+	public ResponseEntity<String> restoreTimestamp(@RequestParam("userId") Integer userId, 
+			@RequestParam(value = "oldTimestamp", required = false) String oldTimestampStr) {
+		userManagementService.restoreUserTimestamp(userId, oldTimestampStr);
+		return ResponseEntity.ok("restored");
 	}
 }

@@ -109,18 +109,22 @@ public class UserManagementService {
 	 * @param editedUserDto 編集されたユーザー情報のDTO
 	 */
 	public void updateUser(UserDto editedUserDto) {
-
-		if (ADMIN_USER_ID.equals(editedUserDto.getUserId())) {
-			logger.warn("Administratorアカウント(userId: {})の編集が試みられましたが、処理は拒否されました。", ADMIN_USER_ID);
+		// Administrator(userId: 0)は編集させない
+		if (Integer.valueOf(0).equals(editedUserDto.getUserId())) {
+			logger.warn("Administratorアカウント(userId: 0)の編集が試みられましたが、処理は拒否されました。");
 			return;
 		}
 
+		// 1. まず、データベースから現在のユーザー情報を取得します
 		Optional<User> currentUserOptional = userRepository.findById(editedUserDto.getUserId());
 		
 		if (currentUserOptional.isPresent()) {
 			User userToUpdate = currentUserOptional.get();
 			
+			// 2. DTOから受け取った情報で、変更するフィールドのみを更新します
+			//	u_datetime は元の値を維持します
 			userToUpdate.setUserName(editedUserDto.getUserName());
+			// setPerOutを削除
 			userToUpdate.setPerAdd(editedUserDto.getPerAdd() != null ? editedUserDto.getPerAdd() : 0);
 			userToUpdate.setPerInventory(editedUserDto.getPerInventory() != null ? editedUserDto.getPerInventory() : 0);
 			userToUpdate.setPerUser(editedUserDto.getPerUser() != null ? editedUserDto.getPerUser() : 0);
@@ -131,10 +135,15 @@ public class UserManagementService {
 			userToUpdate.setPerDb(editedUserDto.getPerDb() != null ? editedUserDto.getPerDb() : 0);
 			userToUpdate.setPerSetting(editedUserDto.getPerSetting() != null ? editedUserDto.getPerSetting() : 0);
 
+			// 3. 更新した情報でデータベースを更新します
+			// [修正] JpaRepository の規約に従い、save() を使用する
 			userRepository.save(userToUpdate);
 			
+			logger.info("ユーザー情報を更新しました。 UserID: {}", editedUserDto.getUserId());
+			
 		} else {
-			logger.warn("更新対象のユーザーが見つかりません。 UserID: {}", editedUserDto.getUserId());
+			// 更新対象のユーザーが見つかったなかった場合の処理
+			logger.warn("更新対象のユーザーが見つかりません。 UserID: {}", editedUserDto.getUserId()); // 修正: 見つかったなかった -> 見つかりません
 		}
 	}
 
@@ -190,20 +199,51 @@ public class UserManagementService {
 	 * @return 更新後のユーザー情報のDTO、見つからない場合はnull
 	 */
 	public UserDto updateUserTimestamp(Integer userId) {
+		// Administrator(userId: 0)の更新を妨げていたifブロックを削除します
+
 		Optional<User> currentUserOptional = userRepository.findById(userId);
 		if (currentUserOptional.isPresent()) {
 			User userToUpdate = currentUserOptional.get();
 			
+			// 新しいタイムスタンプ(LocalDateTime)を生成
 			LocalDateTime newDatetime = LocalDateTime.now();
 			userToUpdate.setUserPrintTime(newDatetime);
 			
+			// DBを更新
+			// [修正] JpaRepository の規約に従い、save() を使用する
 			userRepository.save(userToUpdate);
 			
-			return convertToDto(userToUpdate); 
+			// ログ出力のフォーマットを変更します
+			logger.info("ユーザーのタイムスタンプを更新しました。 UserID: {}, New UserUpdated: {}", userId, newDatetime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+			return convertToDto(userToUpdate); // DTOに変換して返す
 			
 		} else {
 			logger.warn("タイムスタンプ更新対象のユーザーが見つかりません。 UserID: {}", userId);
 			return null;
+		}
+	}
+
+	/**
+	 * タイムスタンプを指定された値（文字列）に戻す
+	 * @param userId ユーザーID
+	 * @param timestampStr ロールバックする日時文字列(yyyy-MM-dd HH:mm:ss)
+	 */
+	public void restoreUserTimestamp(Integer userId, String timestampStr) {
+		Optional<User> currentUserOptional = userRepository.findById(userId);
+		if (currentUserOptional.isPresent()) {
+			User user = currentUserOptional.get();
+			try {
+				if (timestampStr != null && !timestampStr.isEmpty()) {
+					LocalDateTime dt = LocalDateTime.parse(timestampStr, DTO_FORMATTER);
+					user.setUserPrintTime(dt);
+				} else {
+					user.setUserPrintTime(null);
+				}
+				userRepository.save(user);
+				logger.info("ユーザーのタイムスタンプをロールバックしました。 UserID: {}", userId);
+			} catch (Exception e) {
+				logger.error("タイムスタンプの復元に失敗しました。 UserID: {}, Error: {}", userId, e.getMessage());
+			}
 		}
 	}
 	

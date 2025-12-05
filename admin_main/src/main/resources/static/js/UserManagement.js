@@ -1,5 +1,8 @@
 // userManagement.js
 
+// テスト用モード設定：trueの場合、印刷エラーが発生してもデータのロールバックを行わず処理を完了します
+const TEST_MODE_IGNORE_ERROR = true;
+
 // ページが完全に読み込まれた後に実行される処理
 document.addEventListener("DOMContentLoaded", function () {
 	// 選択されたユーザーIDを保持するグローバル変数（数値またはnull）
@@ -156,13 +159,35 @@ document.addEventListener("DOMContentLoaded", function () {
 				const modal = bootstrap.Modal.getInstance(addModal);
 				modal.hide();
 				
-				await printQrCode('user', newUser.userId);
-				
-				location.reload();
+				// 印刷実行
+				try {
+					await printQrCode('user', newUser.userId);
+					// 印刷成功時はリロード
+					location.reload();
+				} catch (printErr) {
+					console.error("印刷失敗:", printErr);
+					
+					if (TEST_MODE_IGNORE_ERROR) {
+						// テストモード：エラーを無視して続行
+						console.log("テストモードのため、印刷エラーを無視して登録を完了します。");
+						location.reload();
+					} else {
+						// 通常モード：ユーザー登録をロールバック（削除）
+						alert("QRコードの印刷に失敗したため、登録をキャンセルしました。");
+						
+						await fetch("/user/delete", {
+							method: "POST",
+							headers: { "Content-Type": "application/x-www-form-urlencoded" },
+							body: new URLSearchParams({ userId: newUser.userId })
+						});
+						
+						// リロードせず、モーダルも閉じた状態
+					}
+				}
 
 			} catch (err) {
-				console.error("登録失敗:", err);
-				alert("ユーザー登録中にエラーが発生しました。");
+				console.error("登録処理失敗:", err);
+				alert("ユーザー登録処理中にエラーが発生しました。");
 			}
 		});
 	}
@@ -266,9 +291,39 @@ document.addEventListener("DOMContentLoaded", function () {
 					throw new Error("QRコード情報の更新に失敗しました。");
 				}
 
-				const updatedUser = await response.json();
+				const responseData = await response.json();
+				// コントローラからの戻り値がMapになったため、構造に合わせて取得
+				const updatedUser = responseData.user;
+				const oldTimestamp = responseData.oldTimestamp;
 
-				await printQrCode('user', updatedUser.userId);
+				try {
+					await printQrCode('user', updatedUser.userId);
+					// 印刷成功時はリロードして完了
+					location.reload();
+				} catch (printErr) {
+					console.error("印刷失敗:", printErr);
+					
+					if (TEST_MODE_IGNORE_ERROR) {
+						// テストモード：無視して完了扱い
+						console.log("テストモードのため、印刷エラーを無視して更新を完了します。");
+						location.reload();
+					} else {
+						// 通常モード：タイムスタンプをロールバック
+						alert("QRコードの再印刷に失敗したため、更新をキャンセルしました。");
+						
+						const restoreParams = new URLSearchParams();
+						restoreParams.append("userId", selectedUserId);
+						if (oldTimestamp) {
+							restoreParams.append("oldTimestamp", oldTimestamp);
+						}
+						
+						await fetch("/user/restore-timestamp", {
+							method: "POST",
+							headers: { "Content-Type": "application/x-www-form-urlencoded" },
+							body: restoreParams
+						});
+					}
+				}
 
 			} catch (err) {
 				console.error("再印刷処理失敗:", err);
@@ -318,25 +373,4 @@ document.addEventListener("DOMContentLoaded", function () {
 	// --- 初期化処理 ---
 	updateButtonStates();
 	adjustTableRows(16);
-});
-
-// モーダル閉鎖時のフォームリセット処理
-document.addEventListener('DOMContentLoaded', () => {
-	
-	// リセット対象となるモーダルのIDを指定
-	// ※実際のHTML上のIDと異なる場合は適宜修正してください
-	const modalsToReset = ['useraddModal']; 
-
-	modalsToReset.forEach(modalId => {
-		const modalEl = document.getElementById(modalId);
-		if (modalEl) {
-			modalEl.addEventListener('hidden.bs.modal', () => {
-				// モーダル内のフォームを探してリセット
-				const form = modalEl.querySelector('form');
-				if (form) {
-					form.reset();
-				}
-			});
-		}
-	});
 });
