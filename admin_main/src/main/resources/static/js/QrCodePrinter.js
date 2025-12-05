@@ -32,9 +32,8 @@ async function printQrCode(type, id) {
 		const templateFile = new File([templateBlob], "qr_template.lw1");
 
 		// URLにタイプとIDを含めるように変更
-		const csvUrl = `/qrcodeprinter/data.csv?type=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`;
-		const csvResponse = await fetch(csvUrl);
-
+		const csvResponse = await fetch(`/qrcodeprinter/csv?type=${type}&id=${id}`);
+		
 		if (!csvResponse.ok) {
 			const errorText = await csvResponse.text();
 			throw new Error(`サーバーエラー: ${csvResponse.statusText} - ${errorText}`);
@@ -56,6 +55,7 @@ async function printQrCode(type, id) {
 				alert('QRコードの印刷要求を正常に送信しました。');
 			}
 		} else {
+			// --- ここから修正 ---
 			let errorMessage = "QRコードの印刷に失敗しました。";
 			switch(printResult.errorCode) {
 				case TepraPrintError.PRINTER_NOT_FOUND:
@@ -68,18 +68,25 @@ async function printQrCode(type, id) {
 					errorMessage += "\nエラー: 印刷ジョブの開始に失敗しました。";
 					break;
 				case TepraPrintError.WEBAPI_REQUEST_ERROR:
-					errorMessage += "\nエラー: TEPRA Web Printアプリケーションに接続できません。アプリケーションが起動しているか確認してください。";
+					errorMessage += "\nエラー: TEPRA Web Print APIへのリクエストに失敗しました。";
 					break;
-				case TepraPrintError.FILE_NOT_FOUND:
-					errorMessage += "\nエラー: テンプレートファイルが見つかりません。";
+				case TepraPrintError.PRINTER_ACCESS_ERROR: // コード100など
+					errorMessage += "\nエラー: プリンターへのアクセスに失敗しました。(Code: " + printResult.errorCode + ")";
 					break;
 				default:
-					errorMessage += `\n不明なエラーが発生しました。エラーコード: ${printResult.errorCode}`;
+					errorMessage += "\nエラーコード: " + printResult.errorCode;
 					break;
 			}
 			alert(errorMessage);
+			
+			// 【重要】ここでエラーを投げないと、呼び出し元は「成功した」と勘違いして進んでしまいます。
+			throw new Error(errorMessage); 
+			// --- ここまで修正 ---
 		}
-	} catch (error) {
-		alert('予期せぬエラーが発生しました。:' + error.message);
+	} catch (e) {
+		// ここでキャッチして再スローすることで、UserManagement.js 側の catch に渡します
+		console.error(e);
+		alert(e.message);
+		throw e; // 親元の処理（UserManagement.js）にエラーを伝えるために必須
 	}
 }

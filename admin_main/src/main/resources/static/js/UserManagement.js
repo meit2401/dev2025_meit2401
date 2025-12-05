@@ -1,7 +1,7 @@
 // userManagement.js
 
 // テスト用モード設定：trueの場合、印刷エラーが発生してもデータのロールバックを行わず処理を完了します
-const TEST_MODE_IGNORE_ERROR = true;
+const TEST_MODE_IGNORE_ERROR = false;
 
 // ページが完全に読み込まれた後に実行される処理
 document.addEventListener("DOMContentLoaded", function () {
