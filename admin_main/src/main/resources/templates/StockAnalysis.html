@@ -1,120 +1,159 @@
 <!DOCTYPE html>
-<html lang="ja" xmlns="http://www.thymeleaf.org">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>admin_main 工具分析画面</title>
-	
-		<!-- Bootstrap 標準CSS -->
-		<link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
-		<link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet">
-	
-		<!-- Bootstrap カスタムCSS -->
-		<link th:href="@{/css/custom.css}" rel="stylesheet">
-		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-	</head>
-	
-	<body>
-		<!-- 共通メニュー呼び出し -->
-		<div th:replace="~{components/Components :: menu('stock')}"></div>
-	
-		<main class="container my-5">
-			<!-- 工具分析 絞り込み条件表示 -->
-			<div class="d-flex justify-content-center align-items-center" style="height: 200px;">
-				<div class="container-fluid bg-light">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>admin_main 工具分析画面</title>
+
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <script th:src="@{/js/chart.min.js}"></script>
+</head>
+
+<body>
+    <div th:replace="~{components/Components :: menu('stock')}"></div>
+
+    <main class="container my-5">
+		<div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+		    <div class="container-fluid bg-light py-3">
+				
+                <div th:if="${periodStr == null}" class="text-center">
+                     <p class="custom-text--large text-center">条件を指定して絞り込みを行ってください。</p>
+                </div>
+				
+                <div th:if="${periodStr != null}">
+                    <div class="row gy-2">
+                        <div class="col-6 mx-auto">
+                            <div class="custom-text d-flex justify-content-center" th:text="'期間：' + ${periodStr}">期間：YY/MM ～ YY/MM</div>
+                        </div>
+                    </div>
+					
 					<div class="row gy-2">
 						<div class="col-6 mx-auto">
-							<div class="custom-text d-flex justify-content-center">期間：YY/MM ～ YY/MM</div>
+						    <div class="custom-text d-flex justify-content-center" th:text="'ライン名：' + ${lineName}">ライン名：○○○○</div>
 						</div>
 					</div>
-					<div class="row gx-5">
-						<div class="col-6">
-							<div class="custom-text d-flex justify-content-end">分類：○○○○</div>
-						</div>
-						<div class="col-6">
-							<div class="custom-text d-flex justify-content-start">メーカー：○○○○</div>
-						</div>
-					</div>
-					<div class="row gx-5">
-						<div class="col-6">
-							<div class="custom-text d-flex justify-content-end">ライン名：○○○○</div>
-						</div>
-						<div class="col-6">
-							<div class="custom-text d-flex justify-content-start">商社：○○○○</div>
-						</div>
-					</div>
-				</div>
-			</div>
-	
-			<!-- CSV出力・絞り込みボタン -->
-			<div class="container my-4">
-				<div class="d-flex justify-content-end align-items-center">
-					<!-- CSV出力ボタン -->
-					<button type="button" class="btn custom-btn-common" style="width: 200px" data-bs-toggle="modal" data-bs-target="#makecsvModal">CSV出力</button>
-					<!-- 絞り込みボタン -->
-					<button type="button" class="btn custom-btn-common ms-3" style="width: 200px" data-bs-toggle="modal" data-bs-target="#stockfilteringModal">絞り込み</button>
-				</div>
-			</div>
-	
-			<!-- 工具分析リスト表示 -->
-			<div class="container my-4">
-				<div class="table-responsive" style="max-height: 580px; overflow-y: auto;">
-					<table class="table table-bordered table-striped w-100" style="table-layout: fixed;">
-						<thead class="custom-list">
-							<tr>
-								<th class="text-center">分 類</th>
-								<th class="text-center">メ ー カ ー</th>
-								<th class="text-center">型 番</th>
-								<th class="text-center">材 質</th>
-								<th class="text-center" style="width: 25%;">取 り 出 し 個 数</th>
-								<th class="text-center" style="width: 25%;">期 間 末 在 庫 数</th>
-							</tr>
-						</thead>
-						<tbody class="custom-text--short">
-							<tr><td>000</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>001</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>002</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>003</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>004</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>005</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>006</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>007</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>008</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>009</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>00a</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>00b</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>00c</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>00d</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>00e</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>00f</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>010</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>011</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>012</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>013</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>014</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>015</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>016</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>017</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>018</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>019</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>01a</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>01b</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>01c</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-							<tr><td>01d</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-	
-			<div class="d-flex justify-content-center rounded custom-image-wrapper">
-				<img th:src="@{/images/photo.png}" class="img-fluid rounded" alt="商品写真">
-			</div>
-	
-			<div th:replace="~{modals/StockAnalysisModals :: makecsvModal}"></div>
-			<div th:replace="~{modals/StockAnalysisModals :: stockfilteringModal}"></div>
-		</main>
-	
-		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
-		<script th:src="@{/js/Components.js}"></script>
-	</body>
+						
+                    <div class="row gx-5">
+                        <div class="col-6">
+                            <div class="custom-text d-flex justify-content-end" th:text="'分類：' + ${category}">分類：○○○○</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="custom-text d-flex justify-content-start" th:text="'メーカー：' + ${manufacturer}">メーカー：○○○○</div>
+                        </div>
+                    </div>
+                    <div class="row gx-5">
+                        <div class="col-6">
+                            <div class="custom-text d-flex justify-content-end" th:text="'材質：' + ${material}">材質：○○○○</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="custom-text d-flex justify-content-start" th:text="'商社：' + ${tradingCompany}">商社：○○○○</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container my-4">
+            <div class="d-flex justify-content-end align-items-center">
+                <button type="button" class="btn custom-btn-common" style="width: 200px" 
+                        data-bs-toggle="modal" data-bs-target="#makecsvModal"
+                        th:disabled="${#lists.isEmpty(stockAnalysisTable)}">CSV出力</button>
+                <button type="button" class="btn custom-btn-common ms-3" style="width: 200px" data-bs-toggle="modal" data-bs-target="#stockfilteringModal">絞り込み</button>
+            </div>
+        </div>
+
+        <div class="container my-4">
+            <div class="table-responsive" style="max-height: 580px; overflow-y: auto;">
+                <table class="table table-bordered table-striped w-100" style="table-layout: fixed;">
+                    <thead class="custom-list">
+                        <tr>
+                            <th class="text-center">分 類</th>
+                            <th class="text-center">メ ー カ ー</th>
+                            <th class="text-center">型 番</th>
+                            <th class="text-center">材 質</th>
+                            <th class="text-center" style="width: 25%;">取 り 出 し 個 数</th>
+							<th class="text-center" style="width: 25%;" 
+				                th:if="${lineName == null || lineName == ''}">
+				                期 間 末 在 庫 数
+				            </th>
+                        </tr>
+                    </thead>
+					<tbody class="custom-text--short">
+					        <tr th:each="tool : ${stockAnalysisTable}">
+					            <td th:text="${tool.toolCategory}"></td>
+					            <td th:text="${tool.maker}"></td>
+					            <td th:text="${tool.toolName}"></td>
+					            <td th:text="${tool.toolMaterial}"></td>
+					            <td th:text="${tool.outNum}"></td>
+
+					            <td th:text="${tool.endPeriodStock}"
+					                th:if="${lineName == null || lineName == ''}">
+					            </td>
+					        </tr>
+					        
+					        <tr th:if="${#lists.isEmpty(stockAnalysisTable)}">
+					            <td th:colspan="${lineName == null || lineName == '' ? 6 : 5}" 
+					                class="text-center">データがありません</td>
+					        </tr>
+					</tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="container d-flex justify-content-center my-4 mt-2">
+            <div class="rounded custom-chart-container w-100" style="height: 400px; overflow-x: auto;">
+                <div class="chart-wrapper" style="position: relative; height: 100%; min-width: 100%;">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div th:replace="~{modals/StockAnalysisModals :: makecsvModal}"></div>
+        <div th:replace="~{modals/StockAnalysisModals :: stockfilteringModal}"></div>
+    </main>
+
+    <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/js/Components.js}"></script>
+    
+    <script th:src="@{/js/chartjs-plugin-datalabels.min.js}"></script>
+    <script th:src="@{/js/analysisChart.js}"></script>
+    <script th:src="@{/js/analysisToolsMain.js}"></script>
+    <script th:src="@{/js/analysisDialog.js}"></script>
+
+	<script th:inline="javascript">
+	    /*<![CDATA[*/
+	    // 1. データを受け取る
+	    const toolDataList = /*[[${stockAnalysisTable}]]*/ [];
+	    const yearMonthData = /*[[${yearMonthStructure}]]*/ [];
+
+	    // ★デバッグ用: ブラウザのコンソール(F12)にデータを表示
+	    console.log("受け取ったデータ:", toolDataList);
+
+	    // 2. データがある場合のみ処理
+	    if (toolDataList && toolDataList.length > 0) {
+
+	        // ★重要: ここのプロパティ名(.toolNameなど)が、上のコンソールログのキー名と一致しているか確認！
+	        const toolNames = toolDataList.map(tool => tool.toolName);       // 型番
+	        const outNumbers = toolDataList.map(tool => tool.outNum);        // 取り出し個数
+	        const stockNumbers = toolDataList.map(tool => tool.endPeriodStock); // 在庫数
+
+	        // 3. グラフ描画 (DOM読み込み完了後)
+	        document.addEventListener('DOMContentLoaded', () => {
+	            // エラーハンドリングを追加
+	            try {
+	                drawAnalysisChart(toolNames, outNumbers, stockNumbers);
+	            } catch (e) {
+	                console.error("グラフ描画エラー:", e);
+	            }
+	        });
+	    } else {
+	        console.log("データがないためグラフを描画しません。");
+	    }
+	    /*]]>*/
+	</script>
+</body>
 </html>

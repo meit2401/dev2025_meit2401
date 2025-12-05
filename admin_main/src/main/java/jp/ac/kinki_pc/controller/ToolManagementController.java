@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,7 +19,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import jp.ac.kinki_pc.dto.AddressDto;
 import jp.ac.kinki_pc.dto.IndividualToolDto;
 import jp.ac.kinki_pc.dto.ToolDto;
-import jp.ac.kinki_pc.entity.UniqueTool;
 import jp.ac.kinki_pc.service.ToolManagementService;
 
 @Controller
@@ -26,7 +27,7 @@ public class ToolManagementController {
 
 	@Autowired
 	private ToolManagementService toolManagementService;
-
+	
 
 	@GetMapping
 	public String getTools(
@@ -36,6 +37,7 @@ public class ToolManagementController {
 			@RequestParam(required = false) String trader,
 			@RequestParam(required = false) String toolNameFilter,
 			@RequestParam(required = false) Integer selectedId,
+			// @RequestParam(required = false) Long printedToolId, // 削除
 			Model model) {
 
 		List<ToolDto> toolList = toolManagementService.searchTools(maker, category, material, trader, toolNameFilter);
@@ -47,14 +49,16 @@ public class ToolManagementController {
 		model.addAttribute("traderFilter", trader);
 		model.addAttribute("toolNameFilter", toolNameFilter);
 		model.addAttribute("selectedId", selectedId);
-
-		int individualToolCount = 0;
+		
+		// model.addAttribute("printedToolId", printedToolId); // 削除
+		
+		int individualToolCount = 0; 
 		if (selectedId != null) {
 			individualToolCount = toolManagementService.getIndividualToolCount(selectedId);
 		}
-
+		
 		model.addAttribute("individualToolCount", individualToolCount);
-
+		
 		List<IndividualToolDto> individualToolList;
 		if (selectedId != null) {
 			individualToolList = toolManagementService.getIndividualTools(selectedId);
@@ -62,19 +66,19 @@ public class ToolManagementController {
 			individualToolList = Collections.emptyList();
 		}
 		model.addAttribute("individualToolList", individualToolList);
-
+		
 		List<AddressDto> addressList = toolManagementService.getAllAddresses();
 		model.addAttribute("addressList", addressList);
-
+		
 		ToolDto selectedTool = toolManagementService.findSelectedTool(toolList, selectedId);
 		model.addAttribute("selectedTool", selectedTool);
-
+		
 		java.util.Map<String, Integer> storageCounts = toolManagementService.getStorageCounts();
 		model.addAttribute("storageCounts", storageCounts);
-
+		
 		return "ToolManagement";
 	}
-
+	
 	@GetMapping("/details")
 	@ResponseBody
 	public List<IndividualToolDto> getIndividualToolDetails(
@@ -82,42 +86,62 @@ public class ToolManagementController {
 		return toolManagementService.getIndividualTools(basicToolId);
 	}
 
+	/**
+	 * 基本工具を追加する処理
+	 * 格納場所が「装置外」の場合は、JS側でdisabledにされるためパラメータが送信されない。
+	 * そのため、在庫数(stc)と発注点(rop)は required = false とし、nullとして受け取る。
+	 */
 	@PostMapping("/add")
 	public String addTool(
 			@RequestParam String toolName,
 			@RequestParam String maker,
 			@RequestParam String toolCategory,
 			@RequestParam String toolMaterial,
-			@RequestParam int rop,
+			@RequestParam(required = false) Integer rop,
 			@RequestParam String buyer,
 			@RequestParam String storageLocation,
-			@RequestParam(defaultValue = "0") int stc) {
-
+			@RequestParam(required = false) Integer stc) {
+		
 		toolManagementService.addTool(toolName, maker, toolCategory, toolMaterial, stc, rop, buyer, storageLocation);
 		return "redirect:/tool";
 	}
 
 	@PostMapping("/delete")
-	public String deleteTool(@RequestParam int basicToolId) {
-		toolManagementService.deleteTool(basicToolId);
-		return "redirect:/tool";
+	@ResponseBody // Ajaxリクエストに対し、HTMLではなくデータを返す
+	public ResponseEntity<String> disableTool(@RequestParam int basicToolId) {
+		try {
+			toolManagementService.disableTool(basicToolId);
+			// 成功時は 200 OK
+			return ResponseEntity.ok("削除完了"); 
+		} catch (DataIntegrityViolationException e) {
+			// 外部キー制約違反（使用中のため削除不可）
+			// 409 Conflict: リソースの状態と矛盾するためリクエストを完了できない
+			return ResponseEntity.status(HttpStatus.CONFLICT)
+					.body("この工具は履歴や在庫に関連付けられているため削除できません。");
+		} catch (Exception e) {
+			// その他のエラー
+			e.printStackTrace();
+			// 500 Internal Server Error
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(e.getMessage());
+		}
 	}
-
+	
 	@PostMapping("/edit")
 	public String editRop(
 			@RequestParam int basicToolId,
 			@RequestParam int rop) {
-
+		
 		toolManagementService.updateReorderPoint(basicToolId, rop);
 		return "redirect:/tool?selectedId=" + basicToolId;
 	}
-
+	
 	@PostMapping("/createIndividual")
 	@ResponseBody // JSONレスポンスを返す
 	public ResponseEntity<Map<String, Object>> createIndividualTool(
 			@RequestParam int basicToolId,
-			@RequestParam(defaultValue = "1") int casePackNum) {
-
+			@RequestParam(defaultValue = "1") int casePackNum) { // casePackNum はフォーム送信ロジック側で制御
+		
 		try {
 			long newUniqueToolId = toolManagementService.createIndividualTool(basicToolId, casePackNum);
 			// 成功したら uniqueToolId を含むJSONを返す
@@ -127,37 +151,24 @@ public class ToolManagementController {
 			return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
 		}
 	}
-
+	
 	/**
 	 * QRコード再印刷のためにタイムスタンプを更新し、uniqueToolIdを返す (Ajax用)
-	 * 9桁のラベルコード(Hex)に対応
 	 */
 	@PostMapping("/reprintQrAjax")
 	@ResponseBody
 	public ResponseEntity<Map<String, Object>> reprintQrCodeAjax(@RequestParam String qrNumber) {
-		if (qrNumber == null) {
-			return ResponseEntity.badRequest().body(Map.of("error", "コードが入力されていません。"));
+		if (qrNumber == null || qrNumber.length() != 10 || !qrNumber.matches("\\d{10}")) {
+			return ResponseEntity.badRequest().body(Map.of("error", "10桁の数字を入力してください。"));
 		}
-
+		
 		try {
-			if (qrNumber.matches("(?i)[0-9a-f]{9}")) { // (?i)は大文字小文字区別なし
-				UniqueTool tool = toolManagementService.findUniqueToolByLabelCode(qrNumber);
-				if (tool != null) {
-					// 工具が見つかった場合、そのIDを使って reprintQrCode (タイムスタンプ更新) を呼び出す
-					// reprintQrCode は 10桁のStringID を期待しているため再構築する
-					String tenDigitId = String.format("%05d%05d", tool.getBasicToolId(), tool.getUniqueNum());
-
-					Long uniqueToolId = toolManagementService.reprintQrCode(tenDigitId);
-					return ResponseEntity.ok(Map.of("uniqueToolId", uniqueToolId));
-				} else {
-					return ResponseEntity.status(404).body(Map.of("error", "ラベルコードに該当する工具が見つかりません。"));
-				}
+			Long uniqueToolId = toolManagementService.reprintQrCode(qrNumber);
+			if (uniqueToolId != null) {
+				return ResponseEntity.ok(Map.of("uniqueToolId", uniqueToolId));
+			} else {
+				return ResponseEntity.status(404).body(Map.of("error", "該当する工具が見つかりません。"));
 			}
-			// エラー: 形式不一致
-			else {
-				return ResponseEntity.badRequest().body(Map.of("error", "10桁の数字、または9桁のラベルコードを入力してください。"));
-			}
-
 		} catch (IllegalArgumentException e) {
 			 return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
 		} catch (Exception e) {

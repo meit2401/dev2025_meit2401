@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.time.YearMonth;
 import java.util.List;
 
+// Logger関連のクラスをインポート
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,7 @@ public class OperationHistoryController {
 	private OperationHistoryService historyService;
 	
 	// application.properties から動画保存パスを取得 (デフォルトは Z:/recordings)
-	@Value("${video.storage.path:Z:/recordings}")
+	@Value("${video.storage.path:C:/recordings}")
 	private String videoStoragePath;
 		
 	/**
@@ -55,18 +56,20 @@ public class OperationHistoryController {
 	@GetMapping("/history")
 	public String showHistoryPage(Model model) {
 		
-		//動画が格納されているパス (設定ファイルから読み込むように変更)
-		//Path sourceDir = Paths.get(videoStoragePath);
+		// 動画コピー処理は不要になったため削除しました
 		
 		model.addAttribute("historyFilterData", new OperationHistoryFilterDialogData());
    
-		// DBから絞り込み候補（年度と月リスト）を最新の状態で取得
-		
-		// メソッド呼び出しのスペルミスを修正 (getHisotryCandidiate -> getHistoryCandidate)
-		List<YearMonthData> yearMonthData = historyService.getHistoryCandidate();
-		
-		// 3. モデル（セッション）に追加
-		model.addAttribute("yearMonthStructure", yearMonthData);
+		// セッションに年月の構造データが存在しない場合のみ、DBから取得する
+		// (この判定ロジックはパフォーマンス向上のため残しておいて問題ありません)
+		if (!model.containsAttribute("yearMonthStructure")) {
+			// サービスから絞り込み候補（年度と月リスト）を取得
+			List<YearMonthData> yearMonthData = historyService.getHistoryCandidate();
+			System.out.println("年/月データ: " + yearMonthData.toString());
+			
+			// モデル（セッション）に追加
+			model.addAttribute("yearMonthStructure", yearMonthData);
+		}
 
 		return "OperationHistory";
 	}
@@ -147,12 +150,12 @@ public class OperationHistoryController {
 
 	/**
 	 * 外部ディレクトリから動画ファイルをストリーミング配信します。
-	 * (OperationHistory.js の player.src = `/video/${videoPath}` から呼び出されます)
+	 * (HTML/JS側がこのエンドポイントを使用しているため、コピー機能を追加した後もこのメソッドは維持します)
 	 *
-	 * @param filename 配信する動画のファイル名 (例: recording_20251010_134116.mp4)
+	 * @param filename 配信する動画のファイル名
 	 * @return 動画データを含むResponseEntity
 	 */
-	@GetMapping("/video/{filename:.+}") // :.+ を追加し、ファイル名中のドット(.)が切り捨てられないようにする
+	@GetMapping("/video/{filename:.+}")
 	public ResponseEntity<Resource> streamVideo(@PathVariable String filename) {
 		
 		try {
@@ -172,10 +175,9 @@ public class OperationHistoryController {
 				// 3. レスポンスを構築して動画データを返す
 				return ResponseEntity.ok()
 						.header(HttpHeaders.CONTENT_TYPE, "video/mp4")
-						// .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(resource.contentLength())) // 必要に応じて
 						.body(resource);
 			} else {
-				// ファイルが見つからない場合 (パスが間違っているか、ファイル名がDBと一致しない)
+				// ファイルが見つからない場合
 				logger.warn("要求された動画ファイルが見つかりません: {}", videoFile);
 				return ResponseEntity.notFound().build();
 			}
@@ -184,10 +186,9 @@ public class OperationHistoryController {
 			logger.error("動画パスの形式が不正です (MalformedURLException): {}", filename, e);
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
-			// その他のエラー (例: 権限不足)
+			// その他のエラー
 			logger.error("動画ストリーミング中に予期せぬエラーが発生しました", e);
 			return ResponseEntity.internalServerError().build();
 		}
 	}
- 
 }

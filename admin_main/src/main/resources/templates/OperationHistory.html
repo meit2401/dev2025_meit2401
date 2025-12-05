@@ -4,11 +4,11 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>admin_main 操作履歴画面</title>
-		
+
 		<!-- Bootstrap 標準CSS -->
 		<link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
 		<link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet">
-		
+
 		<!-- Bootstrap カスタムCSS -->
 		<link th:href="@{/css/custom.css}" rel="stylesheet">
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -36,20 +36,62 @@
 				</div>
 			</div>
 
-			<!-- 履歴絞り込みボタン -->
 			<div class="container my-4">
-				<div class="d-flex justify-content-end align-items-center">
-					<button type="button" class="btn custom-btn-common" style="width: 200px" data-bs-toggle="modal" data-bs-target="#historyModal">絞り込み</button>
-				</div>
+			    <div class="d-flex justify-content-between align-items-end border-bottom pb-2">
+
+			        <div class="d-flex flex-column">
+			            <div class="d-flex gap-4 mb-1">
+			                <span class="custom-text--normal" id="detail-category">分類：○○○</span>
+			                <span class="custom-text--normal" id="detail-maker">メーカー：○○○</span>
+			            </div>
+			            <div class="mb-1">
+			                <span class="custom-text--normal" id="detail-name">型番：○○○</span>
+							<span class="custom-text--normal" id="detail-material">材質：○○○</span>
+			            </div>
+			            <div class="d-flex gap-4">
+			                <span class="custom-text--normal" id="detail-container">コンテナ番号：○○○</span>
+			                <span class="custom-text--normal" id="detail-quantity">操作個数：○○</span>
+							<span class="custom-text--normal" id="detail-warning">警告無視：○○</span>
+			            </div>
+			        </div>
+
+			        <div>
+			            <button type="button" class="btn custom-btn-common" data-bs-toggle="modal" data-bs-target="#historyModal">絞り込み</button>
+			        </div>
+
+			    </div>
 			</div>
-			
+
+
+
 			<div class="container border rounded p-3 mb-4">
 				<div class="row g-4">
-					<div class="col-lg-9">
+					<div class="col-lg-12">
+						<div class="container border rounded p-3 mb-4"
+						     th:if="${絞り込み条件表示 == null or 絞り込み条件表示.work_details != '棚卸'}">
 						<!-- 入出庫録画表示 -->
-						<div class="custom-video-wrapper pt-3">
-							<video id="player" title="ローカル動画"></video>
-						</div>	
+
+						<div class="custom-video-wrapper pt-3 position-relative">
+						    <video id="player" title="ローカル動画"></video>
+
+						    <div id="inventory-message" class="position-absolute top-0 start-0 w-100 h-100 justify-content-center align-items-center bg-secondary text-white"
+						         style="display: none; z-index: 10; opacity: 0.9;">
+						        <span class="custom-text fw-bold">棚卸しのため動画はありません</span>
+						    </div>
+
+						    <div id="default-message" class="position-absolute top-0 start-0 w-100 h-100 justify-content-center align-items-center bg-light text-dark"
+						         style="display: flex; z-index: 20; opacity: 1.0;">
+						        <span class="custom-text fw-bold">絞り込みを行ってください</span>
+						    </div>
+
+						    <div id="error-message" class="position-absolute top-0 start-0 w-100 h-100 justify-content-center align-items-center flex-column  bg-danger text-white"
+						         style="display: none; z-index: 30; opacity: 0.9;">
+						        <span class="custom-text fw-bold">動画パスが正しく記録されていません</span>
+								<span class="custom-text fw-bold">または</span>
+								<span class="custom-text fw-bold">動画の保存期間が過ぎた可能性があります。</span>
+						    </div>
+						</div>
+
 						<div class="container">
 							<input type="range" class="form-range" id="seek-bar" value="0" min="0" max="100" step="0.1">
 							<div class="d-flex justify-content-between">
@@ -59,7 +101,7 @@
 						</div>
 						<!-- 再生ツール -->
 						<div class="container-fluid text-center">
-							<div id="status-display" class="custom-text mb-2">&nbsp;</div>
+							<!--<div id="status-display" class="custom-text mb-2">&nbsp;</div>-->
 							<div class="row justify-content-center g-2 mb-3">
 								<div class="col">
 									<button type="button" id="skip-backward-btn" class="btn custom-btn-video w-100">戻る</button>
@@ -95,34 +137,15 @@
 								</div>
 							</div>
 						</div>
-					</div> 
+					</div>
 					<!-- 履歴詳細表示 -->
-					<div class="col-lg-3">
-						<div class="container-fluid p-3 h-100">
-							<div class="row gy-2 mb-3">
-								<div class="col-12">
-									<div class="custom-text">工具詳細</div>
-								</div>
-								<div class="col-12">
-									<div class="custom-text--short custom-text--wrap" id="detail-category">分類：○○○</div>
-								</div>
-								<div class="col-12">
-									<div class="custom-text--short custom-text--wrap" id="detail-maker">メーカー：○○○</div>
-								</div>
-								<div class="col-12">
-									<div class="custom-text--short custom-text--wrap" id="detail-name">型番：○○○</div>
-								</div>
-								<div class="col-12">
-									<div class="custom-text--short custom-text--wrap" id="detail-material">材質：○○○</div>
-								</div>
-							</div>
-						</div>
-					</div> 
+
 				</div>
 			</div>
 			<div class="container">
 				<!-- 操作履歴リスト -->
-				<div class="table-responsive" style="max-height: 390px; overflow-y: auto;">
+				<div class="table-responsive"
+				th:style="${絞り込み条件表示 != null and 絞り込み条件表示.work_details == '棚卸'} ? 'max-height: 1100px; overflow-y: auto;' : 'max-height: 380px; overflow-y: auto;'">
 					<table id="historyTable" class="table table-bordered table-striped w-100" style="table-layout: fixed;">
 						<thead class="custom-list">
 							<tr>
@@ -134,13 +157,18 @@
 						</thead>
 						<tbody class="custom-text--short">
 							<tr th:if="${絞り込みボタン結果表示 != null}"
-								th:each="item : ${絞り込みボタン結果表示}"
-								th:data-category="${item.toolCategory}"
-								th:data-maker="${item.maker}"
-								th:data-name="${item.toolName}"
-								th:data-material="${item.toolMaterial}"
-								th:data-video-path="${item.video_path}" 
-								style="cursor: pointer;"> 
+							    th:each="item : ${絞り込みボタン結果表示}"
+							    th:data-category="${item.toolCategory}"
+							    th:data-maker="${item.maker}"
+							    th:data-name="${item.toolName}"
+							    th:data-material="${item.toolMaterial}"
+							    th:data-container="${item.displayAddress}"
+							    th:data-quantity="${item.toolNum}"
+							    th:data-warning="${item.trackResult}"
+							    th:data-video-path="${item.video_path}"
+							    th:data-operation="${item.operationContent}"
+							    style="cursor: pointer;">
+
 								<td th:text="${#temporals.format(item.processingTime, 'yyyy-MM-dd')}"></td>
 								<td th:text="${#temporals.format(item.processingTime, 'HH:mm:ss')}"></td>
 								<td th:text="${item.userName}"></td>
@@ -152,15 +180,19 @@
 			</div>
 
 			<div th:replace="~{modals/OperationHistoryModals :: historyModal}"></div>
-			
+
 		</main>
-		
+
 		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
 		<script th:src="@{/js/Components.js}"></script>
 		<script th:src="@{/js/OperationHistory.js}"></script>
 		<script th:inline="javascript">
-			/*<![CDATA[*/ const yearMonthData = /*[[${yearMonthStructure}]]*/ []; /*]]>*/
+			/*<![CDATA[*/
+			    const yearMonthData = /*[[${yearMonthStructure}]]*/ [];
+
+			    const isInventoryMode = /*[[${絞り込み条件表示 != null and 絞り込み条件表示.work_details == '棚卸'}]]*/ false;
+			    /*]]>*/
 		</script>
-		
+
 	</body>
 </html>

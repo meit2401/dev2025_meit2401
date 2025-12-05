@@ -289,11 +289,36 @@ document.addEventListener("DOMContentLoaded", () => {
 				historyTableBody.querySelectorAll('tr.custom-list--selected').forEach(row => {
 					row.classList.remove('custom-list--selected');
 				});
+				
 				updateVideoControlsState(false);
+				
+				// ★追加：メッセージを隠して、動画プレーヤーを表示状態に戻す
+				const inventoryMessage = document.getElementById('inventory-message');
+				if (inventoryMessage) inventoryMessage.style.display = 'none';
+				
+				//追加：エラーメッセージも隠す
+				const errorMessage = document.getElementById('error-message');
+				if (errorMessage) errorMessage.style.display = 'none';
+				
+				const defaultMessage = document.getElementById('default-message');
+				if (defaultMessage) defaultMessage.style.display = 'flex';
+				
+				if (player) player.style.visibility = 'visible';
+				// ★追加終了
+				
 				document.getElementById('detail-category').textContent = '分類：○○○';
 				document.getElementById('detail-maker').textContent = 'メーカー：○○○';
 				document.getElementById('detail-name').textContent = '型番：○○○';
 				document.getElementById('detail-material').textContent = '材質：○○○';
+				document.getElementById('detail-container').texContent ='コンテナ番号：○○○';
+				document.getElementById('detail-quantity').textContent ='操作個数：○○';
+				
+				// ★追加：警告無視の項目を再表示し、テキストをリセット
+				const detailWarningElement = document.getElementById('detail-warning');
+				if (detailWarningElement) {
+					detailWarningElement.style.display = ''; // 表示状態に戻す
+					detailWarningElement.textContent = '警告無視：○○';
+				}
 				// document.getElementById('detail-buyer').textContent = '商社：○○○'; // 削除
 				player.src = "";
 				player.load(); // 'loadstart' が発火
@@ -310,6 +335,17 @@ document.addEventListener("DOMContentLoaded", () => {
 			const maker = clickedRow.dataset.maker;
 			const name = clickedRow.dataset.name;
 			const material = clickedRow.dataset.material;
+			
+			const container = clickedRow.dataset.container; 
+			const quantity = clickedRow.dataset.quantity;
+			const warning = clickedRow.dataset.warning;
+			
+			const operation = clickedRow.dataset.operation;
+			const inventoryMessage = document.getElementById('inventory-message');
+			
+			const defaultMessage = document.getElementById('default-message');
+			
+			const errorMessage = document.getElementById('error-message');
 			// const buyer = clickedRow.dataset.buyer; // 削除
 
 			document.getElementById('detail-category').textContent = '分類：' + (category || '----');
@@ -318,13 +354,75 @@ document.addEventListener("DOMContentLoaded", () => {
 			document.getElementById('detail-material').textContent = '材質：' + (material || '----');
 			// document.getElementById('detail-buyer').textContent = '商社：' + (buyer || '----'); // 削除
 
-			if (videoPath && videoPath !== "null" && videoPath !== "0") {
-				player.src = `/video/${videoPath}`;
-				updateVideoControlsState(true); 
-			} else {
-				player.src = ""; 
-				updateVideoControlsState(false);
+			document.getElementById('detail-container').textContent = 'コンテナ番号：' + (container || '----');
+			document.getElementById('detail-quantity').textContent = '操作個数：' + (quantity || '----');
+			document.getElementById('detail-warning').textContent = '警告無視：' + (warning || '----');
+			
+			// ★追加：警告無視の要素を取得しておく
+			const detailWarningElement = document.getElementById('detail-warning');
+			
+			// ★追加：データ行が選ばれたので、デフォルトメッセージは必ず隠す
+			if (defaultMessage) defaultMessage.style.display = 'none';
+			if (inventoryMessage) inventoryMessage.style.display = 'none';
+			if (errorMessage) errorMessage.style.display = 'none';
+			if (player) {
+				player.style.visibility = 'visible';
+				player.src = ""; // 一旦リセット
 			}
+			
+			updateVideoControlsState(false);
+			
+			// ★★★ 修正箇所：棚卸かどうかで分岐 ★★★
+			if (operation === '棚卸') {
+				
+				// ★追加：警告無視の項目を非表示にする
+				if (detailWarningElement) detailWarningElement.style.display = 'none';
+				
+				// 棚卸の場合: メッセージを表示し、動画・ボタンを無効化
+				if (inventoryMessage) inventoryMessage.style.display = 'flex';
+				
+				if (player) {
+					player.style.visibility = 'hidden'; 
+					player.src = "";
+				}
+				updateVideoControlsState(false);
+				
+			} else {
+				
+				// ★追加：警告無視の項目を表示する（元に戻す）
+				if (detailWarningElement) detailWarningElement.style.display = '';
+				
+                // 棚卸以外の場合: 棚卸メッセージを隠す
+                if (inventoryMessage) inventoryMessage.style.display = 'none';
+                
+                // ★追加: エラーメッセージ要素を取得
+                const errorMessage = document.getElementById('error-message');
+
+                // 通常の動画ロード判定
+                if (videoPath && videoPath !== "null" && videoPath !== "0") {
+                    // ■ 動画がある場合（正常）
+                    if (errorMessage) errorMessage.style.display = 'none'; // エラーを隠す
+                    
+                    if (player) {
+                        player.style.visibility = 'visible';
+                        player.src = `/video/${videoPath}`;
+                    }
+                    updateVideoControlsState(true); 
+
+                } else {
+                    // ■ 動画パス不正（エラー）の場合
+                    // ★エラーメッセージを表示
+                    if (errorMessage) errorMessage.style.display = 'flex';
+                    
+                    // プレーヤーを隠す
+                    if (player) {
+                        player.style.visibility = 'hidden'; 
+                        player.src = ""; 
+                    }
+                    updateVideoControlsState(false);
+                }
+            }
+						
 			player.load(); // 'loadstart' が発火
 			
 			if (!player.src) {
@@ -442,7 +540,10 @@ document.addEventListener("DOMContentLoaded", () => {
 	}
 
 	// --- (9) 初期化処理 ---
-	adjustTableRows(5, historyTableBody); 
+	//adjustTableRows(5, historyTableBody); 
+	
+	const minRows = (typeof isInventoryMode !== 'undefined' && isInventoryMode) ? 16 : 5;
+	adjustTableRows(minRows, historyTableBody);
 	
 	if (speed10Btn) {
 		updateSpeedButtonStyles(speed10Btn); // 速度ボタンの初期スタイル

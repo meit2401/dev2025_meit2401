@@ -1,12 +1,8 @@
 package jp.ac.kinki_pc.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class HistoryFilterDisplayData {
 	String period;//期間
 	String username;//氏名

@@ -70,7 +70,10 @@ public class OperationHistoryService {
 				p.getToolCategory(),
 				p.getMaker(),
 				p.getToolName(),
-				p.getToolMaterial()
+				p.getToolMaterial(),
+				(p.getToolNum() != null ? Math.abs(p.getToolNum()) : 0),
+		        p.getDisplayAddress(),
+		        p.getTrackResult()
 			))
 			.collect(Collectors.toList());
 

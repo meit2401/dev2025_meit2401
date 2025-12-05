@@ -1,6 +1,6 @@
 <!-- 操作履歴絞り込みモーダル -->
 <div th:fragment="historyModal">
-	<div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+	<div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
 		<div class="modal-dialog modal-dialog-centered custom-modal">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -41,7 +41,7 @@
 							<div class="row mb-3 align-items-center justify-content-center">
 								<label for="username" class="col-sm-3 col-form-label custom-text text-center">氏名</label>
 								<div class="col-sm-6">
-									<input type="text" th:field="*{username}" placeholder="氏名を入力"  class="form-control custom-text form-control-lg js-normalize-hankaku">
+									<input type="text" th:field="*{username}" placeholder="氏名を入力"  class="form-control custom-text form-control-lg">
 								</div>
 							</div>	
 							<!-- 作業内容 -->
@@ -51,6 +51,7 @@
 										 <option selected value="全て">全て</option>
 										 <option value="補充">補充</option>
 										 <option value="取出">取出</option>
+										 <option value="棚卸">棚卸</option>
 									 </select>
 								</div>
 							</div>			  

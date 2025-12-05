@@ -4,10 +4,8 @@ import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class HistoryData {
 
@@ -49,4 +47,11 @@ public class HistoryData {
 	 * 工具の材質 (SQLの tool_material AS toolMaterial に対応)
 	 */
 	private String toolMaterial;
+	
+	// ★フィールドを追加
+    private Integer toolNum;       // 操作個数
+    
+    private String displayAddress; // コンテナ番号
+    
+    private String trackResult;
 }

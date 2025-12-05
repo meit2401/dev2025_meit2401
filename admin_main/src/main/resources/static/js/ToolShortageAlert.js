@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// 定数を定義
-	const minRows = 17; 
+	const minRows = 16; 
 	const cellsInRow = 7; // ToolShortageAlert.html の列数
 
 	/**

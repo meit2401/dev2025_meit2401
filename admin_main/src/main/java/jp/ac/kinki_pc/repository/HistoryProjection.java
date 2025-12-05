@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * DTO (HistoryData) への直接依存を避けるために使用する。
  */
 public interface HistoryProjection {
-	LocalDateTime getProcTime();
+	LocalDateTime getProcTime(); 
 	String getUserName();
 	String getOperationClass();
 	String getVideoPath();
@@ -16,4 +16,7 @@ public interface HistoryProjection {
 	String getMaker();
 	String getToolName();
 	String getToolMaterial();
+	Integer getToolNum();        // 操作個数
+    String getDisplayAddress();  // コンテナ番号
+    String getTrackResult();//警告無視の結果
 }
