@@ -36,6 +36,7 @@ public class ToolManagementController {
 			@RequestParam(required = false) String trader,
 			@RequestParam(required = false) String toolNameFilter,
 			@RequestParam(required = false) Integer selectedId,
+			// @RequestParam(required = false) Long printedToolId, // 削除
 			Model model) {
 
 		List<ToolDto> toolList = toolManagementService.searchTools(maker, category, material, trader, toolNameFilter);
@@ -47,14 +48,16 @@ public class ToolManagementController {
 		model.addAttribute("traderFilter", trader);
 		model.addAttribute("toolNameFilter", toolNameFilter);
 		model.addAttribute("selectedId", selectedId);
-
-		int individualToolCount = 0;
+		
+		// model.addAttribute("printedToolId", printedToolId); // 削除
+		
+		int individualToolCount = 0; 
 		if (selectedId != null) {
 			individualToolCount = toolManagementService.getIndividualToolCount(selectedId);
 		}
-
+		
 		model.addAttribute("individualToolCount", individualToolCount);
-
+		
 		List<IndividualToolDto> individualToolList;
 		if (selectedId != null) {
 			individualToolList = toolManagementService.getIndividualTools(selectedId);
@@ -62,16 +65,16 @@ public class ToolManagementController {
 			individualToolList = Collections.emptyList();
 		}
 		model.addAttribute("individualToolList", individualToolList);
-
+		
 		List<AddressDto> addressList = toolManagementService.getAllAddresses();
 		model.addAttribute("addressList", addressList);
-
+		
 		ToolDto selectedTool = toolManagementService.findSelectedTool(toolList, selectedId);
 		model.addAttribute("selectedTool", selectedTool);
-
+		
 		java.util.Map<String, Integer> storageCounts = toolManagementService.getStorageCounts();
 		model.addAttribute("storageCounts", storageCounts);
-
+		
 		return "ToolManagement";
 	}
 
@@ -88,26 +91,41 @@ public class ToolManagementController {
 			@RequestParam String maker,
 			@RequestParam String toolCategory,
 			@RequestParam String toolMaterial,
-			@RequestParam int rop,
+			@RequestParam(required = false) Integer rop,
 			@RequestParam String buyer,
 			@RequestParam String storageLocation,
-			@RequestParam(defaultValue = "0") int stc) {
-
+			@RequestParam(required = false) Integer stc) {
+		
 		toolManagementService.addTool(toolName, maker, toolCategory, toolMaterial, stc, rop, buyer, storageLocation);
 		return "redirect:/tool";
 	}
 
 	@PostMapping("/delete")
-	public String deleteTool(@RequestParam int basicToolId) {
-		toolManagementService.deleteTool(basicToolId);
-		return "redirect:/tool";
+	@ResponseBody // Ajaxリクエストに対し、HTMLではなくデータを返す
+	public ResponseEntity<String> disableTool(@RequestParam int basicToolId) {
+		try {
+			toolManagementService.disableTool(basicToolId);
+			// 成功時は 200 OK
+			return ResponseEntity.ok("削除完了"); 
+		} catch (DataIntegrityViolationException e) {
+			// 外部キー制約違反（使用中のため削除不可）
+			// 409 Conflict: リソースの状態と矛盾するためリクエストを完了できない
+			return ResponseEntity.status(HttpStatus.CONFLICT)
+					.body("この工具は履歴や在庫に関連付けられているため削除できません。");
+		} catch (Exception e) {
+			// その他のエラー
+			e.printStackTrace();
+			// 500 Internal Server Error
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(e.getMessage());
+		}
 	}
 
 	@PostMapping("/edit")
 	public String editRop(
 			@RequestParam int basicToolId,
 			@RequestParam int rop) {
-
+		
 		toolManagementService.updateReorderPoint(basicToolId, rop);
 		return "redirect:/tool?selectedId=" + basicToolId;
 	}
