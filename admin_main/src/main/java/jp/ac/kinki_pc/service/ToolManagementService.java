@@ -239,26 +239,29 @@ public class ToolManagementService {
      */
     @Transactional
     public Long reprintQrCode(String qrNumber) {
-        if (qrNumber == null || qrNumber.length() != 10) {
-            throw new IllegalArgumentException("IDは10桁である必要があります。");
+        if (qrNumber == null || qrNumber.length() != 9) {
+            throw new IllegalArgumentException("IDは9桁である必要があります。");
         }
         try {
-            int basicToolId = Integer.parseInt(qrNumber.substring(0, 5));
-            int uniqueNum = Integer.parseInt(qrNumber.substring(5));
+            // 16進数文字列をLong型のIDに変換
+            long uniqueToolId = Long.parseLong(qrNumber, 16);
             
-            Optional<UniqueTool> toolOptional = uniqueToolRepository.findByBasicToolIdAndUniqueNum(basicToolId, uniqueNum);
+            // 1. IDで直接検索
+            Optional<UniqueTool> toolOptional = uniqueToolRepository.findById(uniqueToolId);
             
             if (toolOptional.isPresent()) {
+                // 2. 存在すれば更新
                 UniqueTool toolToUpdate = toolOptional.get();
                 toolToUpdate.setToolPrintTime(LocalDateTime.now());
-                uniqueToolRepository.save(toolToUpdate);
+                uniqueToolRepository.save(toolToUpdate); // save() が更新を実行
                 return toolToUpdate.getUniqueToolId();
             } else {
+                // 該当なし
                 return null;
             }
             
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("IDは数字である必要があります。");
+            throw new IllegalArgumentException("IDの形式が正しくありません。");
         }
     }
 
@@ -379,7 +382,7 @@ public class ToolManagementService {
     public Map<String, String> getQrDataForTool(long uniqueToolId) {
         Optional<UniqueTool> toolOptional = uniqueToolRepository.findById(uniqueToolId);
         if (toolOptional.isEmpty()) {
-            return null;
+            return null; // 存在しないID
         }
         
         UniqueTool uniqueTool = toolOptional.get();
@@ -389,9 +392,9 @@ public class ToolManagementService {
             timestampStr = uniqueTool.getToolPrintTime().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         }
         
-        String basicToolIdPadded = String.format("%05d", uniqueTool.getBasicToolId());
-        String uniqueNumPadded = String.format("%05d", uniqueTool.getUniqueNum());
-        String toolIdentifier = basicToolIdPadded + uniqueNumPadded;
+        // IDを16進数9桁(0埋め)に変換
+        String toolIdentifier = String.format("%09X", uniqueTool.getUniqueToolId());
+        
         String displayText = toolIdentifier;
         String qrCodeData = String.format("T%s-%s",
             toolIdentifier,

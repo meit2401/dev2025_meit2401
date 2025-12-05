@@ -731,22 +731,23 @@ document.addEventListener('DOMContentLoaded', () => {
 		const reprintModal = new bootstrap.Modal(reprintModalEl);
 		
 		/**
-		 * 10桁の工具ID文字列を受け取り、再印刷Ajaxリクエストを実行する共通関数
-		 * @param {string} qrNumber - 10桁の工具ID (basicToolId 5桁 + uniqueNum 5桁)
+		 * 9桁の工具コード(16進数)を受け取り、再印刷Ajaxリクエストを実行する共通関数
+		 * @param {string} qrNumber - 9桁の工具ID (16進数)
 		 * @returns {Promise<boolean>} 処理が成功し印刷が実行された場合は true
 		 */
 		async function executeReprint(qrNumber) {
-			if (qrNumber.length !== 10 || !/^\d{10}$/.test(qrNumber)) {
-				alert('10桁の半角数字を入力してください。');
+			// バリデーション: 9桁の16進数
+			if (qrNumber.length !== 9 || !/^[0-9A-Fa-f]{9}$/.test(qrNumber)) {
+				alert('9桁の16進数を入力してください。');
 				return false;
 			}
-	
+
 			// OKボタン（手入力用）があれば無効化
 			if (reprintOkButton) {
 				reprintOkButton.disabled = true;
 				reprintOkButton.textContent = '処理中...';
 			}
-	
+
 			try {
 				const response = await fetch('/tool/reprintQrAjax', {
 					method: 'POST',
@@ -755,7 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					},
 					body: `qrNumber=${encodeURIComponent(qrNumber)}`
 				});
-	
+
 				if (response.ok) {
 					const result = await response.json();
 					if (result.uniqueToolId) {
@@ -778,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					const errorText = await response.text();
 					alert(`サーバーエラーが発生しました: ${errorText}`);
 				}
-	
+
 			} catch (error) {
 				// ネットワークエラーなど
 				console.error('QRコード再印刷リクエスト中にエラー:', error);
@@ -821,11 +822,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			// 300ミリ秒後に入力がなければ、入力完了とみなして処理を開始
 			reprintDebounceTimeout = setTimeout(async () => {
 				try {
-					// QRコードデータ (例: T0010002-2025...) から 7桁のID (0010002) を抽出
+					// QRコードデータ (例: T04995F2D1-2025...) から 9桁のID部分を抽出
 					const toolIdentifier = qrCodeData.substring(1).split('-')[0];
 					
 					if (toolIdentifier) {
-						// 抽出した7桁IDで再印刷処理を実行
+						// 抽出した9桁IDで再印刷処理を実行
 						const success = await executeReprint(toolIdentifier);
 						
 						if (success) {
@@ -851,16 +852,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		
 		// --- (C) モーダル表示時の処理 ---
 		reprintModalEl.addEventListener('show.bs.modal', () => {
-			qrNumberInput.value = ''; // 手入力欄クリア
-			qrScanInput.value = ''; // スキャン入力欄クリア
-			clearTimeout(reprintDebounceTimeout); // デバウンスタイマーをクリア
-			
-			// OKボタンの状態をリセット
-			reprintOkButton.disabled = false;
-			reprintOkButton.textContent = 'OK';
-
-			// QRスキャン用の非表示入力欄にフォーカスを当てる (loginModalと同様)
-			setTimeout(() => qrScanInput.focus(), 500);
+			// ... 省略 ...
 		});
 		
 		// --- (D) モーダル非表示時の処理 ---

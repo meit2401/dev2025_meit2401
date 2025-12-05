@@ -158,8 +158,9 @@ public class ToolManagementController {
 	@PostMapping("/reprintQrAjax")
 	@ResponseBody
 	public ResponseEntity<Map<String, Object>> reprintQrCodeAjax(@RequestParam String qrNumber) {
-		if (qrNumber == null || qrNumber.length() != 10 || !qrNumber.matches("\\d{10}")) {
-			return ResponseEntity.badRequest().body(Map.of("error", "10桁の数字を入力してください。"));
+		// バリデーション: 9桁の16進数
+		if (qrNumber == null || !qrNumber.matches("^[0-9A-Fa-f]{9}$")) {
+			return ResponseEntity.badRequest().body(Map.of("error", "9桁の16進数を入力してください。"));
 		}
 		
 		try {
@@ -170,7 +171,7 @@ public class ToolManagementController {
 				return ResponseEntity.status(404).body(Map.of("error", "該当する工具が見つかりません。"));
 			}
 		} catch (IllegalArgumentException e) {
-			 return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+			return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().body(Map.of("error", "サーバー内部エラーが発生しました。"));
 		}
