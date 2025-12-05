@@ -430,24 +430,19 @@
   
 <!-- QRコード再印刷モーダル -->
 <div th:fragment="printqrcodeModal" th:remove="tag">
-	<div class="modal fade" id="printqrcodeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+	<div class="modal fade" id="printqrcodeModal" tabindex="-1" aria-hidden="true">
 		<div class="modal-dialog custom-modal modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">
-					<!--<h1 class="modal-title custom-text--large text-center w-100">QRコードをスキャンするか<br>ラベルの番号を入力してください</h1>-->
 					<h1 class="modal-title custom-text--large text-center w-100">ラベル番号を入力してください</h1>
 				</div>
 				<div class="modal-body">
-					<!--
-					<div class="text-center">
-						<img th:src="@{/images/qrcode_icon.png}" alt="QR Code Icon" style="width: 300px; height: 300px; margin-bottom: 20px;">
-					</div>
 					<input type="text" id="qrScanInput" class="visually-hidden" autofocus>
-					-->
+					
 					<div class="row mb-3 align-items-center justify-content-center">
 						<label for="qrNumber" class="col-4 custom-text col-form-label text-center">工具ラベルコード</label>
 						<div class="col-7">
-							<input type="text" id="qrNumber" class="form-control form-control-lg custom-text js-normalize-hankaku" maxlength="9">
+							<input type="text" id="qrNumber" class="form-control form-control-lg custom-text js-normalize-hankaku" maxlength="10">
 						</div>
 					</div>
 				</div>

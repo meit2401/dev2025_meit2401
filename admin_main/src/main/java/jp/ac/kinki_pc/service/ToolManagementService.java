@@ -238,32 +238,28 @@ public class ToolManagementService {
      * @return 更新された個別工具ID。該当する工具が存在しない場合はnull
      */
     @Transactional
-    public Long reprintQrCode(String qrNumber) {
-        if (qrNumber == null || qrNumber.length() != 9) {
-            throw new IllegalArgumentException("IDは9桁である必要があります。");
-        }
-        try {
-            // 16進数文字列をLong型のIDに変換
-            long uniqueToolId = Long.parseLong(qrNumber, 16);
-            
-            // 1. IDで直接検索
-            Optional<UniqueTool> toolOptional = uniqueToolRepository.findById(uniqueToolId);
-            
-            if (toolOptional.isPresent()) {
-                // 2. 存在すれば更新
-                UniqueTool toolToUpdate = toolOptional.get();
-                toolToUpdate.setToolPrintTime(LocalDateTime.now());
-                uniqueToolRepository.save(toolToUpdate); // save() が更新を実行
-                return toolToUpdate.getUniqueToolId();
-            } else {
-                // 該当なし
-                return null;
-            }
-            
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("IDの形式が正しくありません。");
-        }
-    }
+	public Long reprintQrCode(String qrNumber) {
+		if (qrNumber == null) {
+			throw new IllegalArgumentException("IDが入力されていません。");
+		}
+		
+		// 9桁(Hex)のみ対応
+		if (qrNumber.length() != 9) {
+			throw new IllegalArgumentException("IDは9桁(Hex)である必要があります。");
+		}
+
+		// コンソール出力は findUniqueToolByLabelCode 内で行われます
+		UniqueTool tool = findUniqueToolByLabelCode(qrNumber);
+		if (tool != null) {
+			// 再印刷なのでタイムスタンプを更新
+			tool.setToolPrintTime(LocalDateTime.now());
+			uniqueToolRepository.save(tool);
+			return tool.getUniqueToolId();
+		} else {
+			// 該当なし
+			return null;
+		}
+	}
 
     /**
      * 指定された基本工具の発注点(ROP)を更新する。
@@ -375,35 +371,133 @@ public class ToolManagementService {
     }
 
     /**
-     * 指定された個別工具IDに対応するQRコード生成用データを取得する。
-     * @param uniqueToolId 個別工具ID
-     * @return QRコード表示テキストとデータを含むマップ。該当なしの場合はnull
-     */
-    public Map<String, String> getQrDataForTool(long uniqueToolId) {
-        Optional<UniqueTool> toolOptional = uniqueToolRepository.findById(uniqueToolId);
-        if (toolOptional.isEmpty()) {
-            return null; // 存在しないID
-        }
-        
-        UniqueTool uniqueTool = toolOptional.get();
+	 * 指定された個別工具IDに対応するQRコード生成用データを取得する。
+	 * @param uniqueToolId 個別工具ID
+	 * @return QRコード表示テキストとデータを含むマップ。該当なしの場合はnull
+	 */
+	@Transactional
+	public Map<String, String> getQrDataForTool(long uniqueToolId) {
+		Optional<UniqueTool> toolOptional = uniqueToolRepository.findById(uniqueToolId);
+		if (toolOptional.isEmpty()) {
+			return null; // 存在しないID
+		}
+		
+		UniqueTool uniqueTool = toolOptional.get();
 
-        String timestampStr = "ERROR";
-        if (uniqueTool.getToolPrintTime() != null) {
-            timestampStr = uniqueTool.getToolPrintTime().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        }
-        
-        // IDを16進数9桁(0埋め)に変換
-        String toolIdentifier = String.format("%09X", uniqueTool.getUniqueToolId());
-        
-        String displayText = toolIdentifier;
-        String qrCodeData = String.format("T%s-%s",
-            toolIdentifier,
-            timestampStr);
+		// 1. 印刷日時を取得
+		// 救済措置用コード生成のため、印刷日時が必須となります。
+		LocalDateTime printTime = uniqueTool.getToolPrintTime();
+		if (printTime == null) {
+			printTime = LocalDateTime.now(); // フォールバック: 未設定なら現在日時
+			
+			// DBの値を更新しないと、生成したコードで検索してもヒットしない
+			uniqueTool.setToolPrintTime(printTime);
+			uniqueToolRepository.save(uniqueTool);
+		}
+		
+		// [ログ追加] 暗号化入力確認
+		System.out.println("---------- 暗号化処理 (Encode) ----------");
+		System.out.println("入力 (印刷日時): " + printTime);
 
-        Map<String, String> qrDataMap = new HashMap<>();
-        qrDataMap.put("displayText", displayText);
-        qrDataMap.put("qrCodeData", qrCodeData);
-        
-        return qrDataMap;
-    }
+		// 2. 36ビットデータの生成
+		// 構成: Year(10) | Month(4) | Day(5) | Hour(5) | Minute(6) | Second(6)
+		// Yearは下3桁(0-999)を使用
+		long year   = printTime.getYear() % 1000; // 10 bit
+		long month  = printTime.getMonthValue();  // 4 bit
+		long day    = printTime.getDayOfMonth();  // 5 bit
+		long hour   = printTime.getHour();        // 5 bit
+		long minute = printTime.getMinute();      // 6 bit
+		long second = printTime.getSecond();      // 6 bit
+
+		// ビットシフトで結合 (MSB -> LSB の順で Year -> Second と配置)
+		long timeBits = (year << 26) 
+					  | (month << 22) 
+					  | (day << 17) 
+					  | (hour << 12) 
+					  | (minute << 6) 
+					  | second;
+
+		// 3. 16進数9桁に変換 (displayText用)
+		String timeHexCode = String.format("%09X", timeBits);
+
+		// [ログ追加] 暗号化結果確認
+		System.out.println("結果 (Hexコード): " + timeHexCode);
+		System.out.println("----------------------------------------");
+
+		// 4. QRコードデータ用の識別子
+		String basicToolIdPadded = String.format("%05d", uniqueTool.getBasicToolId());
+		String uniqueNumPadded = String.format("%05d", uniqueTool.getUniqueNum());
+		String toolIdentifier = basicToolIdPadded + uniqueNumPadded;
+		
+		String timestampStr = printTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+		
+		String qrCodeData = String.format("T%s-%s",
+			toolIdentifier,
+			timestampStr);
+
+		Map<String, String> qrDataMap = new HashMap<>();
+		qrDataMap.put("displayText", timeHexCode); // ラベル印字用テキストを9桁Hexに変更
+		qrDataMap.put("qrCodeData", qrCodeData);
+		
+		return qrDataMap;
+	}
+
+	/**
+	 * 工具ラベルコード(9桁Hex)から工具を特定する
+	 * ラベルコードは秒単位の精度のため、同一秒に印刷された工具が複数ある場合はリストの先頭を返す、
+	 * または運用として同一秒印刷はないものとする前提で実装しています。
+	 */
+	public UniqueTool findUniqueToolByLabelCode(String labelCode) {
+		// [ログ追加] 復号化入力確認
+		System.out.println("---------- 復号化処理 (Decode) ----------");
+		System.out.println("入力 (Hexコード): " + labelCode);
+
+		if (labelCode == null || labelCode.length() != 9) {
+			throw new IllegalArgumentException("ラベルコードは9桁の16進数である必要があります。");
+		}
+
+		// 1. 16進数から数値(36bit)へ変換
+		long timeBits;
+		try {
+			timeBits = Long.parseLong(labelCode, 16);
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("ラベルコードの形式が不正です。");
+		}
+
+		// 2. ビット列から日時情報を抽出
+		long second = timeBits & 0x3F;
+		long minute = (timeBits >> 6) & 0x3F;
+		long hour   = (timeBits >> 12) & 0x1F;
+		long day    = (timeBits >> 17) & 0x1F;
+		long month  = (timeBits >> 22) & 0x0F;
+		long year   = (timeBits >> 26) & 0x3FF;
+
+		// 3. LocalDateTimeを復元
+		// Yearは下3桁(0-999)なので、2000年代を前提として西暦に変換 (2000 + year)
+		int fullYear = 2000 + (int) year;
+
+		LocalDateTime targetTimeStart;
+		try {
+			targetTimeStart = LocalDateTime.of(fullYear, (int) month, (int) day, (int) hour, (int) minute, (int) second);
+		} catch (Exception e) {
+			// 日付として不正な場合(例: 2月30日など)
+			throw new IllegalArgumentException("ラベルコードから有効な日時を復元できませんでした。");
+		}
+		
+		// [ログ追加] 復号化結果確認
+		System.out.println("結果 (復元日時): " + targetTimeStart);
+		System.out.println("----------------------------------------");
+		
+		// DBにはミリ秒が含まれている可能性があるため、[targetTime, targetTime + 1秒) の範囲で検索
+		LocalDateTime targetTimeEnd = targetTimeStart.plusSeconds(1);
+
+		List<UniqueTool> foundTools = uniqueToolRepository.findByToolPrintTimeBetween(targetTimeStart, targetTimeEnd);
+
+		if (foundTools.isEmpty()) {
+			return null;
+		}
+
+		// 複数ヒットした場合は、運用ルールに従い先頭を返す(ここではリストの最初の要素)
+		return foundTools.get(0);
+	}
 }

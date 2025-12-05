@@ -32,7 +32,7 @@ async function printQrCode(type, id) {
 		const templateFile = new File([templateBlob], "qr_template.lw1");
 
 		// URLにタイプとIDを含めるように変更
-		const csvResponse = await fetch(`/qrcodeprinter/csv?type=${type}&id=${id}`);
+		const csvResponse = await fetch(`/qrcodeprinter/data.csv?type=${type}&id=${id}`);
 		
 		if (!csvResponse.ok) {
 			const errorText = await csvResponse.text();
