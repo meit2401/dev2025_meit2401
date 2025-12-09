@@ -80,6 +80,15 @@ public class UserManagementService {
 		
 		return convertToDto(savedUser); 
 	}
+
+	/**
+	 * ユーザーを物理削除する
+	 * @param userId 削除するユーザーID
+	 */
+	public void deleteUser(Integer userId) {
+		// データベースから完全に削除（物理削除）
+		userRepository.deleteById(userId);
+	}
 	
 	/**
 	 * 指定されたユーザーIDのユーザーを論理削除する。

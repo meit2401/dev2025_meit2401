@@ -54,13 +54,26 @@ public class UserManagementController {
 		// UserDto savedUserDto = userManagementService.convertToDto(savedUser); // 削除
 		return ResponseEntity.ok(savedUserDto);
 	}
+
+	/**
+	 * ユーザー削除処理を行う（物理削除）
+	 * @param userId 削除するユーザーID
+	 * @return 削除結果を返す
+	 */
+	@PostMapping("/delete")
+	@ResponseBody
+	public ResponseEntity<String> deleteUser(@RequestParam("userId") Integer userId) {
+		// UserManagementServiceの物理削除メソッドを呼び出し
+		userManagementService.deleteUser(userId);
+		return ResponseEntity.ok("deleted");
+	}
 	
 	/**
 	 * ユーザー削除処理を行う
 	 * @param userId 削除するユーザーID
 	 * @return 削除結果を返す
 	 */
-	@PostMapping("/delete")
+	@PostMapping("/disable")
 	@ResponseBody
 	public ResponseEntity<String> disableUser(@RequestParam("userId") Integer userId) { // 型をIntegerに変更
 		userManagementService.disableUser(userId);
