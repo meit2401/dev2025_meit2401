@@ -159,7 +159,7 @@ public class ToolManagementService {
 	public void disableTool(int basicToolId) {
 		// 1. ToolAssignment check
 		if (toolAssignmentRepository.existsByBasicToolId(basicToolId)) {
-			throw new RuntimeException("プログラムに割り当てられているため、凍結できません。");
+			throw new RuntimeException("対象の工具は割り当てられているため、凍結できません。");
 		}
 		
 		// 2. UniqueTool check (保管中 check)

@@ -244,28 +244,24 @@
 
 <!-- 基本工具削除モーダル -->
 <div th:fragment="modelsdelModal">
-    <div class="modal fade" id="modelsdelModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog custom-modal modal-dialog-centered">
-            <div class="modal-content">
-                <form id="deleteToolForm">
-                    <div class="d-flex justify-content-center align-items-center bg-light" style="height: 200px; flex-direction: column;">
-                        <div class="container-fluid">
-                            <p class="modal-title custom-text--large text-center w-100">選択された基本工具情報を<br>本当に削除しますか？</p>
-                        </div>
-                        
-                        <div id="deleteErrorAlert" class="alert alert-danger custom-text w-75 mt-3" style="display: none;" role="alert">
-                            </div>
-                        </div>
-                    <div class="modal-footer d-flex justify-content-center gap-4">
-                        <input type="hidden" name="basicToolId" id="deleteBasicToolIdInput">
-                        
-                        <button type="button" id="executeDeleteBtn" class="btn custom-btn-modal btn-danger" style="width: 25%">削除</button>
-                        <button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+	<div class="modal fade" id="modelsdelModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog custom-modal modal-dialog-centered">
+			<div class="modal-content">
+				<form th:action="@{/tool/delete}" method="post" id="deleteToolForm">
+					<div class="d-flex justify-content-center align-items-center bg-light" style="height: 200px;">
+						<div class="container-fluid">
+							<p class="modal-title custom-text--large text-center w-100">選択された基本工具情報を<br>本当に削除しますか？</p>
+						</div>
+					</div>
+					<div class="modal-footer d-flex justify-content-center gap-4">
+						<input type="hidden" name="basicToolId" id="deleteBasicToolIdInput">
+						<button type="submit" id="executeDeleteBtn" class="btn custom-btn-modal btn-danger" style="width: 25%">削除</button>
+						<button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
 </div>
 
 <!-- 発注点編集モーダル -->

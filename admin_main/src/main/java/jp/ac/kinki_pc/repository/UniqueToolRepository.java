@@ -52,4 +52,9 @@ public interface UniqueToolRepository extends JpaRepository<UniqueTool, Long> {
 	 * ビット演算による日時は秒精度のため、ミリ秒の誤差を許容するために範囲検索を行う
 	 */
 	List<UniqueTool> findByToolPrintTimeBetween(LocalDateTime start, LocalDateTime end);
+
+	/**
+	 * 指定された基本工具IDと保管状況を持つ個体が存在するかチェックする
+	 */
+	boolean existsByBasicToolIdAndStorageCondition(Integer basicToolId, String storageCondition);
 }

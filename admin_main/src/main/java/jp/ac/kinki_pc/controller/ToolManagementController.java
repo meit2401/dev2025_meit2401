@@ -106,24 +106,19 @@ public class ToolManagementController {
 		return "redirect:/tool";
 	}
 
-	@PostMapping("/delete")
-	@ResponseBody // Ajaxリクエストに対し、HTMLではなくデータを返す
-	public ResponseEntity<String> disableTool(@RequestParam int basicToolId) {
+	/**
+	 * 基本工具を削除する
+	 * @param basicToolId 削除対象の基本工具ID
+	 * @return 処理結果(JSON)
+	 */
+	@PostMapping("/disable")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> disableTool(@RequestParam int basicToolId) {
 		try {
 			toolManagementService.disableTool(basicToolId);
-			// 成功時は 200 OK
-			return ResponseEntity.ok("削除完了"); 
-		} catch (DataIntegrityViolationException e) {
-			// 外部キー制約違反（使用中のため削除不可）
-			// 409 Conflict: リソースの状態と矛盾するためリクエストを完了できない
-			return ResponseEntity.status(HttpStatus.CONFLICT)
-					.body("この工具は履歴や在庫に関連付けられているため削除できません。");
+			return ResponseEntity.ok(Map.of("success", true));
 		} catch (Exception e) {
-			// その他のエラー
-			e.printStackTrace();
-			// 500 Internal Server Error
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(e.getMessage());
+			return ResponseEntity.status(500).body(Map.of("error", "削除に失敗しました: " + e.getMessage()));
 		}
 	}
 	
@@ -158,15 +153,8 @@ public class ToolManagementController {
 	@PostMapping("/reprintQrAjax")
 	@ResponseBody
 	public ResponseEntity<Map<String, Object>> reprintQrCodeAjax(@RequestParam String qrNumber) {
-		// [修正] 9桁(Hex)のみ許可
-		if (qrNumber == null) {
-			return ResponseEntity.badRequest().body(Map.of("error", "IDを入力してください。"));
-		}
-		
-		boolean is9DigitHex = qrNumber.length() == 9 && qrNumber.matches("[0-9A-Fa-f]{9}");
-		
-		if (!is9DigitHex) {
-			return ResponseEntity.badRequest().body(Map.of("error", "IDは9桁の英数字(Hex)である必要があります。"));
+		if (qrNumber == null || qrNumber.length() != 10 || !qrNumber.matches("\\d{10}")) {
+			return ResponseEntity.badRequest().body(Map.of("error", "10桁の数字を入力してください。"));
 		}
 		
 		try {
@@ -179,8 +167,6 @@ public class ToolManagementController {
 		} catch (IllegalArgumentException e) {
 			 return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
 		} catch (Exception e) {
-			// エラーログを出力しておくとデバッグしやすい
-			e.printStackTrace(); 
 			return ResponseEntity.internalServerError().body(Map.of("error", "サーバー内部エラーが発生しました。"));
 		}
 	}
