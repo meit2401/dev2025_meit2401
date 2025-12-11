@@ -1,10 +1,7 @@
-// jp/ac/kinki_pc/controller/UserAuthenticationController.java
-
 package jp.ac.kinki_pc.controller;
 
-// import java.time.format.DateTimeFormatter; // 削除
 import java.util.Map;
-import java.util.Optional; // 追加
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,24 +10,21 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import jp.ac.kinki_pc.service.UserManagementService; // 追加
+import jp.ac.kinki_pc.service.UserAuthenticationService;
 
 @RestController
 public class UserAuthenticationController {
 
-	// @Autowired
-	// private UserRepository userRepository; // 削除
-
 	@Autowired
-	private UserManagementService userManagementService; // 追加
+	private UserAuthenticationService userAuthenticationService;
 
 	@PostMapping("/api/verify-auth-code")
 	public ResponseEntity<?> verifyAuthCode(@RequestBody Map<String, String> payload) {
 		String submittedCredential = payload.get("authCode");
 
 		try {
-			// サービス層の認証メソッドを呼び出す
-			Optional<Integer> userIdOptional = userManagementService.verifyAuthCode(submittedCredential);
+			// 変更: UserAuthenticationServiceのメソッドを呼び出す
+			Optional<Integer> userIdOptional = userAuthenticationService.verifyAuthCode(submittedCredential);
 			
 			if (userIdOptional.isPresent()) {
 				// 認証成功時、ユーザーIDを返す
@@ -41,7 +35,7 @@ public class UserAuthenticationController {
 			}
 			
 		} catch (IllegalArgumentException e) {
-			// 形式不正時 (Serviceがスローした例外をキャッチ)
+			// 形式不正時
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
 		}
 	}
