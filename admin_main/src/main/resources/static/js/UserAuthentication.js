@@ -89,55 +89,70 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
         
-        // === ログイン実行処理 ===
-        if (loginSubmitBtn) {
-            loginSubmitBtn.addEventListener('click', function() {
-                const username = usernameHiddenInput ? usernameHiddenInput.value : '';
-                const password = passwordInput ? passwordInput.value : '';
+        /**
+		 * ログインボタンクリック時の非同期ログイン処理
+		 * パスワードの入力チェックを行い、サーバーへ認証リクエストを送信します。
+		 */
+		if (loginSubmitBtn) {
+			loginSubmitBtn.addEventListener('click', function() {
+				const username = usernameHiddenInput ? usernameHiddenInput.value : '';
+				const password = passwordInput ? passwordInput.value : '';
 
-                // エラーメッセージを一旦非表示
-                if (passwordError) {
-                    passwordError.style.display = 'none';
-                    passwordError.textContent = ''; // テキストもクリア
-                }
+				// エラーメッセージを一旦非表示
+				if (passwordError) {
+					passwordError.style.display = 'none';
+					passwordError.textContent = ''; // テキストもクリア
+				}
 
-                // Spring Security認証用データの作成
-                const formData = new URLSearchParams();
-                formData.append('username', username);
-                formData.append('password', password);
+				// パスワード未入力チェック
+				if (!password || password.trim() === '') {
+					if (passwordError) {
+						passwordError.textContent = 'パスワードを入力してください。';
+						passwordError.style.display = 'block';
+					}
+					if (passwordInput) {
+						passwordInput.focus();
+					}
+					return;
+				}
 
-                // ログインリクエスト送信
-                fetch('/login', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    // ログイン失敗時はURLに?errorが含まれるリダイレクトが発生する
-                    if (response.redirected && response.url.includes('?error')) {
-                        // ログイン失敗
-                        if (passwordError) {
-                            passwordError.textContent = 'ユーザーIDまたはパスワードが正しくありません。';
-                            passwordError.style.display = 'block';
-                        }
-                        // パスワード入力欄をクリアしてフォーカス
-                        if (passwordInput) {
-                            passwordInput.value = '';
-                            passwordInput.focus();
-                        }
-                    } else {
-                        // ログイン成功
-                        window.location.href = '/alert';
-                    }
-                })
-                .catch(error => {
-                    console.error('Login request failed:', error);
-                    // 通信エラー等のメッセージを設定
-                    if (passwordError) {
-                        passwordError.textContent = 'ログイン処理中にエラーが発生しました。';
-                        passwordError.style.display = 'block';
-                    }
-                });
-            });
-        }
+				// Spring Security認証用データの作成
+				const formData = new URLSearchParams();
+				formData.append('username', username);
+				formData.append('password', password);
+
+				// ログインリクエスト送信
+				fetch('/login', {
+					method: 'POST',
+					body: formData
+				})
+				.then(response => {
+					// ログイン失敗時はURLに?errorが含まれるリダイレクトが発生する
+					if (response.redirected && response.url.includes('?error')) {
+						// ログイン失敗
+						if (passwordError) {
+							passwordError.textContent = 'ユーザーIDまたはパスワードが正しくありません。';
+							passwordError.style.display = 'block';
+						}
+						// パスワード入力欄をクリアしてフォーカス
+						if (passwordInput) {
+							passwordInput.value = '';
+							passwordInput.focus();
+						}
+					} else {
+						// ログイン成功
+						window.location.href = '/alert';
+					}
+				})
+				.catch(error => {
+					console.error('Login request failed:', error);
+					// 通信エラー等のメッセージを設定
+					if (passwordError) {
+						passwordError.textContent = 'ログイン処理中にエラーが発生しました。';
+						passwordError.style.display = 'block';
+					}
+				});
+			});
+		}
     }
 });
