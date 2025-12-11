@@ -1,5 +1,3 @@
-// userManagement.js
-
 // テスト用モード設定：trueの場合、印刷エラーが発生してもデータのロールバックを行わず処理を完了します
 const TEST_MODE_IGNORE_ERROR = false;
 
@@ -39,8 +37,8 @@ document.addEventListener("DOMContentLoaded", function () {
 			deleteButton.classList.toggle("custom-btn-common--notselectable", selectedUserId === null || isAdministratorSelected);
 		}
 		if (printButton) {
-			printButton.disabled = selectedUserId === null;
-			printButton.classList.toggle("custom-btn-common--notselectable", selectedUserId === null);
+			printButton.disabled = selectedUserId === null || isAdministratorSelected;
+			printButton.classList.toggle("custom-btn-common--notselectable", selectedUserId === null || isAdministratorSelected);
 		}
 	}
 

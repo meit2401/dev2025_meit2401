@@ -72,7 +72,7 @@
 	</div>
 </div>
 	
-<!-- 本体設定モーダル -->
+<!-- パスワード設定モーダル -->
 <div th:fragment="settingModal">
 	<div class="modal fade" id="settingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-dialog-centered custom-modal">
@@ -85,25 +85,23 @@
 						<div id="passwordUpdateSuccess" class="alert alert-success custom-text" style="display: none;">
 							パスワードが更新されました。
 						</div>
-						<div id="passwordUpdateError" class="alert alert-danger custom-text" style="display: none;">
-							エラーが発生しました。
-						</div>
-						
+						<!-- エラーメッセージ表示 -->
+						<div id="passwordUpdateError" class="alert alert-danger custom-text" style="display: none;"></div>
 						<div class="row align-items-center justify-content-center">
 							<label for="newPassword" class="col-sm-4 col-form-label custom-text text-center js-normalize-hankaku">新規パスワード</label>
 							<div class="col-sm-7">
-								<input type="password" class="form-control custom-text" id="newPassword" name="newPassword" required>
+								<input type="password" class="form-control custom-text" id="newPassword" name="newPassword">
 							</div>
 						</div>
 						<div class="row align-items-center justify-content-center">
 							<label for="confirmPassword" class="col-sm-4 col-form-label custom-text text-center js-normalize-hankaku">確認</label>
 							<div class="col-sm-7">
-								<input type="password" class="form-control custom-text" id="confirmPassword" name="confirmPassword" required>
+								<input type="password" class="form-control custom-text" id="confirmPassword" name="confirmPassword">
 							</div>
 						</div>
 					</div>
 					<div class="modal-footer d-flex justify-content-center gap-4">
-						<button type="submit" class="btn custom-btn-modal btn-danger" style="width: 25%">更 新</button>
+						<button type="submit" class="btn custom-btn-modal btn-primary" style="width: 25%">更 新</button>
 						<button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
 					</div>
 				</form>

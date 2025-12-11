@@ -1,10 +1,3 @@
- /**
- * ユーザー認証画面（ログインモーダル）の制御スクリプト
- * * 主な機能: 
- * - ユーザーID入力とパスワード入力のステップ切り替え
- * - 入力値の検証とエラー表示
- * - 非同期通信によるログイン処理
- */
 document.addEventListener("DOMContentLoaded", function () {
      // --- ログインモーダル処理 ---
     const loginModalElement = document.getElementById('loginModal');
@@ -152,7 +145,7 @@ document.addEventListener("DOMContentLoaded", function () {
 					if (response.redirected && response.url.includes('?error')) {
 						 // ログイン失敗
 						if (passwordError) {
-							passwordError.textContent   = 'ユーザーIDまたはパスワードが正しくありません。'; // エラーメッセージを設定
+							passwordError.textContent   = 'ユーザーIDもしくはパスワードが正しくありません。'; // エラーメッセージを設定
 							passwordError.style.display = 'block';                    // エラーメッセージを表示
 						}
 						 // パスワード入力欄をクリアしてフォーカス

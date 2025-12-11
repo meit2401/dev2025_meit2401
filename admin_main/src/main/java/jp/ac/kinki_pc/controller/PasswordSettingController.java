@@ -1,5 +1,3 @@
-// jp/ac/kinki_pc/controller/PasswordController.java
-
 package jp.ac.kinki_pc.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,20 +19,19 @@ public class PasswordSettingController {
 	private PasswordSettingService passwordSettingService;
 
 	/**
-	 * 共有パスワードを更新するAPIエンドポイント。
-	 * 'SETTING'権限を持つユーザーのみアクセス可能です。
+	 * 共有パスワードを更新するAPIエンドポイント
+	 * 'SETTING'権限を持つユーザーのみアクセス可能
 	 * @param passwordDto リクエストボディに含まれる新しいパスワード情報
 	 * @return 処理結果を示すResponseEntity
 	 */
 	@PostMapping("/update")
-	@PreAuthorize("hasRole('SETTING')")
+	@PreAuthorize("hasRole('SETTING')")	// 'SETTING'権限を持つユーザーのみアクセス可能
 	public ResponseEntity<Void> updatePassword(@RequestBody PasswordDto passwordDto) {
 		try {
-			passwordSettingService.updatePassword(passwordDto);
-			return ResponseEntity.ok().build(); // 成功レスポンス (200 OK)
+			passwordSettingService.updatePassword(passwordDto);		// パスワード更新処理を呼び出す
+			return ResponseEntity.ok().build();						// 成功レスポンス (200 OK)
 		} catch (Exception e) {
-			// エラーロギング等をここで行う
-			return ResponseEntity.internalServerError().build(); // サーバーエラーレスポンス (500)
+			return ResponseEntity.internalServerError().build();	// サーバーエラーレスポンス (500)
 		}
 	}
 }

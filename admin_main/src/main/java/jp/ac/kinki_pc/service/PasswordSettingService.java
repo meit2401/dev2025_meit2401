@@ -1,5 +1,3 @@
-// jp/ac/kinki_pc/service/PasswordSettingService.java
-
 package jp.ac.kinki_pc.service;
 
 import org.springframework.beans.factory.annotation.Autowired;

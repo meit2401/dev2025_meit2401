@@ -1,23 +1,3 @@
-// 現在時刻を更新する関数
-function updateTime() {
-	// 現在の日時を取得
-	const now = new Date();
-	const year = now.getFullYear();
-	const month = String(now.getMonth() + 1).padStart(2, '0');
-	const day = String(now.getDate()).padStart(2, '0');
-	const hours = String(now.getHours()).padStart(2, '0');
-	const minutes = String(now.getMinutes()).padStart(2, '0');
-
-	// フォーマットした時刻文字列を作成
-	const formattedTime = `${year}年${month}月${day}日 ${hours}:${minutes}`;
-	const display = document.getElementById("real-time-display");
-	// 時刻表示要素が存在すれば内容を更新
-	if (display) {
-		display.textContent = formattedTime;
-	}
-}
-
-// DOMContentLoaded イベントリスナー
 document.addEventListener("DOMContentLoaded", function () {
 	// --- リアルタイム時刻表示の初期化と定期更新 ---
 	updateTime();
@@ -40,20 +20,21 @@ document.addEventListener("DOMContentLoaded", function () {
 			// メッセージを非表示に初期化
 			successMessage.style.display = 'none';
 			errorMessage.style.display = 'none';
+			errorMessage.textContent = ''; // テキストもリセット
 
 			const newPassword = newPasswordInput.value;
 			const confirmPassword = confirmPasswordInput.value;
 
-			// パスワードが一致しない場合
-			if (newPassword !== confirmPassword) {
-				errorMessage.textContent = '新しいパスワードと確認用パスワードが一致しません。';
+			// パスワードが未入力の場合
+			if (!newPassword || !confirmPassword) {
+				errorMessage.textContent = 'パスワードを入力してください。';
 				errorMessage.style.display = 'block';
 				return;
 			}
-			
-			// パスワードが空の場合
-			if (!newPassword) {
-				errorMessage.textContent = 'パスワードを入力してください。';
+
+			// パスワードが一致しない場合
+			if (newPassword !== confirmPassword) {
+				errorMessage.textContent = '新しいパスワードと確認用パスワードが一致しません。';
 				errorMessage.style.display = 'block';
 				return;
 			}
@@ -72,11 +53,6 @@ document.addEventListener("DOMContentLoaded", function () {
 					successMessage.style.display = 'block';
 					// フォームをリセット
 					passwordUpdateForm.reset(); 
-					// 2秒後にモーダルを閉じる
-					setTimeout(() => {
-						settingModal.hide();
-						successMessage.style.display = 'none';
-					}, 2000);
 				} else {
 					// 失敗した場合
 					errorMessage.textContent = 'パスワードの更新に失敗しました。';
@@ -94,6 +70,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		settingModalElement.addEventListener('hidden.bs.modal', function () {
 			successMessage.style.display = 'none';
 			errorMessage.style.display = 'none';
+			errorMessage.textContent = '';
 			passwordUpdateForm.reset();
 		});
 	}
@@ -119,6 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
 /**
  * 全角英数字、記号、スペースを自動で半角に変換し、
  * 不正な文字（'、'など）を削除するイベントハンドラ。
+ * @param {Event} event - inputイベントオブジェクト
  */
 function normalizeInputToHankaku(event) {
 	// IMEによる入力が未確定（変換中）の場合は、処理を中断する
@@ -170,3 +148,23 @@ function normalizeInputToHankaku(event) {
 		}
 	}
 }
+
+// 現在時刻を更新する関数
+function updateTime() {
+	// 現在の日時を取得
+	const now = new Date();
+	const year = now.getFullYear();
+	const month = String(now.getMonth() + 1).padStart(2, '0');
+	const day = String(now.getDate()).padStart(2, '0');
+	const hours = String(now.getHours()).padStart(2, '0');
+	const minutes = String(now.getMinutes()).padStart(2, '0');
+
+	// フォーマットした時刻文字列を作成
+	const formattedTime = `${year}年${month}月${day}日 ${hours}:${minutes}`;
+	const display = document.getElementById("real-time-display");
+	// 時刻表示要素が存在すれば内容を更新
+	if (display) {
+		display.textContent = formattedTime;
+	}
+}
+
