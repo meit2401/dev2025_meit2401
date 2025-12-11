@@ -26,9 +26,9 @@ public class UserAuthenticationService implements UserDetailsService {
 	private PasswordRepository passwordRepository;
 	
 	/**
-	 * ユーザー名（ユーザーID）に基づいてユーザー情報をロードする。
-	 * ユーザーIDには、バーコードリーダーからの入力を考慮してプレフィックス"U"が含まれる場合があります。
-	 * このメソッド内でプレフィックスを除去し、数値IDとして処理します。
+	 * ユーザーIDに基づいてユーザー情報をロードする。
+	 * ユーザーIDには、バーコードリーダーからの入力を考慮してプレフィックス"U"が含まれる場合があるｒりま。
+	 * このメソッド内でプレフィックスを除去し、数値IDとして処理する。
 	 * @param username ログインフォームから入力されたユーザーID（文字列）
 	 * @return UserDetails Spring Securityで使用するユーザー詳細情報
 	 * @throws UsernameNotFoundException ユーザーが見つからない、またはID形式が不正な場合

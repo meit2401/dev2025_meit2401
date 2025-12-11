@@ -15,7 +15,7 @@
 </head>
 <body>
 	<!-- 共通メニュー呼び出し -->
-	<div th:replace="~{Components :: menu('line')}"></div>
+	<div th:replace="~{CommonComponents :: menu('line')}"></div>
 	
 	<main class="container my-5">
 		<div class="row">
@@ -162,7 +162,7 @@
 	</main>
 
 	<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
-	<script th:src="@{/js/Components.js}"></script>
+	<script th:src="@{/js/CommonComponents.js}"></script>
 	<script th:src="@{/js/QrCodePrinter.js}"></script>
 	<script th:src="@{/js/tepraprint.js}" defer></script>
 	<script th:src="@{/js/LineManagement.js}"></script>

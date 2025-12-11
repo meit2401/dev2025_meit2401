@@ -16,7 +16,7 @@
 
 	<body>
 		<!-- 共通メニュー呼び出し -->
-		<div th:replace="~{Components :: menu('history')}"></div>
+		<div th:replace="~{CommonComponents :: menu('history')}"></div>
 
 		<main class="container my-5">
 			<!-- 履歴絞り込み条件表示 -->
@@ -184,7 +184,7 @@
 		</main>
 
 		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
-		<script th:src="@{/js/Components.js}"></script>
+		<script th:src="@{/js/CommonComponents.js}"></script>
 		<script th:src="@{/js/OperationHistory.js}"></script>
 		<script th:inline="javascript">
 			/*<![CDATA[*/

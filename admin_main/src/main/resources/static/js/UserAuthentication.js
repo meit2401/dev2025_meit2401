@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             passwordError.textContent = 'ユーザーIDまたはパスワードが正しくありません。';
                             passwordError.style.display = 'block';
                         }
-                        
+                        // パスワード入力欄をクリアしてフォーカス
                         if (passwordInput) {
                             passwordInput.value = '';
                             passwordInput.focus();

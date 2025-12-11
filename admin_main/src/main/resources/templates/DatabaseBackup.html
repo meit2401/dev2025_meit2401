@@ -15,7 +15,7 @@
 
 	<body>
 		<!-- 共通メニュー呼び出し -->
-		<div th:replace="~{Components :: menu('database')}"></div>
+		<div th:replace="~{CommonComponents :: menu('database')}"></div>
 
 		<main class="container my-5">
 			<!-- バックアップ案内メッセージ -->
@@ -113,7 +113,7 @@
 		</main>
 
 		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
-		<script th:src="@{/js/Components.js}"></script>
+		<script th:src="@{/js/CommonComponents.js}"></script>
 		<script th:src="@{/js/DatabaseBackup.js}"></script>
 
 	</body>
