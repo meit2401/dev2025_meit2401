@@ -1,5 +1,3 @@
-// jp/ac/kinki_pc/service/UserAuthenticationService.java
-
 package jp.ac.kinki_pc.service;
 
 import java.util.ArrayList;
@@ -27,30 +25,36 @@ public class UserAuthenticationService implements UserDetailsService {
 	@Autowired
 	private PasswordRepository passwordRepository;
 	
+	/**
+	 * ユーザー名（ユーザーID）に基づいてユーザー情報をロードする。
+	 * ユーザーIDには、バーコードリーダーからの入力を考慮してプレフィックス"U"が含まれる場合があります。
+	 * このメソッド内でプレフィックスを除去し、数値IDとして処理します。
+	 * @param username ログインフォームから入力されたユーザーID（文字列）
+	 * @return UserDetails Spring Securityで使用するユーザー詳細情報
+	 * @throws UsernameNotFoundException ユーザーが見つからない、またはID形式が不正な場合
+	 */
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		Integer userId;
-		String usernameToParse = username; // ★ パース用の変数に代入
+		String usernameToParse = username;
 
-		// ★ ユーザーIDのプレフィックス'U'を除去 (QRコード認証のロジックと合わせる)
+		// ユーザーIDのプレフィックス'U'を除去（スキャナー入力対応）
 		if (usernameToParse != null && usernameToParse.startsWith("U")) {
 			if (usernameToParse.length() > 1) {
 				usernameToParse = usernameToParse.substring(1); // "U"を除去
 			} else {
-				// "U"のみが入力された場合
 				throw new UsernameNotFoundException("ユーザーIDの形式が正しくありません: " + username);
 			}
 		}
 		
 		try {
-			// ★ プレフィックスを除去した文字列(usernameToParse)をIntegerに変換
+			// 数値型IDに変換
 			userId = Integer.parseInt(usernameToParse);
 		} catch (NumberFormatException e) {
-			// "U"以外の英字などが入力された場合もここでキャッチされる
 			throw new UsernameNotFoundException("ユーザーIDの形式が正しくありません: " + username);
 		}
 		
-		// 変換したInteger型のIDでDBを検索
+		// DB検索
 		Optional<User> userOptional = userRepository.findById(userId);
 		
 		if (userOptional.isEmpty()) {
@@ -59,16 +63,11 @@ public class UserAuthenticationService implements UserDetailsService {
 		
 		User user = userOptional.get();
 
-		// ★ アカウントが凍結されているかチェック (isFrozen == 1 の場合は認証失敗とする)
-		if (Boolean.TRUE.equals(user.getIsFrozen())) {
-			throw new UsernameNotFoundException("アカウントが凍結されています: " + username);
-		}
-
-		// PasswordRepositoryから共有パスワードを取得
-		// (DBにはハッシュ化済みの値が保存されている想定)
+		// 共有パスワードを取得
 		String password = passwordRepository.findPassword()
 				.orElseThrow(() -> new UsernameNotFoundException("共有パスワードが設定されていません。"));
 		
+		// 権限リストの作成
 		List<GrantedAuthority> authorities = new ArrayList<>();
 		if (user.getPerAdd() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_REPLENISHMENT"));
 		if (user.getPerUser() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_USERS"));
@@ -79,10 +78,9 @@ public class UserAuthenticationService implements UserDetailsService {
 		if (user.getPerDb() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_DATABASE"));
 		if (user.getPerSetting() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_SETTING"));
 		
-		// Spring SecurityのUserオブジェクトを構築
+		// UserDetailsオブジェクトを返却
 		return org.springframework.security.core.userdetails.User.builder()
-			.username(String.valueOf(user.getUserId())) // usernameはString型である必要がある
-			// 取得した共有パスワードを設定
+			.username(String.valueOf(user.getUserId()))
 			.password(password)
 			.authorities(authorities)
 			.build();
