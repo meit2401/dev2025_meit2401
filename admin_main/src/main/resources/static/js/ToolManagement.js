@@ -23,17 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				console.error('座標または最大値の数値変換に失敗しました。', button.dataset);
 				return;
 			}
+			const x = cols - j + 1; 
+			const y = rows - i + 1;
 
-			// const x = j; // [変更前] 1..cols (左から右)
-			// const y = i; // [変更前] 1..rows (上から下)
-			
-			const x = cols - j + 1; // [変更後] cols..1 (右から左)
-			const y = rows - i + 1; // [変更後] rows..1 (下から上)
-
-
-			// const yPadded = String(y); // [変更前]
-			// button.textContent = `${x}${yPadded}`; // [変更前]
-			button.textContent = `${x}${y}`; // [変更後] (例: "89", "88" ... "81", "79" ... "11")
+			button.textContent = `${x}${y}`;
 			button.style.fontSize = "1.5rem"; 
 			button.style.fontWeight = "bold";
 		});
@@ -111,14 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
 					return;
 				}
 				
-				// const x = j; // [変更前] 1..cols (左から右)
-				// const y = i; // [変更前] 1..rows (上から下)
-				const x = cols - j + 1; // [変更後] cols..1 (右から左)
-				const y = rows - i + 1; // [変更後] rows..1 (下から上)
+				const x = cols - j + 1;
+				const y = rows - i + 1;
 				
-				// const yPadded = String(y); // [変更前]
-				// const address = `${segment}${x}${yPadded}`; // [変更前]
-				const address = `${segment}${x}${y}`; // [変更後] (例: "A89", "A11" 形式)
+				const address = `${segment}${x}${y}`;
 				const currentUsage = storageUsageCounts[address] || 0; 
 
 				if (selectedAddresses.has(address)) {
@@ -146,8 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 				} else {
 					// 選択 (緑/灰 -> 青 にする)
-					if (currentUsage >= 2) { // [変更] 3から2に変更
-						alert(`格納場所 [${address}] は、すでに上限(2個)に達しているため選択できません。`); // [変更] 3から2に変更
+					if (currentUsage >= 2) {
+						alert(`格納場所 [${address}] は、すでに上限(2個)に達しているため選択できません。`);
 						return; 
 					}
 					if (selectedAddresses.size < requiredSelections) {
@@ -192,14 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
 							return; // スキップ
 						}
 
-						// const x_ = j_; // [変更前]
-						// const y_ = i_; // [変更前]
-						const x_ = cols_ - j_ + 1; // [変更後]
-						const y_ = rows_ - i_ + 1; // [変更後]
+						const x_ = cols_ - j_ + 1;
+						const y_ = rows_ - i_ + 1;
 
-						// const yPadded_ = String(y_); // [変更前]
-						// const btnAddress = `${seg}${x_}${yPadded_}`; // [変更前]
-						const btnAddress = `${seg}${x_}${y_}`; // [変更後] (例: "A89", "A11" 形式)
+						const btnAddress = `${seg}${x_}${y_}`;
 
 						// 選択されていないボタンは、使用状況に関わらず無効化・フェードする
 						if (!selectedAddresses.has(btnAddress)) { 
@@ -226,14 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
 							return; // スキップ
 						}
 
-						// const x_ = j_; // [変更前]
-						// const y_ = i_; // [変更前]
-						const x_ = cols_ - j_ + 1; // [変更後]
-						const y_ = rows_ - i_ + 1; // [変更後]
+						const x_ = cols_ - j_ + 1;
+						const y_ = rows_ - i_ + 1;
 
-						// const yPadded_ = String(y_); // [変更前]
-						// const btnAddress = `${seg}${x_}${yPadded_}`; // [変更前]
-						const btnAddress = `${seg}${x_}${y_}`; // [変更後] (例: "A89", "A11" 形式)
+						const btnAddress = `${seg}${x_}${y_}`;
 						
 						// 選択解除時は、すべてのボタンの opacity を 1.0 に戻す
 						btn.style.opacity = 1.0; 
@@ -307,14 +288,10 @@ document.addEventListener('DOMContentLoaded', () => {
 					return; // スキップ
 				}
 				
-				// const x = j; // [変更前] 1..cols (左から右)
-				// const y = i; // [変更前] 1..rows (上から下)
-				const x = cols - j + 1; // [変更後] cols..1 (右から左)
-				const y = rows - i + 1; // [変更後] rows..1 (下から上)
+				const x = cols - j + 1;
+				const y = rows - i + 1;
 				
-				// const yPadded = String(y); // [変更前]
-				// const address = `${segment}${x}${yPadded}`; // [変更前]
-				const address = `${segment}${x}${y}`; // [変更後] (例: "A89", "A11" 形式)
+				const address = `${segment}${x}${y}`;
 
 				const currentUsage = storageUsageCounts[address] || 0;
 
