@@ -1,54 +1,56 @@
 <!-- ログインモーダル -->
 <div th:fragment="loginModal">
-	<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-		<div class="modal-dialog modal-dialog-centered custom-modal">
-			<div class="modal-content">
-				
-				<!-- ユーザーID認証 -->
-				<div id="qrScanStep">
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered custom-modal">
+            <div class="modal-content">
+                
+				<!-- ユーザーID入力ステップ -->
+                <div id="qrScanStep">
+                    <div class="modal-header">
+                        <h5 class="modal-title custom-text--large text-center w-100" id="loginModalLabel">ユーザーIDを入力してください</h5>
+                    </div>
+                    <div class="modal-body d-flex flex-column gap-3">
+						<!-- エラーメッセージ表示 -->
+                        <div id="loginError" class="alert alert-danger custom-text" style="display:none;"></div>
+                        <div class="row align-items-center justify-content-center">
+                            <label for="usernameInput" class="col-sm-3 col-form-label custom-text text-center">ユーザーID</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control custom-text js-normalize-hankaku" id="usernameInput" autofocus>
+                                <input type="text" id="authCodeInput" class="visually-hidden js-normalize-hankaku">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer d-flex justify-content-center gap-4">
+                        <button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
+                        <button type="button" id="nextToPasswordBtn" class="btn custom-btn-modal btn-primary" style="width: 25%">次へ</button>
+                    </div>
+                </div>
+
+				<!-- パスワード入力ステップ -->
+                <div id="passwordStep" style="display: none;">
 					<div class="modal-header">
-						<h5 class="modal-title custom-text--large text-center w-100" id="loginModalLabel">ユーザーIDを入力してください</h5>
+						<h5 class="modal-title custom-text--large text-center w-100">パスワードを入力してください</h5>
 					</div>
 					<div class="modal-body d-flex flex-column gap-3">
-						<div id="loginError" class="alert alert-danger" style="display:none;"></div>
+						<!-- エラーメッセージ表示 -->
+						<div id="passwordError" class="alert alert-danger custom-text" style="display:none;"></div>
+						<!-- ユーザーIDを保持する隠しフィールド -->
+						<input type="hidden" id="username" name="username">
 						<div class="row align-items-center justify-content-center">
-							<label for="usernameInput" class="col-sm-3 col-form-label custom-text text-center">ユーザーID</label>
+							<label for="password" class="col-sm-3 col-form-label custom-text text-center">パスワード</label>
 							<div class="col-sm-6">
-								<input type="text" class="form-control custom-text js-normalize-hankaku" id="usernameInput" autofocus>
-								<input type="text" id="authCodeInput" class="visually-hidden js-normalize-hankaku">
+								<input type="password" class="form-control custom-text js-normalize-hankaku" id="password" name="password" required>
 							</div>
 						</div>
 					</div>
 					<div class="modal-footer d-flex justify-content-center gap-4">
-						<button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
-						<button type="button" id="nextToPasswordBtn" class="btn custom-btn-modal btn-primary" style="width: 25%">次へ</button>
+						<button type="button" id="backToQrScanBtn" class="btn custom-btn-modal btn-info" style="width: 25%">戻る</button>
+						<button type="button" id="loginSubmitBtn" class="btn custom-btn-modal btn-primary" style="width: 25%">ログイン</button>
 					</div>
-				</div>
-
-				<!-- パスワード認証 -->
-				<div id="passwordStep" style="display: none;">
-					<div>
-						<div class="modal-header">
-							<h5 class="modal-title custom-text--large text-center w-100">パスワードを入力してください</h5>
-						</div>
-						<div class="modal-body d-flex flex-column gap-3">
-							<input type="hidden" id="username" name="username">
-							<div class="row align-items-center justify-content-center">
-								<label for="password" class="col-sm-3 col-form-label custom-text text-center">パスワード</label>
-								<div class="col-sm-6">
-									<input type="password" class="form-control custom-text js-normalize-hankaku" id="password" name="password" required>
-								</div>
-							</div>
-						</div>
-						<div class="modal-footer d-flex justify-content-center gap-4">
-							<button type="button" id="backToQrScanBtn" class="btn custom-btn-modal btn-info" style="width: 25%">戻る</button>
-							<button type="button" id="loginSubmitBtn" class="btn custom-btn-modal btn-primary" style="width: 25%">ログイン</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- ログアウトモーダル -->
