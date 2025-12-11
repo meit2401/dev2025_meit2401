@@ -19,56 +19,6 @@ document.addEventListener("DOMContentLoaded", function () {
 		// デバウンス処理用のタイマー変数を定義
 		let debounceTimeout;
 
-		// 'keypress'イベントから'input'イベントへ変更
-		// QRコードリーダーからの高速入力に対応するため、入力が止まったことを検知して処理を実行
-		/* === 既存のQRスキャナ処理をコメントアウト ===
-		authCodeInput.addEventListener('input', function(e) {
-			// 既存のタイマーをクリア
-			clearTimeout(debounceTimeout);
-			
-			const authCode = authCodeInput.value;
-			
-			// 入力が一定の形式（Uで始まり、-を含む）を満たしているかチェック
-			if (!authCode.startsWith('U') || !authCode.includes('-')) {
-				return; // 形式が違う場合は何もしない
-			}
-
-			// 300ミリ秒後に入力がなければ、入力完了とみなして認証処理を開始
-			debounceTimeout = setTimeout(() => {
-				loginError.style.display = 'none'; // エラーメッセージを隠す
-
-				// サーバーに認証コードを送信して検証
-				fetch('/api/verify-auth-code', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({ authCode: authCode }),
-				})
-				.then(response => {
-					if (!response.ok) {
-						return response.text().then(text => { throw new Error(text) });
-					}
-					return response.json();
-				})
-				.then(data => {
-					// 検証が成功した場合
-					usernameHiddenInput.value = data.userId; // ユーザーIDを隠しフィールドに設定
-					qrScanStep.style.display = 'none'; // QRスキャン画面を非表示
-					passwordStep.style.display = 'block'; // パスワード入力画面を表示
-					// 少し待ってからパスワード入力欄にフォーカスを当てる
-					setTimeout(() => passwordInput.focus(), 500);
-				})
-				.catch(error => {
-					// 検証が失敗した場合
-					loginError.textContent = error.message; // エラーメッセージを表示
-					loginError.style.display = 'block';
-					authCodeInput.value = ''; // 入力値をクリアして再スキャンを待つ
-				});
-			}, 300);
-		});
-		=== 既存のQRスキャナ処理 終了 === */
-
 		//* === テスト用 ユーザーID入力処理（「次へ」ボタン） ===
 		if (nextToPasswordBtn) {
 			nextToPasswordBtn.addEventListener('click', function() {
