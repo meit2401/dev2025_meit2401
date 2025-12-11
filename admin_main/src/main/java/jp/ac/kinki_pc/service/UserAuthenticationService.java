@@ -25,9 +25,9 @@ public class UserAuthenticationService implements UserDetailsService {
 	@Autowired
 	private PasswordRepository passwordRepository;
 	
-	/**
+	 /**
 	 * ユーザーIDに基づいてユーザー情報をロードする。
-	 * ユーザーIDには、バーコードリーダーからの入力を考慮してプレフィックス"U"が含まれる場合があるｒりま。
+	 * ユーザーIDには、バーコードリーダーからの入力を考慮してプレフィックス"U"が含まれる場合がある。
 	 * このメソッド内でプレフィックスを除去し、数値IDとして処理する。
 	 * @param username ログインフォームから入力されたユーザーID（文字列）
 	 * @return UserDetails Spring Securityで使用するユーザー詳細情報
@@ -38,47 +38,48 @@ public class UserAuthenticationService implements UserDetailsService {
 		Integer userId;
 		String usernameToParse = username;
 
-		// ユーザーIDのプレフィックス'U'を除去（スキャナー入力対応）
-		if (usernameToParse != null && usernameToParse.startsWith("U")) {
-			if (usernameToParse.length() > 1) {
+		 // ユーザーIDのプレフィックス'U'を除去（スキャナー入力対応）
+		if (usernameToParse != null && usernameToParse.startsWith("U")) {	// "U"で始まる場合
+			if (usernameToParse.length() > 1) {								// "U"の後に数字が続く場合
 				usernameToParse = usernameToParse.substring(1); // "U"を除去
 			} else {
-				throw new UsernameNotFoundException("ユーザーIDの形式が正しくありません: " + username);
+				throw new UsernameNotFoundException("ユーザーIDの形式が正しくありません: " + username); // "U"のみの場合
 			}
 		}
 		
+		 // ユーザーIDを数値に変換
 		try {
-			// 数値型IDに変換
-			userId = Integer.parseInt(usernameToParse);
+			userId = Integer.parseInt(usernameToParse); // 数値型IDに変換
 		} catch (NumberFormatException e) {
-			throw new UsernameNotFoundException("ユーザーIDの形式が正しくありません: " + username);
+			throw new UsernameNotFoundException("ユーザーIDの形式が正しくありません: " + username); // 変換に失敗した場合
 		}
 		
-		// DB検索
+		 // DB検索
 		Optional<User> userOptional = userRepository.findById(userId);
 		
+		 // ユーザー存在チェック
 		if (userOptional.isEmpty()) {
-			throw new UsernameNotFoundException("ユーザーが見つかりません: " + username);
+			throw new UsernameNotFoundException("ユーザーが見つかりません: " + username); // ユーザーが存在しない場合
 		}
 		
+		 // ユーザー情報取得
 		User user = userOptional.get();
 
-		// 共有パスワードを取得
+		 // 共有パスワードを取得
 		String password = passwordRepository.findPassword()
-				.orElseThrow(() -> new UsernameNotFoundException("共有パスワードが設定されていません。"));
+				.orElseThrow(() -> new UsernameNotFoundException("共有パスワードが設定されていません。")); // パスワードが設定されていない場合
 		
-		// 権限リストの作成
+		 // 権限リストの作成
 		List<GrantedAuthority> authorities = new ArrayList<>();
-		if (user.getPerAdd() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_REPLENISHMENT"));
-		if (user.getPerUser() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_USERS"));
-		if (user.getPerTool() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_TOOLS"));
-		if (user.getPerLine() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_LINE"));
-		if (user.getPerAnalysis() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_STOCK"));
-		if (user.getPerHistory() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_HISTORY"));
-		if (user.getPerDb() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_DATABASE"));
-		if (user.getPerSetting() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_SETTING"));
+		if (user.getPerUser() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_USERS"));      // ユーザー管理権限
+		if (user.getPerTool() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_TOOLS"));      // 工具管理権限
+		if (user.getPerLine() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_LINE"));       // ライン管理権限
+		if (user.getPerAnalysis() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_STOCK"));  // 工具分析権限
+		if (user.getPerHistory() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_HISTORY")); // 操作履歴権限
+		if (user.getPerDb() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_DATABASE"));     // データベース管理権限
+		if (user.getPerSetting() == 1) authorities.add(new SimpleGrantedAuthority("ROLE_SETTING")); // 設定管理権限
 		
-		// UserDetailsオブジェクトを返却
+		 // UserDetailsオブジェクトを返却
 		return org.springframework.security.core.userdetails.User.builder()
 			.username(String.valueOf(user.getUserId()))
 			.password(password)
