@@ -18,16 +18,17 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
+import java.util.HashSet; // 追加
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set; // 追加
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors; // DTOへのマッピング用
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -35,9 +36,10 @@ import java.util.zip.ZipOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
-import jp.ac.kinki_pc.dto.OperationHistory; // Service層はDTOを扱う
-import jp.ac.kinki_pc.repository.HistoryProjection; // ★これが必要です
+import jp.ac.kinki_pc.dto.OperationHistory;
+import jp.ac.kinki_pc.repository.HistoryProjection;
 import jp.ac.kinki_pc.repository.OperationRepository;
 
 @Service
@@ -45,6 +47,9 @@ public class DatabaseBackupService {
 
 	@Autowired
 	private OperationRepository operationRepository;
+
+	@Value("${video.storage.path}")
+    private String videoStoragePath;   // ← これが正しい
 
 	/**
 	 * "未バックアップ" の操作履歴リストを取得する
@@ -87,7 +92,7 @@ public class DatabaseBackupService {
 	}
 
 	/**
-	 * backups ディレクトリ内から、ファイル名の終了年月が最も新しい backup_YYYYMM_YYYYMM.zip ファイルを探す
+	 * backups ディレクトリ内から、ファイル名の終了年月日が最も新しい backup_YYYYMMDD_YYYYMMDD.zip ファイルを探す
 	 * @return 最新のZIPファイルのPath (Optional)
 	 * @throws IOException ディレクトリの読み込みに失敗した場合
 	 */
@@ -98,21 +103,21 @@ public class DatabaseBackupService {
 		}
 
 		Path latestZip = null;
-		String latestEndYyyyMm = ""; // "YYYYMM" 形式で比較
+		String latestEndYyyyMmDd = ""; // "YYYYMMDD" 形式で比較
 
-		// ファイル名パターン: backup_YYYYMM_YYYYMM.zip
-		Pattern pattern = Pattern.compile("backup_(\\d{6})_(\\d{6})\\.zip");
+		// ファイル名パターン: backup_YYYYMMDD_YYYYMMDD.zip (8桁に変更)
+		Pattern pattern = Pattern.compile("backup_(\\d{8})_(\\d{8})\\.zip");
 
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(backupDir, "backup_*.zip")) {
 			for (Path entry : stream) {
 				Matcher matcher = pattern.matcher(entry.getFileName().toString());
 				if (matcher.matches()) {
-					// String startYyyyMm = matcher.group(1); // 開始年月は使わない
-					String endYyyyMm = matcher.group(2); // 終了年月を取得
+					// String startYyyyMmDd = matcher.group(1); // 開始年月日は使わない
+					String endYyyyMmDd = matcher.group(2); // 終了年月日を取得
 
-					// より新しい終了年月のファイルが見つかったら更新
-					if (latestZip == null || endYyyyMm.compareTo(latestEndYyyyMm) > 0) {
-						latestEndYyyyMm = endYyyyMm;
+					// より新しい終了年月日のファイルが見つかったら更新
+					if (latestZip == null || endYyyyMmDd.compareTo(latestEndYyyyMmDd) > 0) {
+						latestEndYyyyMmDd = endYyyyMmDd;
 						latestZip = entry;
 					}
 				}
@@ -124,11 +129,9 @@ public class DatabaseBackupService {
 	/**
 	 * 指定されたZIPファイル内の history_... .csv ファイルを読み込み、
 	 * 記録されている最も新しい proc_time (日時) を LocalDateTime として取得する
-	 * @param zipFilePath ZIPファイルのPath
-	 * @return 最も新しい日時 (Optional)
-	 * @throws IOException ZIPファイルまたは内部のCSVファイルの読み込みに失敗した場合
 	 */
 	private Optional<LocalDateTime> getLatestTimestampFromZip(Path zipFilePath) throws IOException {
+		// 省略: 変更なし
 		LocalDateTime latestTimestamp = null;
 		// CSVファイル内の日付と時間のフォーマッタ
 		DateTimeFormatter csvDateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
@@ -174,19 +177,19 @@ public class DatabaseBackupService {
 		return Optional.ofNullable(latestTimestamp);
 	}
 
-
 	/**
-	 * 指定された期間の操作履歴を取得し、CSVファイルとダミーMP4ファイルをZIPにまとめて保存する
-	 * (RepositoryからProjectionを受け取り、DTOにマッピングして使用します)
-	 * @param startYear 開始年 (無視される)
-	 * @param startMonth 開始月 (無視される)
+	 * 指定された期間の操作履歴を取得し、CSVファイルと動画ファイルをZIPにまとめて保存する
+	 * @param startYear 開始年
+	 * @param startMonth 開始月
+	 * @param startDay 開始日
 	 * @param endYear 終了年
 	 * @param endMonth 終了月
+	 * @param endDay 終了日
 	 * @return 作成されたZIPファイルのパス
 	 * @throws IOException ファイル操作中にエラーが発生した場合
 	 */
 	@Transactional
-	public String performBackup(int startYear, int startMonth, int endYear, int endMonth) throws IOException {
+	public String performBackup(int startYear, int startMonth, int startDay, int endYear, int endMonth, int endDay) throws IOException {
 
 		// 正確な開始日時をログから取得
 		Map<String, LocalDateTime> logInfo = readBackupLogInfo();
@@ -196,16 +199,15 @@ public class DatabaseBackupService {
 			newerThanTimestamp = latestRecordIncluded;
 		}
 
-		// 終了日時をユーザー指定から計算
-		YearMonth endYearMonth = YearMonth.of(endYear, endMonth);
-		LocalDateTime endDateTime = endYearMonth.atEndOfMonth().atTime(23, 59, 59, 999_999_999);
+		// 終了日時をユーザー指定から計算 (その日の終わりまで)
+		LocalDateTime endDateTime = LocalDateTime.of(endYear, endMonth, endDay, 23, 59, 59, 999_999_999);
 		LocalDateTime endTimestamp = endDateTime;
 
 		// Repository呼び出し (Projectionのリストが返る)
 		List<HistoryProjection> projections = 
 			operationRepository.findOperationHistory(endTimestamp, newerThanTimestamp);
 
-		// Projection を DTO (OperationHistory) にマッピング
+		// Projection を DTO (OperationHistory) にマッピング (CSV出力用)
 		List<OperationHistory> historyList = projections.stream()
 			.map(p -> new OperationHistory(
 				p.getProcTime(), 
@@ -218,38 +220,39 @@ public class DatabaseBackupService {
 		Path tempDir = Paths.get("temp_backup");
 		Files.createDirectories(tempDir);
 
-		// ファイル名用に startYear/Month を再計算 (ログ基準 or 最古)
-		int actualStartYear = startYear; // デフォルトは引数
-		int actualStartMonth = startMonth; // デフォルトは引数
+		// ファイル名用に startYear/Month/Day を再計算
+		int actualStartYear = startYear;
+		int actualStartMonth = startMonth;
+		int actualStartDay = startDay;
 		if (latestRecordIncluded != null) {
-			LocalDateTime nextMonth = latestRecordIncluded.plusMonths(1); // ログの翌月
-			actualStartYear = nextMonth.getYear();
-			actualStartMonth = nextMonth.getMonthValue();
+			LocalDateTime nextDay = latestRecordIncluded.plusDays(1);
+			actualStartYear = nextDay.getYear();
+			actualStartMonth = nextDay.getMonthValue();
+			actualStartDay = nextDay.getDayOfMonth();
 		} else {
 			LocalDateTime oldestTs = operationRepository.findOldestOperationTimestamp();
-			// ★ ここがタイプミス修正箇所です (oldTs -> oldestTs)
 			if (oldestTs != null) {
 				LocalDateTime oldestDt = oldestTs;
 				actualStartYear = oldestDt.getYear();
 				actualStartMonth = oldestDt.getMonthValue();
+				actualStartDay = oldestDt.getDayOfMonth();
 			}
 		}
-		String periodStr = String.format("%d%02d_%d%02d", actualStartYear, actualStartMonth, endYear, endMonth);
+		
+		// ファイル名を YYYYMMDD 形式に変更
+		String periodStr = String.format("%d%02d%02d_%d%02d%02d", actualStartYear, actualStartMonth, actualStartDay, endYear, endMonth, endDay);
 		String csvFileName = "history_" + periodStr + ".csv";
-		String dummyMp4FileName = "video_" + periodStr + ".mp4";
 		String zipFileName = "backup_" + periodStr + ".zip";
 		Path csvFilePath = tempDir.resolve(csvFileName);
-		Path dummyMp4Path = tempDir.resolve(dummyMp4FileName);
 		Path zipFilePath = tempDir.resolve(zipFileName);
 
-		// CSVファイルに書き込み (BOM付きUTF-8)
+		// CSVファイルに書き込み
 		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 		DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 		try (BufferedWriter writer = Files.newBufferedWriter(csvFilePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
 			 writer.write('\uFEFF'); // BOM
 			 writer.write("日付,時間,氏名,作業内容");
 			 writer.newLine();
-			// DTOのリストを使用
 			for (OperationHistory history : historyList) {
 				LocalDateTime procDateTime = history.getProcTime();
 				writer.write(String.format("%s,%s,%s,%s",
@@ -262,14 +265,48 @@ public class DatabaseBackupService {
 			}
 		}
 
-		// ダミーMP4作成
-		Files.createFile(dummyMp4Path);
-
 		// ZIP作成
 		try (FileOutputStream fos = new FileOutputStream(zipFilePath.toFile());
 			 ZipOutputStream zos = new ZipOutputStream(fos)) {
+			
+			// 1. CSVを追加
 			addToZip(csvFilePath, zos);
-			addToZip(dummyMp4Path, zos);
+			
+			// 2. 実際の動画ファイルを追加
+			Set<String> addedFileNames = new HashSet<>(); // 重複ファイル追加防止用
+			
+			for (HistoryProjection p : projections) {
+				String videoPathStr = p.getVideoPath();
+
+				//System.out.println("---- Video backup check ----");
+				//System.out.println("videoPathStr = " + videoPathStr);
+
+				if (videoPathStr == null || videoPathStr.isEmpty()) {
+					System.out.println("→ videoPathStr is null or empty. Skip.");
+				} else {
+					Path videoPath = Paths.get(videoStoragePath, videoPathStr);
+
+					System.out.println("Resolved videoPath = " + videoPath.toAbsolutePath());
+					//System.out.println("Exists? " + Files.exists(videoPath));
+					//System.out.println("Is directory? " + Files.isDirectory(videoPath));
+
+					if (Files.exists(videoPath) && !Files.isDirectory(videoPath)) {
+						String fileName = videoPath.getFileName().toString();
+						//System.out.println("fileName = " + fileName);
+						//System.out.println("Already added? " + addedFileNames.contains(fileName));
+
+						if (!addedFileNames.contains(fileName)) {
+							System.out.println("→ Adding video to ZIP");
+							addToZip(videoPath, zos);
+							addedFileNames.add(fileName);
+						} else {
+							System.out.println("→ Skip, already added");
+						}
+					} else {
+						System.out.println("→ File does not exist or is directory. Skip.");
+					}
+				}
+			}
 		}
 
 		// 最終保存先へ移動
@@ -280,7 +317,6 @@ public class DatabaseBackupService {
 
 		// 一時ファイル削除
 		Files.deleteIfExists(csvFilePath);
-		Files.deleteIfExists(dummyMp4Path);
 		try { Files.delete(tempDir); } catch (IOException e) { /* ignore */ }
 		
 		// ログファイル作成 (last_backup_info.txt)
@@ -317,7 +353,8 @@ public class DatabaseBackupService {
 	 * 指定されたファイルをZipOutputStreamに追加するヘルパーメソッド
 	 */
 	private void addToZip(Path fileToAdd, ZipOutputStream zos) throws IOException {
-		 try (FileInputStream fis = new FileInputStream(fileToAdd.toFile())) {
+		// 省略
+		try (FileInputStream fis = new FileInputStream(fileToAdd.toFile())) {
 			ZipEntry zipEntry = new ZipEntry(fileToAdd.getFileName().toString());
 			zos.putNextEntry(zipEntry);
 			byte[] buffer = new byte[1024];
@@ -333,6 +370,7 @@ public class DatabaseBackupService {
 	 * CSVのフィールド値をエスケープする
 	 */
 	private String escapeCsvField(String field) {
+		// 省略
 		if (field == null) {
 			return "";
 		}
@@ -348,9 +386,9 @@ public class DatabaseBackupService {
 	/**
 	 * バックアップログファイル (last_backup_info.txt) を読み込み、
 	 * 最終バックアップ日時と、バックアップに含まれる最新レコード日時を LocalDateTime として取得する
-	 * @return Map<String, LocalDateTime> キー: "lastBackupExecution", "latestRecordIncluded" (値は日時 or null)
 	 */
 	public Map<String, LocalDateTime> readBackupLogInfo() {
+		// 省略: 変更なし
 		Map<String, LocalDateTime> logInfo = new HashMap<>();
 		logInfo.put("lastBackupExecution", null);
 		logInfo.put("latestRecordIncluded", null);

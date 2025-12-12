@@ -1,6 +1,5 @@
 package jp.ac.kinki_pc.controller;
 
-// import java.sql.Timestamp; // ★ 削除
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -47,9 +46,10 @@ public class DatabaseBackupController {
 				latestRecordIncluded != null ? latestRecordIncluded.format(displayFormatter) : "N/A");
 
 		// ★★★ ここから追加 ★★★
-		// 3.5. 終了年月の初期値設定 (未バックアップ履歴の最新日時)
+		// 3.5. 終了年月日の初期値設定 (未バックアップ履歴の最新日時)
 		int defaultEndYear = -1;
 		int defaultEndMonth = -1;
+		int defaultEndDay = -1; // 追加
 		if (!isHistoryListEmpty) {
 			// Repositoryで ASC (昇順) ソートされているため、リストの末尾が最新
 			OperationHistory latestHistory = historyList.get(historyList.size() - 1);
@@ -58,15 +58,18 @@ public class DatabaseBackupController {
 				LocalDateTime latestDateTime = latestHistory.getProcTime();
 				defaultEndYear = latestDateTime.getYear();
 				defaultEndMonth = latestDateTime.getMonthValue();
+				defaultEndDay = latestDateTime.getDayOfMonth(); // 追加
 			}
 		}
 		model.addAttribute("defaultEndYear", defaultEndYear);
 		model.addAttribute("defaultEndMonth", defaultEndMonth);
+		model.addAttribute("defaultEndDay", defaultEndDay); // 追加
 		// ★★★ ここまで追加 ★★★
-		// 4. 開始年月の初期値設定
+		// 4. 開始年月日の初期値設定
 		
 		int defaultStartYear = -1;
 		int defaultStartMonth = -1;
+		int defaultStartDay = -1; // 追加
 		boolean fallbackNeeded = true;
 
 		// 5. まず "バックアップ済日時" (latestRecordIncluded) の翌日を試す
@@ -74,6 +77,7 @@ public class DatabaseBackupController {
 			LocalDateTime nextBackupStartDate = latestRecordIncluded.plusDays(1); // 翌日に変更
 			defaultStartYear = nextBackupStartDate.getYear();
 			defaultStartMonth = nextBackupStartDate.getMonthValue();
+			defaultStartDay = nextBackupStartDate.getDayOfMonth(); // 追加
 			fallbackNeeded = false;
 		}
 
@@ -86,6 +90,7 @@ public class DatabaseBackupController {
 				LocalDateTime oldestDateTime = oldestTimestamp;
 				defaultStartYear = oldestDateTime.getYear();
 				defaultStartMonth = oldestDateTime.getMonthValue();
+				defaultStartDay = oldestDateTime.getDayOfMonth(); // 追加
 			} else {
 				 System.out.println("rec_operation テーブルにレコードが見つかりませんでした。開始年月は設定されません。"); //
 			}
@@ -94,6 +99,7 @@ public class DatabaseBackupController {
 		// 7. Modelに開始年月の初期値を追加
 		model.addAttribute("defaultStartYear", defaultStartYear);
 		model.addAttribute("defaultStartMonth", defaultStartMonth);
+		model.addAttribute("defaultStartDay", defaultStartDay); // 追加
 
 		// 8. DatabaseBackup.html を表示
 		return "DatabaseBackup"; // ★ 修正 ("database" -> "DatabaseBackup")
@@ -106,12 +112,14 @@ public class DatabaseBackupController {
 	public String performBackup(
 			@RequestParam int startYear, // Serviceでは無視される
 			@RequestParam int startMonth, // Serviceでは無視される
+			@RequestParam int startDay,   // 追加: Serviceでは無視されるが念のため受け取る
 			@RequestParam int endYear,
 			@RequestParam int endMonth,
+			@RequestParam int endDay,     // 追加
 			RedirectAttributes redirectAttributes) {
 		try {
-			// Service には終了年月のみ渡す (開始はServiceがログから判断)
-			String backupFilePath = databaseBackupService.performBackup(startYear, startMonth, endYear, endMonth); //
+			// Service には終了年月日のみ渡す (開始はServiceがログから判断)
+			String backupFilePath = databaseBackupService.performBackup(startYear, startMonth, startDay, endYear, endMonth, endDay); //
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

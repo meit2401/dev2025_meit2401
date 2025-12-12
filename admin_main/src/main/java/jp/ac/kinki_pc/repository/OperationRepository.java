@@ -76,11 +76,11 @@ public interface OperationRepository extends JpaRepository<Operation, Integer> {
 		   "  ro.procTime AS procTime, " +
 		   "  mu.userName AS userName, " +
 		   "  ro.operationClass AS operationClass, " +
-		   "  '' AS videoPath, " + // ★ 追加: ダミー
-		   "  '' AS toolCategory, " + // ★ 追加: ダミー
-		   "  '' AS maker, " + // ★ 追加: ダミー
-		   "  '' AS toolName, " + // ★ 追加: ダミー
-		   "  '' AS toolMaterial " + // ★ 追加: ダミー
+		   "  ro.videoPath AS videoPath, " +
+		   "  '' AS toolCategory, " +
+		   "  '' AS maker, " +
+		   "  '' AS toolName, " +
+		   "  '' AS toolMaterial " +
 		   "FROM Operation ro, User mu " +
 		   "WHERE ro.userId = mu.userId " +
 		   "  AND (:newerThan IS NULL OR ro.procTime > :newerThan) " +

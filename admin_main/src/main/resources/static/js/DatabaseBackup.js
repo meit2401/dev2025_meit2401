@@ -3,21 +3,27 @@
 document.addEventListener('DOMContentLoaded', () => {
 	// --- 要素取得 ---
 	const backupButton = document.querySelector('button[data-bs-target="#backupModal"]');
+	
+	// HTMLに追加した隠しフィールドを取得
 	const startYearInput = document.getElementById('startYear');
 	const startMonthInput = document.getElementById('startMonth');
-	const displayStartYearSpan = document.getElementById('displayStartYear');
-	const displayStartMonthSpan = document.getElementById('displayStartMonth');
-	
-	// 終了年月の要素 (HTMLでは hidden input)
+	const startDayInput = document.getElementById('startDay'); // 追加
 	const endYearInput = document.getElementById('endYear');
 	const endMonthInput = document.getElementById('endMonth');
+	const endDayInput = document.getElementById('endDay'); // 追加
 
+	const displayStartYearSpan = document.getElementById('displayStartYear');
+	const displayStartMonthSpan = document.getElementById('displayStartMonth');
+	const displayStartDaySpan = document.getElementById('displayStartDay'); // 追加
+	
 	// モーダル用
 	const backupRangeText = document.getElementById('backupRangeText');
 	const hiddenStartYear = document.getElementById('hiddenStartYear');
 	const hiddenStartMonth = document.getElementById('hiddenStartMonth');
+	const hiddenStartDay = document.getElementById('hiddenStartDay'); // 追加
 	const hiddenEndYear = document.getElementById('hiddenEndYear');
 	const hiddenEndMonth = document.getElementById('hiddenEndMonth');
+	const hiddenEndDay = document.getElementById('hiddenEndDay'); // 追加
 
 	// 履歴テーブルの tbody
 	const historyTableBody = document.querySelector('.table-responsive tbody.custom-text--short');
@@ -67,16 +73,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// --- バックアップボタンの有効/無効を切り替える関数 ---
 	const toggleBackupButton = () => {
-		const startYear = startYearInput.value;
-		const startMonth = startMonthInput.value;
-		const endYear = endYearInput.value;
-		const endMonth = endMonthInput.value;
+		const startYear = startYearInput ? startYearInput.value : null;
+		const startMonth = startMonthInput ? startMonthInput.value : null;
+		const startDay = startDayInput ? startDayInput.value : null; // 追加
+		const endYear = endYearInput ? endYearInput.value : null;
+		const endMonth = endMonthInput ? endMonthInput.value : null;
+		const endDay = endDayInput ? endDayInput.value : null; // 追加
 
 		// 導出した isHistoryListEmpty を使用
 		if (!isHistoryListEmpty && 
 			startYear && startYear !== '-1' &&
 			startMonth && startMonth !== '-1' &&
-			endYear && endMonth) { // endYear/Month も値があることを確認
+			startDay && startDay !== '-1' && // 追加
+			endYear && endMonth && endDay) { // endYear/Month/Day も値があることを確認
 			backupButton.disabled = false; // 有効化
 			// ★ 修正: UserManagement.js に倣い、クラスをトグル
 			backupButton.classList.remove("custom-btn-common--notselectable");
@@ -91,10 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	toggleBackupButton();
 
 	// --- 終了年月ドロップダウンの変更イベントにのみ関数を紐付け ---
-	// (注: 元のHTMLでは endYear/endMonth は hidden input のため、
-	// 'change' イベントは実質発生しないが、元のロジックをそのまま移植)
 	if(endYearInput) endYearInput.addEventListener('change', toggleBackupButton);
 	if(endMonthInput) endMonthInput.addEventListener('change', toggleBackupButton);
+	if(endDayInput) endDayInput.addEventListener('change', toggleBackupButton); // 追加
 
 
 	// --- バックアップボタンクリック時の処理 ---
@@ -108,31 +116,43 @@ document.addEventListener('DOMContentLoaded', () => {
 			// 値を取得
 			const startYear = startYearInput.value;
 			const startMonth = startMonthInput.value;
+			const startDay = startDayInput.value; // 追加
+			
 			const displayStartYear = displayStartYearSpan ? displayStartYearSpan.textContent : '----';
 			const displayStartMonth = displayStartMonthSpan ? displayStartMonthSpan.textContent : '--';
+			const displayStartDay = displayStartDaySpan ? displayStartDaySpan.textContent : '--'; // 追加
+			
 			const endYear = endYearInput.value;
 			const endMonth = endMonthInput.value;
+			const endDay = endDayInput.value; // 追加
 
 			// バリデーション
-			if (!startYear || startYear === '-1' || !startMonth || startMonth === '-1' || !endYear || !endMonth) {
+			if (!startYear || startYear === '-1' || 
+				!startMonth || startMonth === '-1' || 
+				!startDay || startDay === '-1' || 
+				!endYear || !endMonth || !endDay) {
 				alert('期間が正しく設定されていません。');
 				event.stopPropagation();
 				return;
 			}
 
-			// 終了月をフォーマット
+			// 月・日をフォーマット
 			const formattedEndMonth = String(endMonth).padStart(2, '0');
+			const formattedEndDay = String(endDay).padStart(2, '0'); // 追加
 
 			// モーダル内のテキストを更新
 			if (backupRangeText) {
-				backupRangeText.innerHTML = `${displayStartYear}/${displayStartMonth} から<br>${endYear}/${formattedEndMonth} までの`;
+				// YYYY/MM/DD 形式に変更
+				backupRangeText.innerHTML = `${displayStartYear}/${displayStartMonth}/${displayStartDay} から<br>${endYear}/${formattedEndMonth}/${formattedEndDay} までの`;
 			}
 
 			// モーダル内の隠しフィールドに値を設定
 			if (hiddenStartYear) hiddenStartYear.value = startYear;
 			if (hiddenStartMonth) hiddenStartMonth.value = startMonth;
+			if (hiddenStartDay) hiddenStartDay.value = startDay; // 追加
 			if (hiddenEndYear) hiddenEndYear.value = endYear;
 			if (hiddenEndMonth) hiddenEndMonth.value = endMonth;
+			if (hiddenEndDay) hiddenEndDay.value = endDay; // 追加
 		});
 	}
 });

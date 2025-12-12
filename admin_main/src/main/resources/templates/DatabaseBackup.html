@@ -27,49 +27,69 @@
 
 			<!-- 期間指定欄 -->
 			<div class="card p-4 mb-4 my-4">
-				<!-- 開始期間 -->
+				<!-- 開始日 -->
 				<div class="row g-3 align-items-center justify-content-center mb-3">
-					<div class="col-md-auto">
-						<label class="custom-text fs-1 me-3">開始</label>
+					<div class="col-auto">
+						<label class="custom-text me-3">開始</label>
 					</div>
-					<div class="col-md-5"> <div class="row g-2 align-items-center"> <div class="col-7">
-								<div class="d-flex align-items-center">
-									<span id="displayStartYear" class="form-control custom-text fs-1 me-1 bg-light"
-										  th:text="${defaultStartYear != -1 ? defaultStartYear : '----'}">YYYY</span>
-									<span class="custom-text fs-1 ms-2">年</span> </div>
-							</div>
-							<div class="col-5">
-								<div class="d-flex align-items-center">
-									<span id="displayStartMonth" class="form-control custom-text fs-1 me-1 bg-light"
-										  th:text="${defaultStartMonth != -1 ? #numbers.formatInteger(defaultStartMonth, 2) : '--'}">MM</span> <span class="custom-text fs-1 ms-2">月</span> </div>
-							</div>
-						</div>
-						<input type="hidden" id="startYear" name="startYear" th:value="${defaultStartYear}">
-						<input type="hidden" id="startMonth" name="startMonth" th:value="${defaultStartMonth}">
-						<input type="hidden" id="endYear" th:value="${defaultEndYear}">
-						<input type="hidden" id="endMonth" th:value="${defaultEndMonth}">
-					</div>
-				</div>
-
-				<!-- 終了期間 -->
-				<div class="row g-3 align-items-center justify-content-center">
-					<div class="col-md-auto">
-						<label class="custom-text fs-1 me-3">終了</label>
-					</div>
-					<div class="col-md-5">
+					<div class="col-auto">
 						<div class="row g-2 align-items-center">
-							<div class="col-7">
+							<div class="col-auto">
 								<div class="d-flex align-items-center">
-									<span id="displayEndYear" class="form-control custom-text fs-1 me-1 bg-light"
-										  th:text="${defaultEndYear != -1 ? defaultEndYear : '----'}">YYYY</span>
-									<span class="custom-text fs-1 ms-2">年</span>
+									<span id="displayStartYear" class="form-control custom-text me-1 bg-light"
+											style="width: 130px; text-align: center;"
+											th:text="${defaultStartYear != -1 ? defaultStartYear : '----'}">YYYY</span>
+									<span class="custom-text">年</span>
 								</div>
 							</div>
-							<div class="col-5">
+							<div class="col-auto">
 								<div class="d-flex align-items-center">
-									<span id="displayEndMonth" class="form-control custom-text fs-1 me-1 bg-light"
-										  th:text="${defaultEndMonth != -1 ? #numbers.formatInteger(defaultEndMonth, 2) : '--'}">MM</span>
-									<span class="custom-text fs-1 ms-2">月</span>
+									<span id="displayStartMonth" class="form-control custom-text me-1 bg-light"
+											style="width: 70px; text-align: center;"
+											th:text="${defaultStartMonth != -1 ? #numbers.formatInteger(defaultStartMonth, 2) : '--'}">MM</span>
+									<span class="custom-text">月</span>
+								</div>
+							</div>
+							<div class="col-auto">
+								<div class="d-flex align-items-center">
+									<span id="displayStartDay" class="form-control custom-text me-1 bg-light"
+											style="width: 70px; text-align: center;"
+											th:text="${defaultStartDay != -1 ? #numbers.formatInteger(defaultStartDay, 2) : '--'}">DD</span>
+									<span class="custom-text">日</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- 終了日 -->
+				<div class="row g-3 align-items-center justify-content-center">
+					<div class="col-auto">
+						<label class="custom-text me-3">終了</label>
+					</div>
+					<div class="col-auto">
+						<div class="row g-2 align-items-center">
+							<div class="col-auto">
+								<div class="d-flex align-items-center">
+									<span id="displayEndYear" class="form-control custom-text me-1 bg-light"
+											style="width: 130px; text-align: center;"
+											th:text="${defaultEndYear != -1 ? defaultEndYear : '----'}">YYYY</span>
+									<span class="custom-text">年</span>
+								</div>
+							</div>
+							<div class="col-auto">
+								<div class="d-flex align-items-center">
+									<span id="displayEndMonth" class="form-control custom-text me-1 bg-light"
+											style="width: 70px; text-align: center;"
+											th:text="${defaultEndMonth != -1 ? #numbers.formatInteger(defaultEndMonth, 2) : '--'}">MM</span>
+									<span class="custom-text">月</span>
+								</div>
+							</div>
+							<div class="col-auto">
+								<div class="d-flex align-items-center">
+									<span id="displayEndDay" class="form-control custom-text me-1 bg-light"
+											style="width: 70px; text-align: center;"
+											th:text="${defaultEndDay != -1 ? #numbers.formatInteger(defaultEndDay, 2) : '--'}">DD</span>
+									<span class="custom-text">日</span>
 								</div>
 							</div>
 						</div>
@@ -110,6 +130,13 @@
 			</div>
 
 			<div th:replace="~{modals/DatabaseBackupModals :: backupModal}"></div>
+
+			<input type="hidden" id="startYear" th:value="${defaultStartYear}">
+			<input type="hidden" id="startMonth" th:value="${defaultStartMonth}">
+			<input type="hidden" id="startDay" th:value="${defaultStartDay}">
+			<input type="hidden" id="endYear" th:value="${defaultEndYear}">
+			<input type="hidden" id="endMonth" th:value="${defaultEndMonth}">
+			<input type="hidden" id="endDay" th:value="${defaultEndDay}">
 		</main>
 
 		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>

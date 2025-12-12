@@ -160,7 +160,8 @@ public class LineManagementService {
 					rs.getString("tool_material"),
 					rs.getInt("stc"),
 					rs.getInt("rop"),
-					rs.getString("buyer")
+					rs.getString("buyer"),
+					rs.getBoolean("isFrozen")
 				);
 			}
 		};
@@ -523,7 +524,8 @@ public class LineManagementService {
 					rs.getString("tool_material"),
 					rs.getInt("stc"),
 					rs.getInt("rop"),
-					rs.getString("buyer")
+					rs.getString("buyer"),
+					rs.getBoolean("isFrozen")
 				);
 			}
 		};
