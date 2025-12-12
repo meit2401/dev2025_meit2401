@@ -233,12 +233,26 @@ public class ToolManagementService {
     }
 
     /**
-     * 指定されたQRコード番号(10桁)に基づいて個別工具情報を検索し、印刷日時を更新する。
-     * @param qrNumber QRコード番号(基本工具ID 5桁 + 個別番号 5桁)
+     * 指定された個別工具を削除する。
+     * QRコード印刷等の処理でエラーが発生した場合のロールバック（削除）処理として使用する。
+     * @param uniqueToolId 削除対象の個別工具ID
+     */
+    @Transactional
+    public void deleteIndividualTool(long uniqueToolId) {
+        if (!uniqueToolRepository.existsById(uniqueToolId)) {
+            throw new RuntimeException("削除対象の個別工具が見つかりません。ID=" + uniqueToolId);
+        }
+
+        uniqueToolRepository.deleteById(uniqueToolId);
+    }
+
+    /**
+     * 指定されたQRコード番号(9桁)に基づいて個別工具情報を検索し、印刷日時を更新する。
+     * @param qrNumber QRコード番号(基本工具ID)
      * @return 更新された個別工具ID。該当する工具が存在しない場合はnull
      */
     @Transactional
-	public Long reprintQrCode(String qrNumber) {
+	public Long reprintQrCode(String qrNumber, boolean updateTimestamp) {
 		if (qrNumber == null) {
 			throw new IllegalArgumentException("IDが入力されていません。");
 		}
@@ -251,9 +265,11 @@ public class ToolManagementService {
 		// コンソール出力は findUniqueToolByLabelCode 内で行われます
 		UniqueTool tool = findUniqueToolByLabelCode(qrNumber);
 		if (tool != null) {
-			// 再印刷なのでタイムスタンプを更新
-			tool.setToolPrintTime(LocalDateTime.now());
-			uniqueToolRepository.save(tool);
+			if (updateTimestamp) {
+				// 再印刷なのでタイムスタンプを更新
+				tool.setToolPrintTime(LocalDateTime.now());
+				uniqueToolRepository.save(tool);
+			}
 			return tool.getUniqueToolId();
 		} else {
 			// 該当なし

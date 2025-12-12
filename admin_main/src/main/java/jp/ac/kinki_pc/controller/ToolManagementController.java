@@ -146,19 +146,41 @@ public class ToolManagementController {
 			return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
 		}
 	}
+
+    /**
+     * 個別工具を削除する。
+     * QRコード印刷等の処理でエラーが発生した場合のロールバック（削除）処理として使用する。
+     * @param uniqueToolId 削除対象の個別工具ID
+     * @return 処理結果
+     */
+    @PostMapping("/deleteIndividual")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> deleteIndividualTool(@RequestParam long uniqueToolId) {
+        try {
+            toolManagementService.deleteIndividualTool(uniqueToolId);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
 	
 	/**
 	 * QRコード再印刷のためにタイムスタンプを更新し、uniqueToolIdを返す (Ajax用)
 	 */
 	@PostMapping("/reprintQrAjax")
 	@ResponseBody
-	public ResponseEntity<Map<String, Object>> reprintQrCodeAjax(@RequestParam String qrNumber) {
-		if (qrNumber == null || qrNumber.length() != 10 || !qrNumber.matches("\\d{10}")) {
-			return ResponseEntity.badRequest().body(Map.of("error", "10桁の数字を入力してください。"));
+	public ResponseEntity<Map<String, Object>> reprintQrCodeAjax(
+			@RequestParam String qrNumber,
+			@RequestParam(defaultValue = "true") boolean updateTimestamp) {
+		
+		if (qrNumber == null || qrNumber.length() != 9 || !qrNumber.matches("^[0-9A-Fa-f]{9}$")) {
+			return ResponseEntity.badRequest().body(Map.of("error", "9桁の16進数を入力してください。"));
 		}
 		
 		try {
-			Long uniqueToolId = toolManagementService.reprintQrCode(qrNumber);
+			// Serviceへ更新フラグを渡す
+			Long uniqueToolId = toolManagementService.reprintQrCode(qrNumber, updateTimestamp);
+			
 			if (uniqueToolId != null) {
 				return ResponseEntity.ok(Map.of("uniqueToolId", uniqueToolId));
 			} else {

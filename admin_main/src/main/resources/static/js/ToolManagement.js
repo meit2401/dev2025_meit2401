@@ -1,4 +1,5 @@
-// toolManagement.js
+// テスト用モード設定：trueの場合、印刷エラーが発生してもデータのロールバックを行わず処理を完了します
+const TEST_MODE_IGNORE_ERROR = true;
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -623,13 +624,34 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 				// 登録成功後、印刷を実行
 				if (result.uniqueToolId && typeof printQrCode === 'function') {
-					await printQrCode('tool', result.uniqueToolId);
+                    try {
+                        await printQrCode('tool', result.uniqueToolId);
+						// 印刷成功時はリロード
+						location.reload();
+                    } catch (printErr) {
+						console.error("印刷失敗:", printErr);
+						
+						if (TEST_MODE_IGNORE_ERROR) {
+							// テストモード：エラーを無視して続行
+							console.log("テストモードのため、印刷エラーを無視して登録を完了します。");
+							location.reload();
+						} else {
+							// 通常モード：個別工具登録をロールバック（削除）
+							alert("QRコードの印刷に失敗したため、登録をキャンセルしました。");
+							
+							await fetch('/tool/deleteIndividual', {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+								body: new URLSearchParams({ uniqueToolId: result.uniqueToolId })
+							});
+							
+							// リロードせず、モーダルも閉じた状態
+						}
+                    }
 				} else {
 					console.warn('printQrCode関数が見つからないか、uniqueToolIdがレスポンスに含まれていません。');
+					location.reload(); // 印刷不要ならそのままリロード
 				}
-	
-				// 印刷後にリロード
-				location.reload();
 	
 			} catch (err) {
 				console.error("登録失敗:", err);
@@ -695,7 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 	// 個別工具登録モーダルロジックここまで
 	
-	// 6. QRコード再印刷処理 (新規追加)
+	// 6. QRコード再印刷処理
 	const reprintModalEl = document.getElementById('printqrcodeModal');
 	const reprintOkButton = document.getElementById('reprintQrOkButton');
 	const qrNumberInput = document.getElementById('qrNumber'); // 手入力用
@@ -726,26 +748,53 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			try {
+				// TEST_MODE_IGNORE_ERROR = false のとき、updateTimestamp = false (更新しない) となるようにパラメータを追加
+				const updateTimestamp = TEST_MODE_IGNORE_ERROR;
+				
 				const response = await fetch('/tool/reprintQrAjax', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/x-www-form-urlencoded',
 					},
-					body: `qrNumber=${encodeURIComponent(qrNumber)}`
+					// updateTimestamp パラメータを追加
+					body: `qrNumber=${encodeURIComponent(qrNumber)}&updateTimestamp=${updateTimestamp}`
 				});
 
 				if (response.ok) {
 					const result = await response.json();
 					if (result.uniqueToolId) {
-						// タイムスタンプ更新成功
-						console.log(`タイムスタンプを更新しました。ID: ${result.uniqueToolId}`);
+						if (updateTimestamp) {
+							console.log(`タイムスタンプを更新しました。ID: ${result.uniqueToolId}`);
+						} else {
+							console.log(`タイムスタンプを更新せずに再印刷します。ID: ${result.uniqueToolId}`);
+						}
+						
 						// 印刷実行
 						if (typeof printQrCode === 'function') {
-							printQrCode('tool', result.uniqueToolId);
+							try {
+								// awaitを追加して印刷完了を待機し、エラーを捕捉できるようにする
+								await printQrCode('tool', result.uniqueToolId);
+								// 印刷成功時はリロード
+								location.reload();
+								return true; // 成功 (リロードされるので到達しない場合もある)
+							} catch (printErr) {
+								console.error("再印刷時の印刷処理に失敗:", printErr);
+								
+								if (TEST_MODE_IGNORE_ERROR) {
+									// テストモード：エラーを無視して完了
+									console.log("テストモードのため、印刷エラーを無視して更新を完了します。");
+									location.reload();
+								} else {
+									// 通常モード：更新キャンセル扱い（実際には更新していないのでロールバック不要）
+									alert("QRコードの再印刷に失敗したため、更新をキャンセルしました。");
+									// リロードしない
+								}
+								return false;
+							}
 						} else {
 							alert('QRコード印刷機能の読み込みに失敗しました。');
+							return false;
 						}
-						return true; // 成功
 					} else if (result.error) {
 						alert(`エラー: ${result.error}`);
 					} else {
