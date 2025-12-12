@@ -1,9 +1,9 @@
-// jp/ac/kinki_pc/controller/LineManagementController.java
-
 package jp.ac.kinki_pc.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +41,7 @@ public class LineManagementController {
 	@PostMapping("/add")
 	@ResponseBody
 	public ResponseEntity<LineDto> addLine(@ModelAttribute LineDto newLineDto) {
-		LineDto savedLineDto = lineManagementService.addLine(newLineDto); // ServiceがDTOを直接返す
-		// LineDto savedLineDto = lineManagementService.convertToDto(savedLine); // 変換処理を削除
+		LineDto savedLineDto = lineManagementService.addLine(newLineDto);
 		return ResponseEntity.ok(savedLineDto);
 	}
 
@@ -63,8 +62,7 @@ public class LineManagementController {
 	@PostMapping("/program/add")
 	@ResponseBody
 	public ResponseEntity<ProgramDto> addProgram(@ModelAttribute ProgramDto newProgramDto) {
-		ProgramDto savedProgramDto = lineManagementService.addProgram(newProgramDto); // ServiceがDTOを直接返す
-		// ProgramDto savedProgramDto = lineManagementService.convertToDto(savedProgram); // 変換処理を削除
+		ProgramDto savedProgramDto = lineManagementService.addProgram(newProgramDto);
 		return ResponseEntity.ok(savedProgramDto);
 	}
 
@@ -75,11 +73,6 @@ public class LineManagementController {
 		return ResponseEntity.ok("deleted");
 	}
 	
-	/**
-	 * 指定されたプログラムIDに紐づく工具割当情報を取得する
-	 * @param programId プログラムID
-	 * @return 工具割当情報DTOのリストを含むResponseEntity
-	 */
 	@GetMapping("/program/tools")
 	@ResponseBody
 	public ResponseEntity<List<ToolAssignmentDto>> getToolAssignments(@RequestParam("programId") Integer programId) {
@@ -87,33 +80,18 @@ public class LineManagementController {
 		return ResponseEntity.ok(assignments);
 	}
 	
-	/**
-	 * 絞り込み条件に一致する工具マスタのリストを返す
-	 * @param category 分類
-	 * @param maker メーカー
-	 * @param toolName 型番 (工具名)
-	 * @param material 材質
-	 * @return 工具DTOのリスト
-	 */
 	@GetMapping("/tools/filter")
 	@ResponseBody
-	public ResponseEntity<List<ToolDto>> getFilteredTools( // 戻り値を List<ToolDto> に変更
+	public ResponseEntity<List<ToolDto>> getFilteredTools(
 			@RequestParam(value = "category", required = false) String category,
 			@RequestParam(value = "maker", required = false) String maker,
 			@RequestParam(value = "toolName", required = false) String toolName,
 			@RequestParam(value = "material", required = false) String material) {
 		
-		List<ToolDto> tools = lineManagementService.findFilteredTools(category, maker, toolName, material); // Serviceが DTO のリストを直接返す
+		List<ToolDto> tools = lineManagementService.findFilteredTools(category, maker, toolName, material);
 		return ResponseEntity.ok(tools);
 	}
 
-	/**
-	 * 指定されたプログラムの指定されたツール番号に、基本工具IDを割り当てる
-	 * @param programId プログラムID
-	 * @param toolNum ツール番号 ("0", "1"...)
-	 * @param basicToolId 基本工具ID
-	 * @return 成功レスポンス
-	 */
 	@PostMapping("/program/tool/assign")
 	@ResponseBody
 	public ResponseEntity<String> assignTool(
@@ -125,12 +103,6 @@ public class LineManagementController {
 		return ResponseEntity.ok("assigned");
 	}
 
-	/**
-	 * (新規) 指定されたプログラムの指定されたツール番号の割り当てを解除する
-	 * @param programId プログラムID
-	 * @param toolNum ツール番号 ("0", "1"...)
-	 * @return 成功レスポンス
-	 */
 	@PostMapping("/program/tool/deallocate")
 	@ResponseBody
 	public ResponseEntity<String> deallocateTool(
@@ -142,57 +114,61 @@ public class LineManagementController {
 	}
 
 	/**
-	 * QRコード再印刷のためにタイムスタンプを更新し、更新後のプログラム情報を返す
+	 * QRコード再印刷のためにタイムスタンプを更新し、更新後のプログラム情報と更新前のタイムスタンプを返す
 	 * @param programId プログラムID
-	 * @return 更新後のプログラム情報(DTO)を含むResponseEntity
+	 * @return 更新後のプログラム情報と旧タイムスタンプを含むMap
 	 */
 	@PostMapping("/program/reprint-qr")
 	@ResponseBody
-	public ResponseEntity<ProgramDto> reprintQrCode(@RequestParam("programId") Integer programId) {
-		ProgramDto updatedProgramDto = lineManagementService.updateProgramTimestamp(programId); // ServiceがDTOを直接返す
-		if (updatedProgramDto != null) {
-			// ProgramDto updatedProgramDto = lineManagementService.convertToDto(updatedProgram); // 変換処理を削除
-			return ResponseEntity.ok(updatedProgramDto);
+	public ResponseEntity<Map<String, Object>> reprintQrCode(@RequestParam("programId") Integer programId) {
+		// ロールバック用に更新前の情報を取得しておく
+		ProgramDto oldProgram = lineManagementService.findProgramEntityById(programId)
+				.map(lineManagementService::convertToDto)
+				.orElse(null);
+
+		ProgramDto updatedProgramDto = lineManagementService.updateProgramTimestamp(programId);
+		
+		if (updatedProgramDto != null && oldProgram != null) {
+			Map<String, Object> response = new HashMap<>();
+			response.put("program", updatedProgramDto);
+			response.put("oldTimestamp", oldProgram.getProgramPrintTime());
+			return ResponseEntity.ok(response);
 		} else {
 			return ResponseEntity.notFound().build();
 		}
 	}
 	
 	/**
-	 * 工具割当データをファイルからインポートする
-	 * @param file JSから送られてくるアップロードファイル (FormData の 'file' に対応)
-	 * @return 処理結果(成功時はProgramDtoのリスト、エラー時はエラーメッセージ)
+	 * 印刷失敗時にプログラムのタイムスタンプを元に戻す処理
+	 * @param programId プログラムID
+	 * @param oldTimestampStr 戻したいタイムスタンプ文字列
+	 * @return 処理結果
 	 */
-	@PostMapping("/program/tool/import") // /line/program/tool/import でPOSTを受け取る
-	@ResponseBody // ページ遷移せず、データ(文字列など)を返す
-	// public ResponseEntity<String> handleToolImport(@RequestParam("file") MultipartFile file) {
-	public ResponseEntity<?> handleToolImport(@RequestParam("file") MultipartFile file) { // 戻り値を汎用化
+	@PostMapping("/program/restore-timestamp")
+	@ResponseBody
+	public ResponseEntity<String> restoreTimestamp(@RequestParam("programId") Integer programId, 
+			@RequestParam(value = "oldTimestamp", required = false) String oldTimestampStr) {
+		lineManagementService.restoreProgramTimestamp(programId, oldTimestampStr);
+		return ResponseEntity.ok("restored");
+	}
+	
+	@PostMapping("/program/tool/import")
+	@ResponseBody
+	public ResponseEntity<?> handleToolImport(@RequestParam("file") MultipartFile file) {
 		
 		if (file.isEmpty()) {
 			return ResponseEntity.badRequest().body("ファイルが選択されていません。");
 		}
 
 		try {
-			// Service層のメソッドを呼び出してインポート処理を実行
-			// Service層が DTO のリストを直接返す
-			List<ProgramDto> programDtos = lineManagementService.importToolAssignments(file); 
-
-			// ControllerでのDTO変換処理は不要になった
-			// List<ProgramDto> programDtos = importedPrograms.stream()
-			// 		.map(lineManagementService::convertToDto)
-			// 		.collect(Collectors.toList());
-			
-			return ResponseEntity.ok(programDtos); // DTOのリストを返す
+			List<ProgramDto> programDtos = lineManagementService.importToolAssignments(file);
+			return ResponseEntity.ok(programDtos);
 
 		} catch (IOException e) {
-			// [修正] ファイルI/Oエラー (Service層からのメッセージをそのまま使用)
 			return ResponseEntity.status(500).body(e.getMessage());
 		} catch (RuntimeException e) {
-			// [修正] Service層でスローされた業務エラー (E2セル不備、DBエラーなど)
-			// Service層からのメッセージ(e.getMessage())をそのまま使用
 			return ResponseEntity.badRequest().body(e.getMessage());
 		} catch (Exception e) {
-			// [修正] その他の予期せぬエラー (詳細は隠蔽)
 			return ResponseEntity.status(500).body("予期せぬエラーが発生しました。");
 		}
 	}

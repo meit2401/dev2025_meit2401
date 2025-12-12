@@ -1,11 +1,12 @@
-// LineManagement.js
+// テスト用モード設定：trueの場合、印刷エラーが発生してもデータのロールバックを行わず処理を完了します
+const TEST_MODE_IGNORE_ERROR = false;
 
 document.addEventListener("DOMContentLoaded", function () {
 	let selectedLineId = null;
 	let selectedLineName = null;
 	let selectedProgramId = null;
 	let selectedToolId = null;
-	let selectedBasicToolId = null; // モーダル内での選択工具ID
+	let selectedBasicToolId = null; 
 
 	const deleteLineButton = document.getElementById("delete-line-btn");
 	const addProgramButton = document.getElementById("add-program-btn");
@@ -19,10 +20,6 @@ document.addEventListener("DOMContentLoaded", function () {
 	const toolTable = document.getElementById("tools-table");
 	const programTableBody = document.getElementById("programs-table-body");
 
-	/**
-	 * プログラムテーブルを更新し、最低7行を表示する
-	 * @param {Array} programs - 表示するプログラムの配列 (DTOのリスト)
-	 */
 	function updateProgramTable(programs = []) {
 		programTableBody.innerHTML = '';
 
@@ -43,29 +40,20 @@ document.addEventListener("DOMContentLoaded", function () {
 		}
 	}
 	
-	/**
-	 * ツール割当テーブルを更新する
-	 * @param {Array} assignments - 表示する工具割当情報の配列
-	 */
 	function updateToolTable(assignments = []) {
 		const toolTableBody = toolTable.querySelector("tbody");
 		const rows = toolTableBody.querySelectorAll("tr");
 
-		// [修正] 取得した工具情報を、ツール番号(TNN)をキーにしたMapに変換する
-		// (DBの tool_num "T01", "T02" ... がキーになる)
 		const assignmentMap = new Map(assignments.map(a => [a.toolNum, a]));
 
 		rows.forEach(row => {
 			const toolNumCell = row.cells[0];
 			if (!toolNumCell) return;
 			
-			// [修正] HTMLの表示 ("T01", "T02") をDBのキー ("T01", "T02") として使用する
-			const toolNumText = toolNumCell.textContent.trim(); // "T01", "T02" などを取得
+			const toolNumText = toolNumCell.textContent.trim();
 			
-			// [修正] N-1 変換を削除
 			const lookupKey = toolNumText; 
 			
-			// [修正] 調整したキー ("T01", "T02"...) で Map からデータを検索
 			const assignment = assignmentMap.get(lookupKey); 
 
 			if (assignment) {
@@ -74,7 +62,6 @@ document.addEventListener("DOMContentLoaded", function () {
 				row.cells[3].textContent = assignment.toolName || '';
 				row.cells[4].textContent = assignment.toolMaterial || '';
 			} else {
-				// 対応するデータがない場合はセルをクリアする
 				row.cells[1].innerHTML = '&nbsp;';
 				row.cells[2].innerHTML = '&nbsp;';
 				row.cells[3].innerHTML = '&nbsp;';
@@ -83,10 +70,6 @@ document.addEventListener("DOMContentLoaded", function () {
 		});
 	}
 
-	/**
-	 * 工具割当モーダル内の候補テーブルを更新する
-	 * @param {Array} tools - 表示する工具(Toolエンティティ)の配列
-	 */
 	function updateToolCandidatesTable(tools = []) {
 		const toolCandidatesBody = document.getElementById("tool-candidates-body");
 		if (!toolCandidatesBody) return;
@@ -94,7 +77,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 		tools.forEach(tool => {
 			const row = toolCandidatesBody.insertRow();
-			// 選択時にIDを取得できるようdata属性に設定
 			row.dataset.basicToolId = tool.basicToolId; 
 			
 			row.insertCell(0).textContent = tool.toolCategory || '';
@@ -103,19 +85,17 @@ document.addEventListener("DOMContentLoaded", function () {
 			row.insertCell(3).textContent = tool.toolMaterial || '';
 		});
 
-		// モーダルのHTMLは5行表示 (LineManagementModals.html 参照)
 		const rowsToPad = 5 - tools.length; 
 		if (rowsToPad > 0) {
 			for (let i = 0; i < rowsToPad; i++) {
 				const row = toolCandidatesBody.insertRow();
 				row.insertCell(0).innerHTML = '&nbsp;';
-				row.insertCell(1).innerHTML = ' '; // HTML の定義に合わせる
+				row.insertCell(1).innerHTML = ' ';
 				row.insertCell(2).innerHTML = ' ';
 				row.insertCell(3).innerHTML = ' ';
 			}
 		}
 		
-		// 選択状態をリセット
 		selectedBasicToolId = null;
 		const toolCandidatesTable = document.getElementById("tool-candidates-table");
 		if (toolCandidatesTable) {
@@ -123,10 +103,6 @@ document.addEventListener("DOMContentLoaded", function () {
 		}
 	}
 
-	/**
-	 * 選択されたプログラムの工具割当リストを再取得・再描画する
-	 * @param {string | number | null} programId - 工具割当を取得するプログラムのID
-	 */
 	async function refreshToolList(programId) {
 		if (!programId) {
 			updateToolTable([]);
@@ -144,10 +120,6 @@ document.addEventListener("DOMContentLoaded", function () {
 		}
 	}
 
-	/**
-	 * 選択されたラインのプログラムリストを再取得・再描画する
-	 * @param {string | number} lineId - プログラムを取得するラインのID
-	 */
 	async function refreshProgramList(lineId) {
 		if (!lineId) {
 			updateProgramTable([]);
@@ -187,7 +159,6 @@ document.addEventListener("DOMContentLoaded", function () {
 		allocateToolButton.disabled = !isToolSelected;
 		allocateToolButton.classList.toggle("custom-btn-common--notselectable", !isToolSelected);
 
-		// 工具割当解除ボタンの状態更新
 		if (deallocateToolButton) {
 			deallocateToolButton.disabled = !isToolSelected;
 			deallocateToolButton.classList.toggle("custom-btn-common--notselectable", !isToolSelected);
@@ -197,11 +168,6 @@ document.addEventListener("DOMContentLoaded", function () {
 		reprintQrButton.classList.toggle("custom-btn-common--notselectable", !isProgramSelected);
 	}
 
-	/**
-	 * テーブル行の選択処理
-	 * @param {HTMLTableElement} currentTable - クリックされたテーブル
-	 * @param {HTMLTableRowElement} clickedRow - クリックされた行
-	 */
 	async function handleRowSelection(currentTable, clickedRow) {
 		const firstCell = clickedRow.cells[0];
 		const isRowEmpty = !firstCell || firstCell.textContent.trim() === "";
@@ -219,11 +185,11 @@ document.addEventListener("DOMContentLoaded", function () {
 				selectedLineName = firstCell.textContent.trim();
 				
 				await refreshProgramList(selectedLineId);
-				await refreshToolList(null); // ライン選択時はツールリストをクリア
+				await refreshToolList(null);
 			} else {
 				selectedLineId = null;
 				selectedLineName = null;
-				await refreshToolList(null); // 空白行選択時はツールリストをクリア
+				await refreshToolList(null);
 			}
 	
 		} else if (currentTable === programTable) {
@@ -235,28 +201,24 @@ document.addEventListener("DOMContentLoaded", function () {
 				clickedRow.classList.add("custom-list--selected");
 				selectedProgramId = clickedRow.dataset.programId ?? null;
 				
-				await refreshToolList(selectedProgramId); // プログラム選択時にツールリストを更新
+				await refreshToolList(selectedProgramId);
 
 				const parentLineId = clickedRow.dataset.lineId;
 				if (parentLineId) {
-					// 対応するラインの行を探す
 					const lineRowToSelect = lineTable.querySelector(`tr[data-line-id="${parentLineId}"]`);
 					if (lineRowToSelect) {
-						// ラインの選択状態を更新
 						lineTable.querySelectorAll("tbody tr").forEach(r => r.classList.remove("custom-list--selected"));
 						lineRowToSelect.classList.add("custom-list--selected");
-						// グローバル変数も更新
 						selectedLineId = parentLineId;
 						selectedLineName = lineRowToSelect.cells[0].textContent.trim();
 					}
 				}
 			} else {
 				selectedProgramId = null;
-				await refreshToolList(null); // 空白行選択時はツールリストをクリア
+				await refreshToolList(null);
 			}
 	
 		} else if (currentTable === toolTable) {
-			// プログラムが選択されていない場合は、ツールリストの行を選択できないようにする
 			if (selectedProgramId === null) {
 				return;
 			}
@@ -283,13 +245,10 @@ document.addEventListener("DOMContentLoaded", function () {
 		}
 	});
 	
-	/* ここから工具割当モーダルのロジックを追加 */
-		
 	const filterToolsButton = document.getElementById("filter-tools-btn");
 	const toolCandidatesTable = document.getElementById("tool-candidates-table");
 	const assignToolConfirmButton = document.getElementById("assign-tool-confirm-btn");
 
-	// 絞り込みボタン
 	if (filterToolsButton) {
 		filterToolsButton.addEventListener("click", async function () {
 			const category = document.getElementById("filterCategory").value;
@@ -298,9 +257,6 @@ document.addEventListener("DOMContentLoaded", function () {
 			const material = document.getElementById("filterMaterial").value;
 
 			const params = new URLSearchParams();
-			// "" (すべて) の場合は、JSの if(category) が false となる
-			// パラメータが送信されず、Controller で null となる
-			// Service は null と "" の両方で絞り込みをスキップするため、正しく動作する
 			if (category) params.append('category', category);
 			if (maker) params.append('maker', maker);
 			if (toolName) params.append('toolName', toolName);
@@ -312,7 +268,7 @@ document.addEventListener("DOMContentLoaded", function () {
 					throw new Error('工具の絞り込みに失敗しました。');
 				}
 				const tools = await response.json();
-				updateToolCandidatesTable(tools); // 候補テーブルを更新
+				updateToolCandidatesTable(tools);
 			} catch (err) {
 				console.error("絞り込みエラー:", err);
 				alert(err.message);
@@ -320,28 +276,25 @@ document.addEventListener("DOMContentLoaded", function () {
 		});
 	}
 
-	// 候補テーブルの行選択
 	if (toolCandidatesTable) {
 		toolCandidatesTable.addEventListener("click", function (event) {
 			const clickedRow = event.target.closest("tr");
 			if (!clickedRow || !clickedRow.closest("tbody")) return;
 
 			const firstCell = clickedRow.cells[0];
-			// HTMLの定義 に合わせて &nbsp; も空行とみなす
 			const isRowEmpty = !firstCell || firstCell.textContent.trim() === "" || firstCell.innerHTML.trim() === "&nbsp;";
 
 			toolCandidatesTable.querySelectorAll("tbody tr").forEach(r => r.classList.remove("custom-list--selected"));
 
 			if (!isRowEmpty) {
 				clickedRow.classList.add("custom-list--selected");
-				selectedBasicToolId = clickedRow.dataset.basicToolId; // data属性からIDを取得
+				selectedBasicToolId = clickedRow.dataset.basicToolId;
 			} else {
 				selectedBasicToolId = null;
 			}
 		});
 	}
 
-	// 確定ボタン
 	if (assignToolConfirmButton) {
 		assignToolConfirmButton.addEventListener("click", async function () {
 			if (selectedProgramId === null) {
@@ -357,17 +310,14 @@ document.addEventListener("DOMContentLoaded", function () {
 				return;
 			}
 
-			// [修正] T01 -> 0 への変換を削除
-			// selectedToolId ("T01", "T02"...) が Service が期待する toolNum
 			const toolNumStr = selectedToolId; 
 
 			const formData = new URLSearchParams();
 			formData.append('programId', selectedProgramId);
-			formData.append('toolNum', toolNumStr); // [修正]
+			formData.append('toolNum', toolNumStr);
 			formData.append('basicToolId', selectedBasicToolId);
 
 			try {
-				// Controllerの /line/program/tool/assign を呼び出す
 				const response = await fetch("/line/program/tool/assign", {
 					method: "POST",
 					headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -381,7 +331,6 @@ document.addEventListener("DOMContentLoaded", function () {
 				const modal = bootstrap.Modal.getInstance(document.getElementById("allocationModal"));
 				modal.hide();
 
-				// 割当完了後、メインのツールリストを再描画
 				await refreshToolList(selectedProgramId);
 
 			} catch (err) {
@@ -390,7 +339,6 @@ document.addEventListener("DOMContentLoaded", function () {
 			}
 		});
 	}
-	/* ここまで工具割当モーダルのロジック */
 
 	function setupModalTextUpdates() {
 		const linedelModal = document.getElementById('linedelModal');
@@ -416,17 +364,14 @@ document.addEventListener("DOMContentLoaded", function () {
 		const allocationModal = document.getElementById('allocationModal');
 		if (allocationModal) {
 			allocationModal.addEventListener('show.bs.modal', function () {
-				// 既存のタイトル更新処理
-				const modalTitle = document.getElementById('allocationModalTitle'); // ID でタイトル部分を特定
+				const modalTitle = document.getElementById('allocationModalTitle');
 				if (modalTitle && selectedToolId) {
 					modalTitle.innerHTML = `ツール番号${selectedToolId} に<br>工具を登録します`;
 				}
 				
-				/* モーダル表示時に内部の状態をリセット */
 				selectedBasicToolId = null;
-				updateToolCandidatesTable([]); // テーブルをクリア
+				updateToolCandidatesTable([]);
 
-				// フォーム入力値もリセット
 				document.getElementById('filterCategory').value = '';
 				document.getElementById('filterMaker').value = '';
 				document.getElementById('filterToolName').value = '';
@@ -434,11 +379,9 @@ document.addEventListener("DOMContentLoaded", function () {
 			});
 		}
 
-		// インポートモーダルの表示時処理
 		const importModal = document.getElementById('importModal');
 		if (importModal) {
 			importModal.addEventListener('show.bs.modal', function () {
-				// フォームをリセット (ファイル選択をクリア)
 				const form = document.getElementById("import-form");
 				if (form) {
 					form.reset();
@@ -446,7 +389,6 @@ document.addEventListener("DOMContentLoaded", function () {
 			});
 		}
 		
-		// 割当解除モーダルのテキスト更新
 		const deallocationModal = document.getElementById('deallocationModal');
 		if (deallocationModal) {
 			deallocationModal.addEventListener('show.bs.modal', function () {
@@ -554,9 +496,29 @@ document.addEventListener("DOMContentLoaded", function () {
 				modal.hide();
 				form.reset();
 
-				await printQrCode('program', newProgram.programId);
-				
-				await refreshProgramList(selectedLineId);
+				// 印刷実行と失敗時のロールバック処理
+				try {
+					await printQrCode('program', newProgram.programId);
+					
+					await refreshProgramList(selectedLineId);
+				} catch (printErr) {
+					console.error("印刷失敗:", printErr);
+					
+					if (TEST_MODE_IGNORE_ERROR) {
+						// テストモード：エラーを無視して登録完了
+						console.log("テストモードのため、印刷エラーを無視して登録を完了します。");
+						await refreshProgramList(selectedLineId);
+					} else {
+						// 通常モード：ロールバック
+						alert("QRコードの印刷に失敗したため、登録をキャンセルしました。");
+						
+						await fetch("/line/program/delete", {
+							method: "POST",
+							headers: { "Content-Type": "application/x-www-form-urlencoded" },
+							body: new URLSearchParams({ programId: newProgram.programId })
+						});
+					}
+				}
 
 			} catch (err) {
 				console.error("登録失敗:", err);
@@ -593,14 +555,10 @@ document.addEventListener("DOMContentLoaded", function () {
 		});
 	}
 	
-	// インポートモーダルのOKボタン
 	const importOkButton = document.getElementById("import-confirm-btn");
 	if (importOkButton) {
 		importOkButton.addEventListener("click", async function(event) {
-			event.preventDefault(); // form のデフォルト送信を防ぐ
-
-			// テンプレート (E2, B4:V4) に基づくインポートのため、
-			// 選択中のプログラムID (selectedProgramId) のチェックは不要とする
+			event.preventDefault(); 
 
 			const importModal = document.getElementById("importModal");
 			const form = document.getElementById("import-form");
@@ -613,38 +571,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
 			const file = fileInput.files[0];
 			const formData = new FormData();
-			// formData.append('programId', selectedProgramId); // テンプレート仕様に基づき削除
 			formData.append('file', file);
 
 			try {
-				// サーバー側のインポート用エンドポイント
-				// (バックエンドは E2, B4:V4, B6:V26 等を解析する前提)
 				const response = await fetch("/line/program/tool/import", {
 					method: "POST",
 					body: formData 
-					// 'Content-Type' は FormData を使うとブラウザが自動設定
 				});
 
 				if (!response.ok) {
-					const errorText = await response.text(); // エラー時はテキスト
+					const errorText = await response.text();
 					throw new Error(errorText || "インポートに失敗しました。");
 				}
 
-				// [修正] 成功時は JSON (ProgramDto の配列) を受け取る
 				const importedPrograms = await response.json();
 
 				const modal = bootstrap.Modal.getInstance(importModal);
 				modal.hide();
-				form.reset(); // フォームをリセット
+				form.reset();
 
-				// [修正] QRコードの連続印刷処理
 				if (importedPrograms && importedPrograms.length > 0) {
 					alert(`インポートが完了しました。\n${importedPrograms.length}件のプログラムのQRコードを順次印刷します。`);
 					
-					// for...of ループで await を正しく待機
 					for (const program of importedPrograms) {
 						try {
-							// 1. サーバーにタイムスタンプの更新を依頼
 							const updateResponse = await fetch("/line/program/reprint-qr", {
 								method: "POST",
 								headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -652,39 +602,39 @@ document.addEventListener("DOMContentLoaded", function () {
 							});
 
 							if (!updateResponse.ok) {
-								// タイムスタンプ更新失敗
 								throw new Error(`プログラムID ${program.programId} のQR情報更新に失敗しました。`);
 							}
 							
-							// 2. 更新後の情報 (updatedProgram) を取得
-							const updatedProgram = await updateResponse.json(); 
+							const updatedProgramData = await updateResponse.json(); 
+							const updatedProgram = updatedProgramData.program; 
 
-							// 3. QrCodePrinter.js の printQrCode を呼び出す
-							//    (タイムスタンプが更新された programId を使用)
 							await printQrCode('program', updatedProgram.programId);
 
 						} catch (printErr) {
 							console.error(`プログラムID ${program.programId} の印刷に失敗:`, printErr);
-							// 1件失敗してもアラートを出し、次のプログラムへ進む
-							alert(`プログラムID ${program.programId} の印刷中にエラーが発生しました。\n${printErr.message}\n\n次のプログラムの印刷に進みます。`);
+							
+							if (TEST_MODE_IGNORE_ERROR) {
+								// テストモード：ログのみ出力
+								console.log(`テストモード: プログラムID ${program.programId} の印刷エラーを無視して次へ進みます。`);
+							} else {
+								// 通常モード：アラート表示
+								alert(`プログラムID ${program.programId} の印刷中にエラーが発生しました。\n${printErr.message}\n\n次のプログラムの印刷に進みます。`);
+							}
 						}
 					}
 				} else {
 					alert("インポートが完了しました。（対象プログラムなし）");
 				}
 
-				// すべての処理が終わったらリロード
 				location.reload(); 
 
 			} catch (err) {
 				console.error("インポート失敗:", err);
-				// [修正] 冗長なメッセージを削除し、サーバーからのエラー(err.message)のみ表示
 				alert(err.message);
 			}
 		});
 	}
 	
-	// 工具割当解除モーダルのOKボタン
 	const deallocateOkButton = document.getElementById("deallocate-tool-confirm-btn");
 	if (deallocateOkButton) {
 		deallocateOkButton.addEventListener("click", async function () {
@@ -697,13 +647,11 @@ document.addEventListener("DOMContentLoaded", function () {
 				return;
 			}
 
-			// [修正] T01 -> 0 への変換を削除
-			// selectedToolId ("T01", "T02"...) が Service が期待する toolNum
 			const toolNumStr = selectedToolId;
 
 			const formData = new URLSearchParams();
 			formData.append('programId', selectedProgramId);
-			formData.append('toolNum', toolNumStr); // [修正]
+			formData.append('toolNum', toolNumStr);
 
 			try {
 				const response = await fetch("/line/program/tool/deallocate", {
@@ -719,10 +667,8 @@ document.addEventListener("DOMContentLoaded", function () {
 				const modal = bootstrap.Modal.getInstance(document.getElementById("deallocationModal"));
 				modal.hide();
 
-				// メインのツールリストを再描画
 				await refreshToolList(selectedProgramId);
 				
-				// 選択状態を解除
 				selectedToolId = null;
 				toolTable.querySelectorAll("tbody tr").forEach(r => r.classList.remove("custom-list--selected"));
 				updateButtonStates();
@@ -756,9 +702,36 @@ document.addEventListener("DOMContentLoaded", function () {
 					throw new Error("QRコード情報の更新に失敗しました。");
 				}
 
-				const updatedProgram = await response.json();
+				const responseData = await response.json();
+				const updatedProgram = responseData.program;
+				const oldTimestamp = responseData.oldTimestamp;
 
-				await printQrCode('program', updatedProgram.programId);
+				// 印刷実行と失敗時のロールバック処理
+				try {
+					await printQrCode('program', updatedProgram.programId);
+				} catch (printErr) {
+					console.error("印刷失敗:", printErr);
+					
+					if (TEST_MODE_IGNORE_ERROR) {
+						// テストモード：エラーを無視して完了
+						console.log("テストモードのため、印刷エラーを無視して更新を完了します。");
+					} else {
+						// 通常モード：ロールバック
+						alert("QRコードの再印刷に失敗したため、更新をキャンセルしました。");
+
+						const restoreParams = new URLSearchParams();
+						restoreParams.append("programId", selectedProgramId);
+						if (oldTimestamp) {
+							restoreParams.append("oldTimestamp", oldTimestamp);
+						}
+						
+						await fetch("/line/program/restore-timestamp", {
+							method: "POST",
+							headers: { "Content-Type": "application/x-www-form-urlencoded" },
+							body: restoreParams
+						});
+					}
+				}
 
 			} catch (err) {
 				console.error("再印刷処理失敗:", err);
