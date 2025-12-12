@@ -45,16 +45,15 @@ public class DatabaseBackupController {
 		model.addAttribute("latestRecordIncludedTime",
 				latestRecordIncluded != null ? latestRecordIncluded.format(displayFormatter) : "N/A");
 
-		// ★★★ ここから追加 ★★★
-		// 3.5. 終了年月日の初期値設定 (未バックアップ履歴の最新日時)
+		// 3.5. 終了年月の初期値設定 (未バックアップ履歴の最新日時)
 		int defaultEndYear = -1;
 		int defaultEndMonth = -1;
 		int defaultEndDay = -1; // 追加
+		
 		if (!isHistoryListEmpty) {
 			// Repositoryで ASC (昇順) ソートされているため、リストの末尾が最新
 			OperationHistory latestHistory = historyList.get(historyList.size() - 1);
 			if (latestHistory != null && latestHistory.getProcTime() != null) {
-				// ★ 修正(前回): getProcTime() は既に LocalDateTime のため .toLocalDateTime() を削除
 				LocalDateTime latestDateTime = latestHistory.getProcTime();
 				defaultEndYear = latestDateTime.getYear();
 				defaultEndMonth = latestDateTime.getMonthValue();
@@ -64,9 +63,8 @@ public class DatabaseBackupController {
 		model.addAttribute("defaultEndYear", defaultEndYear);
 		model.addAttribute("defaultEndMonth", defaultEndMonth);
 		model.addAttribute("defaultEndDay", defaultEndDay); // 追加
-		// ★★★ ここまで追加 ★★★
-		// 4. 開始年月日の初期値設定
-		
+
+		// 4. 開始年月の初期値設定
 		int defaultStartYear = -1;
 		int defaultStartMonth = -1;
 		int defaultStartDay = -1; // 追加
@@ -83,10 +81,8 @@ public class DatabaseBackupController {
 
 		// 6. フォールバックが必要な場合 (ログ情報がない)
 		if (fallbackNeeded) {
-			// ★ 修正: Timestamp -> LocalDateTime
 			LocalDateTime oldestTimestamp = databaseBackupService.getOldestOperationTimestamp(); //
 			if (oldestTimestamp != null) {
-				// ★ 修正: .toLocalDateTime() 削除
 				LocalDateTime oldestDateTime = oldestTimestamp;
 				defaultStartYear = oldestDateTime.getYear();
 				defaultStartMonth = oldestDateTime.getMonthValue();
@@ -102,7 +98,7 @@ public class DatabaseBackupController {
 		model.addAttribute("defaultStartDay", defaultStartDay); // 追加
 
 		// 8. DatabaseBackup.html を表示
-		return "DatabaseBackup"; // ★ 修正 ("database" -> "DatabaseBackup")
+		return "DatabaseBackup";
 	}
 
 	/**
@@ -110,16 +106,18 @@ public class DatabaseBackupController {
 	 */
 	@PostMapping("/database/backup")
 	public String performBackup(
-			@RequestParam int startYear, // Serviceでは無視される
-			@RequestParam int startMonth, // Serviceでは無視される
-			@RequestParam int startDay,   // 追加: Serviceでは無視されるが念のため受け取る
+			@RequestParam int startYear, // Serviceではログ優先だが、初回などで使用
+			@RequestParam int startMonth,
+			@RequestParam int startDay,   // 追加
 			@RequestParam int endYear,
 			@RequestParam int endMonth,
 			@RequestParam int endDay,     // 追加
 			RedirectAttributes redirectAttributes) {
 		try {
-			// Service には終了年月日のみ渡す (開始はServiceがログから判断)
-			String backupFilePath = databaseBackupService.performBackup(startYear, startMonth, startDay, endYear, endMonth, endDay); //
+			// Service に年月日を渡す (開始はServiceがログから判断するが、引数として渡す必要あり)
+			// ★★★ 修正: 6つの引数を渡すように変更 ★★★
+			String backupFilePath = databaseBackupService.performBackup(startYear, startMonth, startDay, endYear, endMonth, endDay);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -1,5 +1,3 @@
-// src/main/java/jp/ac/kinki_pc/repository/OperationRepository.java
-
 package jp.ac.kinki_pc.repository;
 
 import java.time.LocalDateTime;
@@ -16,13 +14,26 @@ import jp.ac.kinki_pc.entity.Operation;
 public interface OperationRepository extends JpaRepository<Operation, Integer> {
 	
 	/**
+	 * findOperationHistory メソッドが返す JPA Projection (射影) インターフェース。
+	 * Service 層で DTO にマッピングするために使用されます。
+	 */
+	public interface OperationHistoryProjection {
+		LocalDateTime getProcTime();
+		String getUserName();
+		String getOperationClass();
+		Integer getToolNum();
+		String getLineName();
+		String getToolCategory(); // 追加
+		String getMaker();        // 追加
+		String getToolName();
+		String getToolMaterial(); // 追加
+		String getBuyer();        // 追加
+		String getVideoPath();
+	}
+
+	/**
 	 * 氏名、年度月、作業内容を条件に、関連する工具情報を含む操作履歴を検索します。
-	 * (DTOへの依存を排除し、Projectionインターフェースを返すように変更)
-	 * @param year 年
-	 * @param month 月
-	 * @param username ユーザー名 (null許容)
-	 * @param operationContent 作業内容 (null許容)
-	 * @return 条件に一致する操作履歴 (HistoryProjectionのリスト)
+	 * (HistoryProjection インターフェースのリストを返します)
 	 */
 	@Query("SELECT " +
 		   "  ro.procTime AS procTime, " +
@@ -32,10 +43,7 @@ public interface OperationRepository extends JpaRepository<Operation, Integer> {
 		   "  mt.toolCategory AS toolCategory, " +
 		   "  mt.maker AS maker, " +
 		   "  mt.toolName AS toolName, " +
-		   "  mt.toolMaterial AS toolMaterial, " +
-		   "  ro.toolNum AS toolNum, " +
-		   "  sa.displayAddress AS displayAddress, " +
-	       "  ro.trackResult AS trackResult " +
+		   "  mt.toolMaterial AS toolMaterial " +
 		   "FROM Operation ro, User mu, StorageArea sa, Tool mt " +
 		   "WHERE ro.userId = mu.userId " +
 		   "  AND ro.storageAreaId = sa.storageAreaId " +
@@ -55,38 +63,41 @@ public interface OperationRepository extends JpaRepository<Operation, Integer> {
 	
 	/**
 	 * 履歴(rec_operation)テーブルに存在する操作履歴の「年月」を重複なく取得します。
-	 * (旧 OperationHistoryRepository.findHistoryCamdodate を代替)
-	 * * @return 'YYYY-MM' 形式の年月のリスト
 	 */
-	// メソッド名のスペルミスを修正 (findHistoryCamdodate -> findHistoryCandidate)
 	@Query("SELECT DISTINCT FUNCTION('DATE_FORMAT', ro.procTime, '%Y-%m') " +
 		   "FROM Operation ro " +
 		   "ORDER BY 1 DESC")
 	List<String> findHistoryCandidate();
 
+	// --- 旧 DatabaseRepository より統合されたメソッド ---
+
 	/**
-	 * 操作履歴(rec_operation)とユーザー名(mst_user)を結合して取得します。
-	 * (DTO ではなく、HistoryProjection インターフェースのリストを返します)
-	 * HistoryProjectionのフィールドを満たすため、不要なカラムには空文字を割り当てています。
+	 * 操作履歴(rec_operation)とユーザー名(mst_user)、および関連情報を結合して取得します。
+	 * ★★★ 修正: StorageArea, Tool を結合し、新しい項目を取得するように変更 ★★★
 	 * @param end 終了日時 (この日時"以前" <=) (null許容)
 	 * @param newerThan 開始日時 (この日時"より後" >) (null許容)
-	 * @return HistoryProjection のリスト
+	 * @return OperationHistoryProjection のリスト
 	 */
 	@Query("SELECT " +
 		   "  ro.procTime AS procTime, " +
 		   "  mu.userName AS userName, " +
 		   "  ro.operationClass AS operationClass, " +
-		   "  ro.videoPath AS videoPath, " +
-		   "  '' AS toolCategory, " +
-		   "  '' AS maker, " +
-		   "  '' AS toolName, " +
-		   "  '' AS toolMaterial " +
-		   "FROM Operation ro, User mu " +
+		   "  ro.toolNum AS toolNum, " +
+		   "  (SELECT ml.lineName FROM Line ml WHERE ml.lineId = ro.lineId) AS lineName, " +
+		   "  mt.toolCategory AS toolCategory, " +
+		   "  mt.maker AS maker, " +
+		   "  mt.toolName AS toolName, " +
+		   "  mt.toolMaterial AS toolMaterial, " +
+		   "  mt.buyer AS buyer, " +
+		   "  ro.videoPath AS videoPath " +
+		   "FROM Operation ro, User mu, StorageArea sa, Tool mt " +
 		   "WHERE ro.userId = mu.userId " +
+		   "  AND ro.storageAreaId = sa.storageAreaId " +
+		   "  AND sa.basicToolId = mt.basicToolId " +
 		   "  AND (:newerThan IS NULL OR ro.procTime > :newerThan) " +
 		   "  AND (:end IS NULL OR ro.procTime <= :end) " +
 		   "ORDER BY ro.procTime ASC")
-	List<HistoryProjection> findOperationHistory(
+	List<OperationHistoryProjection> findOperationHistory(
 		@Param("end") LocalDateTime end,
 		@Param("newerThan") LocalDateTime newerThan
 	);
