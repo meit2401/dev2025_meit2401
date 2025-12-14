@@ -89,11 +89,11 @@ public class DatabaseBackupService {
 				p.getOperationClass(),
 				p.getToolNum(),
 				p.getLineName(),
-				p.getToolCategory(), // 追加
-				p.getMaker(),        // 追加
+				p.getToolCategory(),
+				p.getMaker(),
 				p.getToolName(),
-				p.getToolMaterial(), // 追加
-				p.getBuyer(),        // 追加
+				p.getToolMaterial(),
+				p.getBuyer(),
 				p.getVideoPath()
 			))
 			.collect(Collectors.toList());
@@ -321,8 +321,8 @@ public class DatabaseBackupService {
 			for (OperationRepository.OperationHistoryProjection p : projections) {
 				String videoPathStr = p.getVideoPath();
 
-				System.out.println("---- Video backup check ----");
-				System.out.println("videoPathStr = " + videoPathStr);
+				//System.out.println("---- Video backup check ----");
+				//System.out.println("videoPathStr = " + videoPathStr);
 
 				if (videoPathStr == null || videoPathStr.isEmpty()) {
 					System.out.println("→ videoPathStr is null or empty. Skip.");
@@ -330,12 +330,12 @@ public class DatabaseBackupService {
 					Path videoPath = Paths.get(videoStoragePath, videoPathStr);
 
 					System.out.println("Resolved videoPath = " + videoPath.toAbsolutePath());
-					System.out.println("Exists? " + Files.exists(videoPath));
-					System.out.println("Is directory? " + Files.isDirectory(videoPath));
+					//System.out.println("Exists? " + Files.exists(videoPath));
+					//System.out.println("Is directory? " + Files.isDirectory(videoPath));
 
 					if (Files.exists(videoPath) && !Files.isDirectory(videoPath)) {
 						String fileName = videoPath.getFileName().toString();
-						System.out.println("fileName = " + fileName);
+						//System.out.println("fileName = " + fileName);
 						System.out.println("Already added? " + addedFileNames.contains(fileName));
 
 						if (!addedFileNames.contains(fileName)) {
