@@ -5,37 +5,47 @@
             <div class="modal-content">
 
 				<!-- QRコードリーダー入力ステップ -->
-				<!--
 				<div id="qrScanStep">
 					<div class="modal-header">
 						<h5 class="modal-title custom-text--large text-center w-100" id="loginModalLabel">QRコードを読み取ってください</h5>
 					</div>
-					<div class="modal-body text-center">
-						<img th:src="@{/images/qrcode_icon.png}" alt="QR Code Icon" style="width: 300px; height: 300px; margin-bottom: 20px;">
-						<div id="loginError" class="alert alert-danger" style="display:none;"></div>
-						<input type="text" id="authCodeInput" class="visually-hidden" autofocus>
+					<div class="modal-body text-center d-flex flex-column gap-3">
+						<div>
+							<img th:src="@{/images/qrcode_icon.png}" alt="QR Code Icon" style="width: 400px; height: 400px; margin-bottom: 20px;">
+						</div>
+						<input type="text" id="authCodeInput" class="visually-hidden js-normalize-hankaku" autocomplete="off">
+						
+						<div id="qrError" class="alert alert-danger custom-text" style="display:none;"></div>
+						
+						<div class="d-flex justify-content-center">
+							<button type="button" id="switchToManualBtn" class="btn btn-link custom-text" style="border: none;">
+								<i class="bi bi-keyboard"></i> IDを手動で入力する
+							</button>
+						</div>
 					</div>
 					<div class="modal-footer d-flex justify-content-center">
-						<button type="button" class="btn custom-btn-modal btn-secondary" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
+						<button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
 					</div>
 				</div>
-				-->
                 
 				<!-- ユーザーID入力ステップ -->
-                <div id="qrScanStep">
+                <div id="userIdInputStep" style="display: none;">
                     <div class="modal-header">
-                        <h5 class="modal-title custom-text--large text-center w-100" id="loginModalLabel">ユーザーIDを入力してください</h5>
+                        <h5 class="modal-title custom-text--large text-center w-100">ユーザーIDを入力してください</h5>
                     </div>
                     <div class="modal-body d-flex flex-column gap-3">
-						<!-- エラーメッセージ表示 -->
-                        <div id="loginError" class="alert alert-danger custom-text" style="display:none;"></div>
+						<div id="loginError" class="alert alert-danger custom-text" style="display:none;"></div>
                         <div class="row align-items-center justify-content-center">
                             <label for="usernameInput" class="col-sm-3 col-form-label custom-text text-center">ユーザーID</label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control custom-text js-normalize-hankaku" id="usernameInput" autofocus>
-                                <input type="text" id="authCodeInput" class="visually-hidden js-normalize-hankaku">
+                                <input type="text" class="form-control custom-text js-normalize-hankaku" id="usernameInput">
                             </div>
                         </div>
+						<div class="d-flex justify-content-center mt-2">
+							<button type="button" id="switchToQrBtn" class="btn btn-link custom-text" style="border: none;">
+								<i class="bi bi-qr-code-scan"></i> QRコードでログイン
+							</button>
+						</div>
                     </div>
                     <div class="modal-footer d-flex justify-content-center gap-4">
                         <button type="button" class="btn custom-btn-modal" data-bs-dismiss="modal" style="width: 25%">キャンセル</button>
@@ -51,7 +61,7 @@
 					<div class="modal-body d-flex flex-column gap-3">
 						<!-- エラーメッセージ表示 -->
 						<div id="passwordError" class="alert alert-danger custom-text" style="display:none;"></div>
-						<!-- ユーザーIDを保持する隠しフィールド -->
+						<!-- ユーザー名を隠しフィールドで保持 -->
 						<input type="hidden" id="username" name="username">
 						<div class="row align-items-center justify-content-center">
 							<label for="password" class="col-sm-3 col-form-label custom-text text-center">パスワード</label>
@@ -61,10 +71,11 @@
 						</div>
 					</div>
 					<div class="modal-footer d-flex justify-content-center gap-4">
-						<button type="button" id="backToQrScanBtn" class="btn custom-btn-modal" style="width: 25%">戻る</button>
+						<button type="button" id="backToFirstStepBtn" class="btn custom-btn-modal" style="width: 25%">戻る</button>
 						<button type="button" id="loginSubmitBtn" class="btn custom-btn-modal btn-danger" style="width: 25%">ログイン</button>
 					</div>
                 </div>
+            </div>
             </div>
         </div>
     </div>

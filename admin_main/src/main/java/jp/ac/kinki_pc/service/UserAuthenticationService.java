@@ -1,5 +1,6 @@
 package jp.ac.kinki_pc.service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +19,9 @@ import jp.ac.kinki_pc.repository.UserRepository;
 
 @Service
 public class UserAuthenticationService implements UserDetailsService {
+
+	// 追加: 認証コードのタイムスタンプフォーマット
+	private static final DateTimeFormatter AUTH_CODE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
 	@Autowired
 	private UserRepository userRepository;
