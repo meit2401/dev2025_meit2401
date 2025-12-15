@@ -86,4 +86,63 @@ public class UserAuthenticationService implements UserDetailsService {
 			.authorities(authorities)
 			.build();
 	}
+
+	/**
+	 * QRコード認証コードを検証する
+	 * (UserManagementServiceから移動)
+	 */
+	public Optional<Integer> verifyAuthCode(String submittedCredential) throws IllegalArgumentException {
+		if (submittedCredential == null || submittedCredential.trim().isEmpty()) {
+			throw new IllegalArgumentException("認証コードを入力してください。");
+		}
+
+		String usernameToProcess;
+		String timestampToProcess;
+
+		// '-'で分割してユーザーIDとタイムスタンプを取得
+		if (submittedCredential.contains("-")) {
+			// splitの第二引数に2を指定することで、分割数を最大2に制限します
+			String[] parts = submittedCredential.split("-", 2);
+			if (parts.length == 2) {
+				usernameToProcess = parts[0];
+				timestampToProcess = parts[1];
+			} else {
+				throw new IllegalArgumentException("認証コードの形式が正しくありません。");
+			}
+		} else {
+			throw new IllegalArgumentException("認証コードの形式が正しくありません。");
+		}
+
+		Integer userIdToFind;
+		// ユーザーIDのプレフィックス'U'を除去してIntegerに変換
+		if (usernameToProcess.startsWith("U")) {
+			try {
+				userIdToFind = Integer.parseInt(usernameToProcess.substring(1));
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("ユーザーIDの形式が正しくありません。");
+			}
+		} else {
+			 throw new IllegalArgumentException("ユーザーIDの形式が正しくありません。");
+		}
+
+		// DB検索
+		Optional<User> userOptional = userRepository.findById(userIdToFind);
+		if (userOptional.isEmpty()) {
+			// ユーザーが見つからない
+			return Optional.empty();
+		}
+
+		User user = userOptional.get();
+		// ユーザーの最終更新日時を"yyyyMMddHHmmss"形式にフォーマット
+		String storedTimestamp = user.getUserPrintTime().format(AUTH_CODE_FORMATTER);
+
+		// フォーマットした文字列とQRコードから読み取ったタイムスタンプ文字列を比較
+		if (!timestampToProcess.equals(storedTimestamp)) {
+			// タイムスタンプが一致しない
+			return Optional.empty();
+		}
+
+		// 認証成功
+		return Optional.of(user.getUserId());
+	}
 }

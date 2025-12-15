@@ -336,7 +336,7 @@ public class DatabaseBackupService {
 					if (Files.exists(videoPath) && !Files.isDirectory(videoPath)) {
 						String fileName = videoPath.getFileName().toString();
 						//System.out.println("fileName = " + fileName);
-						System.out.println("Already added? " + addedFileNames.contains(fileName));
+						//System.out.println("Already added? " + addedFileNames.contains(fileName));
 
 						if (!addedFileNames.contains(fileName)) {
 							System.out.println("→ Adding video to ZIP");
