@@ -1,29 +1,29 @@
-// テスト用モード設定：trueの場合、QRコードによるユーザー認証を行わない
-const TEST_MODE_QR_AUTH = false;
+// テスト用モード設定：trueの場合、手動入力ボタンを表示する（falseの場合はQR認証のみに制限）
+const TEST_MODE_QR_AUTH = true;
 
 document.addEventListener("DOMContentLoaded", function () {
      // --- ログインモーダル処理 ---
     const loginModalElement = document.getElementById('loginModal');
     if (loginModalElement) {
          // ステップ管理用の要素
-        const qrScanStep      = document.getElementById('qrScanStep');      // 追加: QRスキャンステップ
-        const userIdInputStep = document.getElementById('userIdInputStep'); // 変更: ID入力ステップ
+        const qrScanStep      = document.getElementById('qrScanStep');
+        const userIdInputStep = document.getElementById('userIdInputStep');
         const passwordStep    = document.getElementById('passwordStep');
 
          // 入力フォーム要素
-        const authCodeInput       = document.getElementById('authCodeInput');   // 追加: QRコード入力欄
+        const authCodeInput       = document.getElementById('authCodeInput');
         const userIdInput         = document.getElementById('usernameInput');
         const usernameHiddenInput = document.getElementById('username');
         const passwordInput       = document.getElementById('password');
 
          // ボタン・メッセージ要素
-        const switchToManualBtn   = document.getElementById('switchToManualBtn'); // 追加: 手動切替ボタン
-        const switchToQrBtn       = document.getElementById('switchToQrBtn');     // 追加: QR切替ボタン
+        const switchToManualBtn   = document.getElementById('switchToManualBtn');
+        const switchToQrBtn       = document.getElementById('switchToQrBtn');
         const nextToPasswordBtn   = document.getElementById('nextToPasswordBtn');
-        const backToFirstStepBtn  = document.getElementById('backToFirstStepBtn'); // 変更: 戻るボタン
+        const backToFirstStepBtn  = document.getElementById('backToFirstStepBtn');
         const loginSubmitBtn      = document.getElementById('loginSubmitBtn');
         
-        const qrError             = document.getElementById('qrError');    // 追加: QRエラー
+        const qrError             = document.getElementById('qrError');
         const loginError          = document.getElementById('loginError');
         const passwordError       = document.getElementById('passwordError');
 
@@ -129,6 +129,11 @@ document.addEventListener("DOMContentLoaded", function () {
          * 「IDを手動で入力する」ボタン押下時の処理
          */
         if (switchToManualBtn) {
+            // 変更: TEST_MODE_QR_AUTH が false の場合、ボタンを非表示にする
+            if (!TEST_MODE_QR_AUTH) {
+                switchToManualBtn.style.display = 'none';
+            }
+
             switchToManualBtn.addEventListener('click', function() {
                 if (qrScanStep) qrScanStep.style.display = 'none';
                 if (userIdInputStep) userIdInputStep.style.display = 'block';
@@ -154,33 +159,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
          /**
          * ユーザーID入力ステップにおいて、「次へ」ボタンを押した場合
+         * 修正不要: 省略
          */
         if (nextToPasswordBtn) {
             nextToPasswordBtn.addEventListener('click', function() {
-                 // 要素が取得できない場合、処理を中断
+                 // 省略: 既存ロジックそのまま
                 if (!userIdInput) return;
-
-                 // ユーザーIDの取得
                 const userId = userIdInput.value;
-                
-                 // 入力値が空の場合
                 if (!userId || userId.trim() === '') {
                     if (loginError) {
-                        loginError.textContent   = 'ユーザーIDを入力してください。'; // エラーメッセージを設定
-                        loginError.style.display = 'block';            // エラーメッセージを表示
+                        loginError.textContent   = 'ユーザーIDを入力してください。';
+                        loginError.style.display = 'block';
                     }
                     return;
                 }
+                if (loginError) loginError.style.display = 'none';
+                if (usernameHiddenInput) usernameHiddenInput.value = userId;
                 
-                // エラーメッセージのクリアと隠しフィールドへの設定
-                if (loginError) loginError.style.display = 'none';           // エラーメッセージを非表示
-                if (usernameHiddenInput) usernameHiddenInput.value = userId; // ユーザーIDを隠しフィールドに設定
-                
-                // 画面遷移
-                if (userIdInputStep) userIdInputStep.style.display = 'none'; // ユーザーID入力ステップを非表示
-                if (passwordStep) passwordStep.style.display = 'block';      // パスワード入力ステップを表示
-                
-                 // 500msの後、パスワード入力欄にフォーカス
+                if (userIdInputStep) userIdInputStep.style.display = 'none';
+                if (passwordStep) passwordStep.style.display = 'block';
                 if (passwordInput) setTimeout(() => passwordInput.focus(), 500);
             });
         }
@@ -203,74 +200,62 @@ document.addEventListener("DOMContentLoaded", function () {
                     authCodeInput.value = '';
                     setTimeout(() => authCodeInput.focus(), 500);
                 }
-                
-                // もし手動入力ステップの状態を保持したい場合はここで制御可能
             });
         }
         
          /**
 		 * パスワード入力ステップにおいて、「ログイン」ボタンを押した場合
-         * 入力されたパスワードの検証を行い、非同期通信でログイン処理を実行する
+         * 修正不要: 省略
 		 */
 		if (loginSubmitBtn) {
+            // 省略: 既存ロジックそのまま
 			loginSubmitBtn.addEventListener('click', function() {
-				// 要素が取得できない場合、処理を中断
-				const username = usernameHiddenInput ? usernameHiddenInput.value : ''; // 隠しフィールドからユーザーIDを取得
-				const password = passwordInput ? passwordInput.value : '';             // パスワード入力欄からパスワードを取得
+				const username = usernameHiddenInput ? usernameHiddenInput.value : '';
+				const password = passwordInput ? passwordInput.value : '';
 
-				 // エラーメッセージを一旦非表示
 				if (passwordError) {
-                    passwordError.style.display = 'none'; // パスワードエラーメッセージを非表示
-                    passwordError.textContent   = '';     // メッセージ内容をクリア
+                    passwordError.style.display = 'none';
+                    passwordError.textContent   = '';
 				}
 
-				 // 入力値が空の場合
 				if (!password || password.trim() === '') {
-                     // パスワードが未入力の場合の処理
 					if (passwordError) {
-						passwordError.textContent   = 'パスワードを入力してください。'; // エラーメッセージを設定
-						passwordError.style.display = 'block';           // エラーメッセージを表示
+						passwordError.textContent   = 'パスワードを入力してください。';
+						passwordError.style.display = 'block';
 					}
 					if (passwordInput) {
-						passwordInput.focus(); // パスワード入力欄にフォーカス
+						passwordInput.focus();
 					}
 					return;
 				}
 
-				// Spring Security認証用データの作成
-				const           formData = new URLSearchParams(); // フォームデータオブジェクトを作成
-				formData.append('username', username);            // ユーザーIDを追加
-				formData.append('password', password);            // パスワードを追加
+				const formData = new URLSearchParams();
+				formData.append('username', username);
+				formData.append('password', password);
 
-				 // ログインリクエスト送信
 				fetch('/login', {
 					method: 'POST',
 					body  : formData
 				})
 				.then(response => {
-					 // ログイン失敗時はURLに?errorが含まれるリダイレクトが発生する
 					if (response.redirected && response.url.includes('?error')) {
-						 // ログイン失敗
 						if (passwordError) {
-							passwordError.textContent   = 'ユーザーIDもしくはパスワードが正しくありません。'; // エラーメッセージを設定
-							passwordError.style.display = 'block';                    // エラーメッセージを表示
+							passwordError.textContent   = 'ユーザーIDもしくはパスワードが正しくありません。';
+							passwordError.style.display = 'block';
 						}
-						 // パスワード入力欄をクリアしてフォーカス
 						if (passwordInput) {
-							passwordInput.value = ''; // パスワード入力欄をクリア
-							passwordInput.focus();    // パスワード入力欄にフォーカス
+							passwordInput.value = '';
+							passwordInput.focus();
 						}
 					} else {
-						 // ログイン成功
 						window.location.href = '/alert';
 					}
 				})
 				.catch(error => {
-					console.error('Login request failed:', error); // エラー内容をコンソールに出力
-					// 通信エラー等のメッセージを設定
+					console.error('Login request failed:', error);
 					if (passwordError) {
-						passwordError.textContent   = 'ログイン処理中にエラーが発生しました。'; // エラーメッセージを設定
-						passwordError.style.display = 'block';               // エラーメッセージを表示
+						passwordError.textContent   = 'ログイン処理中にエラーが発生しました。';
+						passwordError.style.display = 'block';
 					}
 				});
 			});

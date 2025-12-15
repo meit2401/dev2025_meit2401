@@ -20,7 +20,7 @@ import jp.ac.kinki_pc.repository.UserRepository;
 @Service
 public class UserAuthenticationService implements UserDetailsService {
 
-	// 追加: 認証コードのタイムスタンプフォーマット
+	// 認証コードのタイムスタンプフォーマット
 	private static final DateTimeFormatter AUTH_CODE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
 	@Autowired
@@ -93,12 +93,17 @@ public class UserAuthenticationService implements UserDetailsService {
 
 	/**
 	 * QRコード認証コードを検証する
-	 * (UserManagementServiceから移動)
+	 * @param submittedCredential QRコードから読み取った文字列
+	 * @return 認証成功時はユーザーID(Optional)、失敗時はOptional.empty()
+	 * @throws IllegalArgumentException フォーマット不正時
 	 */
 	public Optional<Integer> verifyAuthCode(String submittedCredential) throws IllegalArgumentException {
+		// 追加: 空白除去とNullチェック
 		if (submittedCredential == null || submittedCredential.trim().isEmpty()) {
 			throw new IllegalArgumentException("認証コードを入力してください。");
 		}
+		// 追加: 入力値の前後の空白を除去 (スキャナーによる改行コード混入対策)
+		submittedCredential = submittedCredential.trim();
 
 		String usernameToProcess;
 		String timestampToProcess;
@@ -137,11 +142,19 @@ public class UserAuthenticationService implements UserDetailsService {
 		}
 
 		User user = userOptional.get();
+
+		// 追加: userPrintTimeがnullの場合（QRコードが未発行、またはDBに日時がない場合）は認証失敗とする
+		// これにより NullPointerException を回避します
+		if (user.getUserPrintTime() == null) {
+			return Optional.empty();
+		}
+
 		// ユーザーの最終更新日時を"yyyyMMddHHmmss"形式にフォーマット
 		String storedTimestamp = user.getUserPrintTime().format(AUTH_CODE_FORMATTER);
 
 		// フォーマットした文字列とQRコードから読み取ったタイムスタンプ文字列を比較
-		if (!timestampToProcess.equals(storedTimestamp)) {
+		// 追加: timestampToProcessも念のためtrimする
+		if (!timestampToProcess.trim().equals(storedTimestamp)) {
 			// タイムスタンプが一致しない
 			return Optional.empty();
 		}

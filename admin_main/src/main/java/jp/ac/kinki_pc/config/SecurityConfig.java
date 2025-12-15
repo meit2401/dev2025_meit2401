@@ -38,7 +38,7 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 				// 認証なしでアクセス可能なエンドポイント
 				.requestMatchers("/", "/alert", "/alert/**", 
-								 "/api/tool-shortages", "/api/tool-shortages/count",
+								 "/api/tool-shortages", "/api/tool-shortages/count", "/api/verify-auth-code",
 								 "/css/**", "/js/**", "/images/**").permitAll()
 				// ロールベースのアクセス制御
 				.requestMatchers("/users").hasRole("USERS")

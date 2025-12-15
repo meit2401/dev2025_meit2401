@@ -23,7 +23,7 @@ public class UserAuthenticationController {
 		String submittedCredential = payload.get("authCode");
 
 		try {
-			// 変更: UserAuthenticationServiceのメソッドを呼び出す
+			// UserAuthenticationServiceのメソッドを呼び出す
 			Optional<Integer> userIdOptional = userAuthenticationService.verifyAuthCode(submittedCredential);
 			
 			if (userIdOptional.isPresent()) {
@@ -37,6 +37,10 @@ public class UserAuthenticationController {
 		} catch (IllegalArgumentException e) {
 			// 形式不正時
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+		} catch (Exception e) {
+			// 追加: 予期せぬエラー（DBエラーやNPEなど）
+			e.printStackTrace(); // ログにスタックトレースを出力
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("サーバー内部エラーが発生しました。");
 		}
 	}
 }
