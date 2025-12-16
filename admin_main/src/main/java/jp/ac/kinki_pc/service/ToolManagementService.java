@@ -142,7 +142,12 @@ public class ToolManagementService {
                     StorageArea newArea = new StorageArea();
                     newArea.setBasicToolId(newBasicToolId);
                     newArea.setDisplayAddress(trimmedAddress);
-                    newArea.setToolcaseStcNum(0);
+                    
+                    if (stc == null) {
+                        newArea.setToolcaseStcNum(null);
+                    } else {
+                        newArea.setToolcaseStcNum(0);
+                    }
                     
                     storageAreaRepository.save(newArea);
                 }

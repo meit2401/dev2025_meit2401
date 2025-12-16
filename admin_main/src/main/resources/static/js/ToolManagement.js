@@ -675,13 +675,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-
 	if (toolsAddModal) {
 		
 		toolsAddModal.addEventListener('show.bs.modal', function () {
 			const category = toolsAddModal.dataset.category;
 			const insertCountSection = document.getElementById('insertCountSection');
 			
+			// --- 追加: モーダル表示開始時に見た目をリセット ---
+			const numberBox = document.getElementById('numberBox');
+			const insertCountInput = document.getElementById('insertCountInput');
+			if (numberBox) numberBox.textContent = '1';
+			if (insertCountInput) insertCountInput.value = '1';
+
 			if (category === 'インサート' || category === 'チップ') {
 				insertCountSection.style.display = 'flex';
 			} else {
@@ -703,6 +708,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			const insertCountInput = document.getElementById('insertCountInput');
 
 			let count = 1;
+			// ここでのリセットは念のため残しておきますが、
+			// 見た目はすでに show.bs.modal で 1 になっています。
 			numberBox.textContent = count;
 			insertCountInput.value = count;
 			
