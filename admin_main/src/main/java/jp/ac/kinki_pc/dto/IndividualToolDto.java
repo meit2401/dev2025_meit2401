@@ -12,4 +12,5 @@ public class IndividualToolDto {
 	private long uniqueToolId;
 	private int casePackNum;
 	private int regrindCount;
+	private String storageCondition;
 }

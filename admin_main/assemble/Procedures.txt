@@ -1,0 +1,19 @@
+プロジェクトディレクトリまで移動
+cd [projectdir]
+
+環境変数JAVA_HOMEを設定
+set JAVA_HOME=C:\pleiades\2025-06\java\21
+
+Mavenビルドを実行
+mvnw clean package
+Mavenビルドを実行(テスト工程を無視)
+mvnw clean package -DskipTests
+
+batファイルの作成
+init_admin_main.batを生成されたjarファイルと同じディレクトリに配置
+
+非常復帰用powershellスクリプトの作成
+Microsoft.PowerShell_profile.ps1をC:\Users\[USERNAME]\Documents\WindowsPowerShell直下に配置
+
+ログイン中ユーザーによってローカルで作成されたpowershellスクリプトに実行許可を与える
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser

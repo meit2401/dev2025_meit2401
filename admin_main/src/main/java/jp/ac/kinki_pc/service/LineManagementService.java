@@ -18,8 +18,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -58,11 +56,8 @@ public class LineManagementService {
 	
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
-
-	private static final Logger logger = LoggerFactory.getLogger(LineManagementService.class);
 	
-	// 日時フォーマット定義 (ロールバック用とQR用)
-	private static final DateTimeFormatter DTO_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	// QRコード用のフォーマッタ
 	private static final DateTimeFormatter QR_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
 	public List<LineDto> findAllLines() {
@@ -78,25 +73,30 @@ public class LineManagementService {
 	}
 	
 	public List<ToolAssignmentDto> findToolAssignmentsByProgramId(Integer programId) {
+		// 1. まず、割り当てエンティティのリストを取得
 		List<ToolAssignment> assignments = toolAssignmentRepository.findByProgramId(programId);
 		
 		if (assignments.isEmpty()) {
 			return new ArrayList<>();
 		}
 
+		// 2. N+1問題を回避するため、必要な工具ID(basicToolId)を全て集める
 		List<Integer> toolIds = assignments.stream()
 			.map(ToolAssignment::getBasicToolId)
 			.distinct()
 			.collect(Collectors.toList());
 
+		// 3. JpaRepository が提供する findAllById() メソッドを呼び出す
 		Map<Integer, Tool> toolMap = new HashMap<>();
 		if (!toolIds.isEmpty()) {
 			List<Tool> tools = toolRepository.findAllById(toolIds); 
 			
+			// 4. basicToolId をキーにした Map に変換
 			toolMap = tools.stream()
 				.collect(Collectors.toMap(Tool::getBasicToolId, tool -> tool));
 		}
 
+		// 5. 割り当てリストをループ処理し、Mapから工具マスタ情報を取得してDTOに詰める
 		List<ToolAssignmentDto> dtos = new ArrayList<>();
 		for (ToolAssignment ta : assignments) {
 			Tool tool = toolMap.get(ta.getBasicToolId()); 
@@ -127,6 +127,9 @@ public class LineManagementService {
 		return programRepository.findById(programId);
 	}
 	
+	/**
+	 * 絞り込み条件に一致する工具マスタのリストを取得する
+	 */
 	public List<ToolDto> findFilteredTools(String category, String maker, String toolName, String material) {
 		StringBuilder sql = new StringBuilder("SELECT * FROM mst_tool WHERE 1=1");
 		List<Object> params = new java.util.ArrayList<>();
@@ -161,7 +164,7 @@ public class LineManagementService {
 					rs.getInt("stc"),
 					rs.getInt("rop"),
 					rs.getString("buyer"),
-					rs.getBoolean("isFrozen")
+					rs.getBoolean("is_frozen") // [修正] isFrozen を追加
 				);
 			}
 		};
@@ -175,7 +178,7 @@ public class LineManagementService {
 
 	@Transactional
 	public LineDto addLine(LineDto lineDto) {
-		// Lineコンストラクタ(Integer, String, Boolean)に適合するように修正
+		// [修正] Lineエンティティのコンストラクタ変更に対応（isFrozen に false を設定）
 		Line line = new Line(null, lineDto.getLineName(), false);
 		Line savedLine = lineRepository.save(line);
 		return convertToDto(savedLine);
@@ -212,38 +215,40 @@ public class LineManagementService {
 		Optional<Program> currentProgramOptional = programRepository.findById(programId);
 		if (currentProgramOptional.isPresent()) {
 			Program programToUpdate = currentProgramOptional.get();
-			LocalDateTime newDatetime = LocalDateTime.now();
-			programToUpdate.setProgramPrintTime(newDatetime);
+			programToUpdate.setProgramPrintTime(LocalDateTime.now());
 			
 			programRepository.save(programToUpdate); 
 			
-			logger.info("プログラムのタイムスタンプを更新しました。 ProgramID: {}, New Time: {}", programId, newDatetime.format(QR_FORMATTER));
 			return convertToDto(programToUpdate);
 		}
 		return null;
 	}
-
+	
 	/**
-	 * プログラムのタイムスタンプを指定された値（文字列）に戻す
+	 * (新規) 印刷失敗時などにプログラムのタイムスタンプを元に戻す
 	 * @param programId プログラムID
-	 * @param timestampStr ロールバックする日時文字列(yyyy-MM-dd HH:mm:ss)
+	 * @param oldTimestampStr 戻したい日時文字列 ("yyyy-MM-dd HH:mm:ss")
 	 */
-	public void restoreProgramTimestamp(Integer programId, String timestampStr) {
-		Optional<Program> currentProgramOptional = programRepository.findById(programId);
-		if (currentProgramOptional.isPresent()) {
-			Program program = currentProgramOptional.get();
-			try {
-				if (timestampStr != null && !timestampStr.isEmpty()) {
-					LocalDateTime dt = LocalDateTime.parse(timestampStr, DTO_FORMATTER);
-					program.setProgramPrintTime(dt);
-				} else {
-					program.setProgramPrintTime(null);
+	@Transactional
+	public void restoreProgramTimestamp(Integer programId, String oldTimestampStr) {
+		Optional<Program> programOptional = programRepository.findById(programId);
+		
+		if (programOptional.isPresent()) {
+			Program program = programOptional.get();
+			LocalDateTime timestamp = null;
+			
+			if (oldTimestampStr != null && !oldTimestampStr.isEmpty()) {
+				try {
+					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+					timestamp = LocalDateTime.parse(oldTimestampStr, formatter);
+				} catch (Exception e) {
+					e.printStackTrace();
+					// パース失敗時はnullを設定
 				}
-				programRepository.save(program);
-				logger.info("プログラムのタイムスタンプをロールバックしました。 ProgramID: {}", programId);
-			} catch (Exception e) {
-				logger.error("プログラムのタイムスタンプの復元に失敗しました。 ProgramID: {}, Error: {}", programId, e.getMessage());
 			}
+			
+			program.setProgramPrintTime(timestamp);
+			programRepository.save(program);
 		}
 	}
 	
@@ -431,7 +436,7 @@ public class LineManagementService {
 						Tool foundTool = toolCache.get(normalizedToolName); 
 						
 						if (foundTool != null) {
-							int toolNumInt = (rowIndex - 5) + 1;
+							int toolNumInt = (rowIndex - 5) + 1; 
 							String toolNum = String.format("T%02d", toolNumInt);
 							
 							assignmentsToSave.add(new ToolAssignment(
@@ -525,7 +530,7 @@ public class LineManagementService {
 					rs.getInt("stc"),
 					rs.getInt("rop"),
 					rs.getString("buyer"),
-					rs.getBoolean("isFrozen")
+					rs.getBoolean("is_frozen") // [修正] isFrozen を追加
 				);
 			}
 		};
@@ -547,7 +552,7 @@ public class LineManagementService {
 
 	public ProgramDto convertToDto(Program program) {
 		String formattedTimestamp = (program.getProgramPrintTime() != null)
-			? program.getProgramPrintTime().format(DTO_FORMATTER)
+			? program.getProgramPrintTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 			: null;
 		return new ProgramDto(
 			program.getProgramId(),

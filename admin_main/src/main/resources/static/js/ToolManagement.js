@@ -472,6 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					if(detailBody) {
 						detailBody.innerHTML = ""; 
 						
+						// データ行の追加
 						if (individualToolList && individualToolList.length > 0) {
 							individualToolList.forEach(indTool => {
 								const newRow = detailBody.insertRow();
@@ -479,13 +480,24 @@ document.addEventListener('DOMContentLoaded', () => {
 									<td class="text-center">${indTool.uniqueToolId}</td>
 									<td class="text-center">${indTool.casePackNum}</td>
 									<td class="text-center">${indTool.regrindCount}</td>
+									<td class="text-center">${indTool.storageCondition}</td>
 								`;
 							});
-						} else {
-							const newRow = detailBody.insertRow();
-							newRow.innerHTML = `
-								<td colspan="3" class="text-center">個別工具データはありません</td>
-							`;
+						}
+						
+						// 空行の追加（常に15行になるように調整）
+						const currentRowCount = detailBody.rows.length;
+						const minRows = 15;
+						if (currentRowCount < minRows) {
+							for (let i = 0; i < minRows - currentRowCount; i++) {
+								const newRow = detailBody.insertRow();
+								newRow.innerHTML = `
+									<td class="text-center">&nbsp;</td>
+									<td class="text-center">&nbsp;</td>
+									<td class="text-center">&nbsp;</td>
+									<td class="text-center">&nbsp;</td>
+								`;
+							}
 						}
 					}
 				})
@@ -493,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					console.error('個別工具データの取得に失敗しました:', error);
 					const detailBody = document.getElementById("individualToolListBody");
 					if(detailBody) {
-						detailBody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">データの取得に失敗しました</td></tr>`;
+						detailBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">データの取得に失敗しました</td></tr>`;
 					}
 				});
 		});

@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		return currentRowCount;
 	};
 
-	const dataRowCount = adjustTableRows(16);
+	const dataRowCount = adjustTableRows(8);
 	const isHistoryListEmpty = dataRowCount === 0;
 
 	// --- プルダウン生成ロジック ---

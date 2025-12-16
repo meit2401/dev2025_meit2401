@@ -39,7 +39,7 @@ public class SecurityConfig {
 				// 認証なしでアクセス可能なエンドポイント
 				.requestMatchers("/", "/alert", "/alert/**", 
 								 "/api/tool-shortages", "/api/tool-shortages/count", "/api/verify-auth-code",
-								 "/css/**", "/js/**", "/images/**").permitAll()
+								 "/api/auth-config", "/css/**", "/js/**", "/images/**").permitAll()
 				// ロールベースのアクセス制御
 				.requestMatchers("/users").hasRole("USERS")
 				.requestMatchers("/tools").hasRole("TOOLS")

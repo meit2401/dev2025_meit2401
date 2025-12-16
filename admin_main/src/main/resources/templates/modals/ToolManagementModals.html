@@ -400,9 +400,10 @@
 							<table class="table table-bordered table-striped ">
 								<thead class="custom-list">
 									<tr>
-										<th class="text-center" style="width: 33%;">個別工具ID</th>
-										<th class="text-center" style="width: 33%;">個数</th>
-										<th class="text-center" style="width: 33%;">再研磨回数</th>
+										<th class="text-center" style="width: 25%;">個別工具ID</th>
+										<th class="text-center" style="width: 25%;">個数</th>
+										<th class="text-center" style="width: 25%;">再研磨回数</th>
+										<th class="text-center" style="width: 25%;">状態</th>
 									</tr>
 								</thead>
 								<tbody class="fs-3" id="individualToolListBody">
@@ -410,6 +411,7 @@
 										 <td class="text-center" th:text="${indTool.uniqueToolId}"></td>
 										 <td class="text-center" th:text="${indTool.casePackNum}"></td>
 										 <td class="text-center" th:text="${indTool.regrindCount}"></td>
+										 <td class="text-center" th:text="${indTool.storageCondition}"></td>
 									</tr>
 								</tbody>
 								</table>

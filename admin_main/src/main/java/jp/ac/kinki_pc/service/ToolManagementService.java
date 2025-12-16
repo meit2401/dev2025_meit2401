@@ -324,6 +324,7 @@ public class ToolManagementService {
     public List<IndividualToolDto> getIndividualTools(int basicToolId) {
         List<UniqueTool> entities = uniqueToolRepository.findByBasicToolId(basicToolId);
         return entities.stream()
+                        .filter(tool -> !"取出".equals(tool.getStorageCondition()))
                         .map(this::convertEntityToDto)
                         .collect(Collectors.toList());
     }
@@ -370,7 +371,8 @@ public class ToolManagementService {
         return new IndividualToolDto(
             uniqueToolIdAsLong,
             uniqueTool.getCasePackNum(),
-            uniqueTool.getRegrindCount()
+            uniqueTool.getRegrindCount(),
+            uniqueTool.getStorageCondition()
         );
     }
     

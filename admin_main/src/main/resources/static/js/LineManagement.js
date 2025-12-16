@@ -1,5 +1,5 @@
 // テスト用モード設定：trueの場合、印刷エラーが発生してもデータのロールバックを行わず処理を完了します
-const TEST_MODE_IGNORE_ERROR = false;
+const TEST_MODE_IGNORE_ERROR = true;
 
 document.addEventListener("DOMContentLoaded", function () {
 	let selectedLineId = null;

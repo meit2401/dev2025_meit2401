@@ -100,7 +100,13 @@
 			<!-- 更新日時表示 -->
 			<div class="card p-4 mb-4">
 				<div class="mt-4 text-center">
-						<p class="custom-text">最終更新日： <span th:text="${lastBackupExecutionTime}">YYYY/MM/DD XX:XX</span></p> <p class="custom-text">バックアップ済日： <span th:text="${latestRecordIncludedTime}">YYYY/MM/DD XX:XX</span></p> </div>
+					<p class="custom-text">最終更新日： 
+						<span th:text="${lastBackupExecutionTime}">YYYY/MM/DD XX:XX</span>
+					</p>
+					<p class="custom-text">バックアップ済日：
+						<span th:text="${latestRecordIncludedTime}">YYYY/MM/DD XX:XX</span>
+					</p>
+				</div>
 			</div>
 
 			<!-- バックアップボタン -->

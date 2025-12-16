@@ -1,5 +1,5 @@
-// テスト用モード設定：trueの場合、手動入力ボタンを表示する（falseの場合はQR認証のみに制限）
-const TEST_MODE_QR_AUTH = true;
+// 設定値を保持する変数 (デフォルトは安全のためfalse)
+let isTestModeQrAuth = false;
 
 document.addEventListener("DOMContentLoaded", function () {
      // --- ログインモーダル処理 ---
@@ -26,6 +26,31 @@ document.addEventListener("DOMContentLoaded", function () {
         const qrError             = document.getElementById('qrError');
         const loginError          = document.getElementById('loginError');
         const passwordError       = document.getElementById('passwordError');
+
+        // 追加: サーバーから設定値を取得してUIを制御
+        fetch('/api/auth-config')
+            .then(response => {
+                // レスポンスがJSONかどうかを確認
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                } else {
+                    // JSONでない場合（ログイン画面のHTMLなど）はエラーとする
+                    throw new Error("Response is not JSON");
+                }
+            })
+            .then(config => {
+                isTestModeQrAuth = config.testModeQrAuth;
+                // テストモードが有効な場合のみ手動入力ボタンを表示
+                if (switchToManualBtn) {
+                    switchToManualBtn.style.display = isTestModeQrAuth ? 'block' : 'none';
+                }
+            })
+            .catch(error => {
+                console.warn('Auth config load failed (using default=false):', error);
+                // エラー時は安全側に倒してボタンを非表示
+                if (switchToManualBtn) switchToManualBtn.style.display = 'none';
+            });
 
          /**
          * モーダル表示時の初期フォーカス設定
@@ -77,7 +102,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     if (!authCode || authCode.trim() === '') return;
 
-                    if (TEST_MODE_QR_AUTH) {
+                    // 修正: 変数を使用するように変更
+                    if (isTestModeQrAuth) {
                         console.log("Test Mode: QR Scanned", authCode);
                     }
 
@@ -100,6 +126,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         // 認証成功: ユーザーIDを設定してパスワード入力へ遷移
                         if (usernameHiddenInput) usernameHiddenInput.value = data.userId;
                         if (qrError) qrError.style.display = 'none';
+
+                        // パスワード入力ステップへ遷移する前にエラー表示をクリア
+                        if (passwordError) passwordError.style.display = 'none';
 
                         if (qrScanStep) qrScanStep.style.display = 'none';
                         if (passwordStep) passwordStep.style.display = 'block';
@@ -129,10 +158,9 @@ document.addEventListener("DOMContentLoaded", function () {
          * 「IDを手動で入力する」ボタン押下時の処理
          */
         if (switchToManualBtn) {
-            // 変更: TEST_MODE_QR_AUTH が false の場合、ボタンを非表示にする
-            if (!TEST_MODE_QR_AUTH) {
-                switchToManualBtn.style.display = 'none';
-            }
+            // 修正: 初期表示はCSSまたはAPIコールバックで制御するため、ここでの即時非表示ロジックは削除
+            // 代わりにロード直後は非表示にしておく（チラつき防止）
+            switchToManualBtn.style.display = 'none';
 
             switchToManualBtn.addEventListener('click', function() {
                 if (qrScanStep) qrScanStep.style.display = 'none';
@@ -157,13 +185,11 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-         /**
+        /**
          * ユーザーID入力ステップにおいて、「次へ」ボタンを押した場合
-         * 修正不要: 省略
          */
         if (nextToPasswordBtn) {
             nextToPasswordBtn.addEventListener('click', function() {
-                 // 省略: 既存ロジックそのまま
                 if (!userIdInput) return;
                 const userId = userIdInput.value;
                 if (!userId || userId.trim() === '') {
@@ -176,13 +202,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (loginError) loginError.style.display = 'none';
                 if (usernameHiddenInput) usernameHiddenInput.value = userId;
                 
+                // パスワード入力ステップへ遷移する前にエラー表示をクリア
+                if (passwordError) passwordError.style.display = 'none';
+                
                 if (userIdInputStep) userIdInputStep.style.display = 'none';
                 if (passwordStep) passwordStep.style.display = 'block';
                 if (passwordInput) setTimeout(() => passwordInput.focus(), 500);
             });
         }
         
-         /**
+        /**
          * パスワード入力ステップにおいて、「戻る」ボタンを押した場合
          * ユーザーID入力ステップ（またはQRステップ）へ戻る
          */
@@ -194,6 +223,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 // 入力値をクリア
                 if (passwordInput) passwordInput.value = '';
 
+                // エラー表示をクリア
+                if (passwordError) passwordError.style.display = 'none';
+
                 // 直前のステップに戻るべきだが、デフォルトでQRステップに戻す
                 if (qrScanStep) qrScanStep.style.display = 'block';
                 if (authCodeInput) {
@@ -203,7 +235,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
         
-         /**
+        /**
 		 * パスワード入力ステップにおいて、「ログイン」ボタンを押した場合
          * 修正不要: 省略
 		 */
