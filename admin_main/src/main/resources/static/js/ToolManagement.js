@@ -1,5 +1,8 @@
+////////////////////////////////////////////////////////////////////////////////////////////////
 // テスト用モード設定：trueの場合、印刷エラーが発生してもデータのロールバックを行わず処理を完了します
-const TEST_MODE_IGNORE_ERROR = true;
+// (開発・テスト環境向け) 本番環境においては消去すること
+////////////////////////////////////////////////////////////////////////////////////////////////
+const TEST_MODE_IGNORE_ERROR = false;
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -1026,13 +1029,21 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 			
 			// フォーム送信時の念押しバリデーション
+			// フォーム送信時の念押しバリデーション
 			if (addToolForm) {
 				addToolForm.addEventListener('submit', function(e) {
+					const locationVal = storageLocationInput.value.trim();
+
 					if (storageCountSelect.value === '6') { // 6=装置外
-						const locationVal = storageLocationInput.value.trim().toUpperCase();
-						if (/^[ABC]\d{2}$/.test(locationVal)) {
+						if (/^[ABC]\d{2}$/.test(locationVal.toUpperCase())) {
 							e.preventDefault();
 							alert("名称が装置内コンテナアドレスと重複しているため登録できません。");
+						}
+					} else {
+						// コンテナ (1-5) の場合、格納場所が必須
+						if (!locationVal) {
+							e.preventDefault();
+							alert("格納場所を選択してください。");
 						}
 					}
 				});

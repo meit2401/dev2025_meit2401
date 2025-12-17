@@ -1,6 +1,3 @@
-// 設定値を保持する変数 (デフォルトは安全のためfalse)
-let isTestModeQrAuth = false;
-
 document.addEventListener("DOMContentLoaded", function () {
      // --- ログインモーダル処理 ---
     const loginModalElement = document.getElementById('loginModal');
@@ -26,6 +23,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const qrError             = document.getElementById('qrError');
         const loginError          = document.getElementById('loginError');
         const passwordError       = document.getElementById('passwordError');
+
+        // 設定値を保持する変数 (デフォルトは安全のためfalse)
+        let isTestModeQrAuth = false;
 
         // 追加: サーバーから設定値を取得してUIを制御
         fetch('/api/auth-config')

@@ -50,6 +50,9 @@ public class DatabaseBackupService {
 	@Value("${video.storage.path}")
 	private String videoStoragePath;
 
+	@Value("${backup.storage.path}")
+	private String backupStoragePath;
+
 	/**
 	 * "未バックアップ" の操作履歴リストを取得する
 	 * (backupsフォルダ内の最新ZIPに含まれる最新日時よりも新しい履歴を取得)
@@ -81,7 +84,6 @@ public class DatabaseBackupService {
 			operationRepository.findOperationHistory(null, newerThanTimestamp);
 
 		// 5. Projection を DTO (OperationHistory) にマッピングして返す
-		// ★★★ 修正: 新しいフィールドをマッピング ★★★
 		return projections.stream()
 			.map(p -> new OperationHistory(
 				p.getProcTime(), 
@@ -105,7 +107,7 @@ public class DatabaseBackupService {
 	 * @throws IOException ディレクトリの読み込みに失敗した場合
 	 */
 	private Optional<Path> findLatestBackupZip() throws IOException {
-		Path backupDir = Paths.get("backups");
+		Path backupDir = Paths.get(backupStoragePath);
 		if (!Files.isDirectory(backupDir)) {
 			return Optional.empty(); // backups ディレクトリがない
 		}
@@ -281,13 +283,11 @@ public class DatabaseBackupService {
 		DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 		try (BufferedWriter writer = Files.newBufferedWriter(csvFilePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
 			 writer.write('\uFEFF'); // BOM
-			 // ★★★ 修正: ヘッダーを指定された順序に設定 ★★★
 			 writer.write("日付,時間,氏名,ライン名,操作内容,操作個数,分類,メーカー,型番,材質,商社");
 			 writer.newLine();
 			// DTOのリストを使用
 			for (OperationHistory history : historyList) {
 				LocalDateTime procDateTime = history.getProcTime();
-				// ★★★ 修正: 指定された順序でCSVに出力 ★★★
 				writer.write(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
 						procDateTime.format(dateFormatter),
 						procDateTime.format(timeFormatter),
@@ -315,14 +315,11 @@ public class DatabaseBackupService {
 			// CSVファイル追加
 			addToZip(csvFilePath, zos);
 
-			// ★ 動画ファイル追加（ここを復元）★
+			// 動画ファイル追加
 			Set<String> addedFileNames = new HashSet<>();
 
 			for (OperationRepository.OperationHistoryProjection p : projections) {
 				String videoPathStr = p.getVideoPath();
-
-				//System.out.println("---- Video backup check ----");
-				//System.out.println("videoPathStr = " + videoPathStr);
 
 				if (videoPathStr == null || videoPathStr.isEmpty()) {
 					System.out.println("→ videoPathStr is null or empty. Skip.");
@@ -330,13 +327,9 @@ public class DatabaseBackupService {
 					Path videoPath = Paths.get(videoStoragePath, videoPathStr);
 
 					System.out.println("Resolved videoPath = " + videoPath.toAbsolutePath());
-					//System.out.println("Exists? " + Files.exists(videoPath));
-					//System.out.println("Is directory? " + Files.isDirectory(videoPath));
 
 					if (Files.exists(videoPath) && !Files.isDirectory(videoPath)) {
 						String fileName = videoPath.getFileName().toString();
-						//System.out.println("fileName = " + fileName);
-						//System.out.println("Already added? " + addedFileNames.contains(fileName));
 
 						if (!addedFileNames.contains(fileName)) {
 							System.out.println("→ Adding video to ZIP");
@@ -353,7 +346,7 @@ public class DatabaseBackupService {
 		}
 
 		// 最終保存先へ移動
-		Path backupDir = Paths.get("backups");
+		Path backupDir = Paths.get(backupStoragePath);
 		Files.createDirectories(backupDir);
 		Path finalZipPath = backupDir.resolve(zipFileName);
 		Files.move(zipFilePath, finalZipPath, StandardCopyOption.REPLACE_EXISTING);
