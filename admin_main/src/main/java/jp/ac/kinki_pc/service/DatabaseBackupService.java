@@ -53,37 +53,33 @@ public class DatabaseBackupService {
 	@Value("${backup.storage.path}")
 	private String backupStoragePath;
 
+	// 隠しログファイル名の定数定義
+	private static final String LOG_DIR_NAME = "backup_log";
+	private static final String LOG_FILE_NAME = ".last_backup_info";
+
 	/**
 	 * "未バックアップ" の操作履歴リストを取得する
-	 * (backupsフォルダ内の最新ZIPに含まれる最新日時よりも新しい履歴を取得)
+	 * (backup_log内の最新バックアップ日時よりも新しい履歴を取得)
 	 * (RepositoryからProjectionを受け取り、DTOにマッピングして返します)
 	 * @return OperationHistoryのリスト
 	 */
 	public List<OperationHistory> getOperationHistory() {
 		LocalDateTime newerThanTimestamp = null; // デフォルトは null (全件取得)
 
-		try {
-			// 1. backupsフォルダから最新のZIPファイルを探す
-			Optional<Path> latestZipOpt = findLatestBackupZip();
+		// 1. ログファイルから「バックアップ済みの最新日時」を取得する
+		//    (実際のZIPファイルの有無に関わらず、ログのみを正とする)
+		Map<String, LocalDateTime> logInfo = readBackupLogInfo();
+		LocalDateTime latestRecordIncluded = logInfo.get("latestRecordIncluded");
 
-			if (latestZipOpt.isPresent()) {
-				// 2. 最新ZIPファイルが見つかった場合、その中のCSVから最新日時を取得
-				Optional<LocalDateTime> latestTimestampOpt = getLatestTimestampFromZip(latestZipOpt.get());
-
-				if (latestTimestampOpt.isPresent()) {
-					newerThanTimestamp = latestTimestampOpt.get();
-				}
-			}
-		} catch (IOException e) {
-			System.err.println("バックアップファイル検索または読み込み中にエラー: " + e.getMessage());
-			// エラー時は newerThanTimestamp は null のまま (全件取得)
+		if (latestRecordIncluded != null) {
+			newerThanTimestamp = latestRecordIncluded;
 		}
 
-		// 4. Repository を呼び出す (Projectionのリストが返る)
+		// 2. Repository を呼び出す (Projectionのリストが返る)
 		List<OperationRepository.OperationHistoryProjection> projections = 
 			operationRepository.findOperationHistory(null, newerThanTimestamp);
 
-		// 5. Projection を DTO (OperationHistory) にマッピングして返す
+		// 3. Projection を DTO (OperationHistory) にマッピングして返す
 		return projections.stream()
 			.map(p -> new OperationHistory(
 				p.getProcTime(), 
@@ -101,102 +97,8 @@ public class DatabaseBackupService {
 			.collect(Collectors.toList());
 	}
 
-	/**
-	 * backups ディレクトリ内から、ファイル名の終了年月が最も新しい backup_YYYYMMDD_YYYYMMDD.zip ファイルを探す
-	 * @return 最新のZIPファイルのPath (Optional)
-	 * @throws IOException ディレクトリの読み込みに失敗した場合
-	 */
-	private Optional<Path> findLatestBackupZip() throws IOException {
-		Path backupDir = Paths.get(backupStoragePath);
-		if (!Files.isDirectory(backupDir)) {
-			return Optional.empty(); // backups ディレクトリがない
-		}
-
-		Path latestZip = null;
-		String latestEndStr = ""; // 文字列で比較 (YYYYMMDD)
-
-		// ファイル名パターン: backup_YYYYMMDD_YYYYMMDD.zip または 古い形式 backup_YYYYMM_YYYYMM.zip
-		// 両方に対応する正規表現: backup_(\d+)_(\d+)\.zip
-		Pattern pattern = Pattern.compile("backup_(\\d+)_(\\d+)\\.zip");
-
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(backupDir, "backup_*.zip")) {
-			for (Path entry : stream) {
-				Matcher matcher = pattern.matcher(entry.getFileName().toString());
-				if (matcher.matches()) {
-					// String startStr = matcher.group(1); 
-					String endStr = matcher.group(2); // 終了日時部分を取得
-
-					if (latestZip == null) {
-						latestEndStr = endStr;
-						latestZip = entry;
-					} else {
-						// 桁数と値を考慮して比較
-						long currentEndVal = Long.parseLong(endStr);
-						long latestEndVal = Long.parseLong(latestEndStr);
-						if (currentEndVal > latestEndVal) {
-							latestEndStr = endStr;
-							latestZip = entry;
-						}
-					}
-				}
-			}
-		}
-		return Optional.ofNullable(latestZip);
-	}
-
-	/**
-	 * 指定されたZIPファイル内の history_... .csv ファイルを読み込み、
-	 * 記録されている最も新しい proc_time (日時) を LocalDateTime として取得する
-	 * @param zipFilePath ZIPファイルのPath
-	 * @return 最も新しい日時 (Optional)
-	 * @throws IOException ZIPファイルまたは内部のCSVファイルの読み込みに失敗した場合
-	 */
-	private Optional<LocalDateTime> getLatestTimestampFromZip(Path zipFilePath) throws IOException {
-		LocalDateTime latestTimestamp = null;
-		// CSVファイル内の日付と時間のフォーマッタ
-		DateTimeFormatter csvDateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-		DateTimeFormatter csvTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-
-		try (ZipFile zipFile = new ZipFile(zipFilePath.toFile())) {
-			// ZIPファイル内の history_... .csv ファイルを探す
-			 Optional<? extends ZipEntry> csvEntryOpt = zipFile.stream()
-					 .filter(entry -> !entry.isDirectory() && entry.getName().startsWith("history_") && entry.getName().endsWith(".csv"))
-					 .findFirst();
-
-			 if (csvEntryOpt.isPresent()) {
-				 ZipEntry csvEntry = csvEntryOpt.get();
-				 try (BufferedReader reader = new BufferedReader(
-						 new InputStreamReader(zipFile.getInputStream(csvEntry), StandardCharsets.UTF_8))) { // UTF-8で読み込み
-
-					 String line;
-					 reader.readLine(); // ヘッダー行を読み飛ばし
-
-					 while ((line = reader.readLine()) != null) {
-						 // CSV形式に合わせてカンマで分割 (単純分割)
-						 String[] columns = line.split(",");
-
-						 if (columns.length >= 2) {
-							 try {
-								 // 日付と時間を別々にパースし、結合する
-								 LocalDate currentDate = LocalDate.parse(columns[0].trim(), csvDateFormatter);
-								 LocalTime currentTime = LocalTime.parse(columns[1].trim(), csvTimeFormatter);
-								 LocalDateTime currentTimestamp = LocalDateTime.of(currentDate, currentTime);
-
-								 // より新しい日時が見つかったら更新
-								 if (latestTimestamp == null || currentTimestamp.isAfter(latestTimestamp)) {
-									 latestTimestamp = currentTimestamp;
-								 }
-							 } catch (DateTimeParseException e) {
-								 System.err.println("CSVファイル内の日時パース失敗: Date='" + columns[0] + "', Time='" + columns[1] + "'");
-							 }
-						 }
-					 }
-				 }
-			 }
-		}
-		return Optional.ofNullable(latestTimestamp);
-	}
-
+	// 削除: findLatestBackupZip() - ログファイル依存に変更したため不要
+	// 削除: getLatestTimestampFromZip() - ログファイル依存に変更したため不要
 
 	/**
 	 * 指定された期間の操作履歴を取得し、CSVファイルとダミーMP4ファイルをZIPにまとめて保存する
@@ -216,7 +118,7 @@ public class DatabaseBackupService {
 		// 正確な開始日時をログから取得
 		Map<String, LocalDateTime> logInfo = readBackupLogInfo();
 		LocalDateTime latestRecordIncluded = logInfo.get("latestRecordIncluded");
-		LocalDateTime newerThanTimestamp = null; // 開始の基準 (これより後)
+		LocalDateTime newerThanTimestamp = null;
 		if (latestRecordIncluded != null) {
 			newerThanTimestamp = latestRecordIncluded;
 		}
@@ -225,11 +127,11 @@ public class DatabaseBackupService {
 		LocalDateTime endDateTime = LocalDateTime.of(endYear, endMonth, endDay, 23, 59, 59, 999_999_999);
 		LocalDateTime endTimestamp = endDateTime;
 
-		// Repository呼び出し (Projectionのリストが返る)
+		// Repository呼び出し
 		List<OperationRepository.OperationHistoryProjection> projections = 
 			operationRepository.findOperationHistory(endTimestamp, newerThanTimestamp);
 
-		// Projection を DTO (OperationHistory) にマッピング
+		// Projection を DTO にマッピング
 		List<OperationHistory> historyList = projections.stream()
 			.map(p -> new OperationHistory(
 				p.getProcTime(), 
@@ -237,11 +139,11 @@ public class DatabaseBackupService {
 				p.getOperationClass(),
 				p.getToolNum(),
 				p.getLineName(),
-				p.getToolCategory(), // 追加
-				p.getMaker(),        // 追加
+				p.getToolCategory(),
+				p.getMaker(),
 				p.getToolName(),
-				p.getToolMaterial(), // 追加
-				p.getBuyer(),        // 追加
+				p.getToolMaterial(),
+				p.getBuyer(),
 				p.getVideoPath()
 			))
 			.collect(Collectors.toList());
@@ -250,10 +152,10 @@ public class DatabaseBackupService {
 		Path tempDir = Paths.get("temp_backup");
 		Files.createDirectories(tempDir);
 
-		// ファイル名用に startYear/Month/Day を再計算 (ログ基準 or 最古)
-		int actualStartYear = startYear; // デフォルトは引数
-		int actualStartMonth = startMonth; // デフォルトは引数
-		int actualStartDay = startDay; // デフォルトは引数
+		// ファイル名設定
+		int actualStartYear = startYear;
+		int actualStartMonth = startMonth;
+		int actualStartDay = startDay;
 
 		if (latestRecordIncluded != null) {
 			LocalDateTime startDateBase = latestRecordIncluded; 
@@ -283,12 +185,28 @@ public class DatabaseBackupService {
 		DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 		try (BufferedWriter writer = Files.newBufferedWriter(csvFilePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
 			 writer.write('\uFEFF'); // BOM
-			 writer.write("日付,時間,氏名,ライン名,操作内容,操作個数,分類,メーカー,型番,材質,商社");
+			 // ★ 修正: "映像データ" カラムを追加
+			 writer.write("日付,時間,氏名,ライン名,操作内容,操作個数,分類,メーカー,型番,材質,商社,映像データ");
 			 writer.newLine();
-			// DTOのリストを使用
+			
 			for (OperationHistory history : historyList) {
 				LocalDateTime procDateTime = history.getProcTime();
-				writer.write(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+				
+				// ★ 追加: 映像ファイル名の取得
+				String videoFileName = "";
+				String videoPathStr = history.getVideoPath();
+				if (videoPathStr != null && !videoPathStr.isEmpty()) {
+					try {
+						// パスからファイル名のみを抽出 (例: "dir/video.mp4" -> "video.mp4")
+						videoFileName = Paths.get(videoPathStr).getFileName().toString();
+					} catch (Exception e) {
+						// パス形式不正などの場合は元の文字列を使用
+						videoFileName = videoPathStr;
+					}
+				}
+
+				// ★ 修正: フォーマットに映像データを追加
+				writer.write(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
 						procDateTime.format(dateFormatter),
 						procDateTime.format(timeFormatter),
 						escapeCsvField(history.getUserName()),
@@ -299,7 +217,8 @@ public class DatabaseBackupService {
 						escapeCsvField(history.getMaker()),
 						escapeCsvField(history.getToolName()),
 						escapeCsvField(history.getToolMaterial()),
-						escapeCsvField(history.getBuyer())
+						escapeCsvField(history.getBuyer()),
+						escapeCsvField(videoFileName) // ★ 追加
 				));
 				writer.newLine();
 			}
@@ -356,33 +275,43 @@ public class DatabaseBackupService {
 		Files.deleteIfExists(dummyMp4Path);
 		try { Files.delete(tempDir); } catch (IOException e) { /* ignore */ }
 		
-		// ログファイル作成 (last_backup_info.txt)
+		// ログファイル作成 (.last_backup_info)
 		try {
-			Path logDir = Paths.get("backup_log");
-			Files.createDirectories(logDir);
-			Path logFilePath = logDir.resolve("last_backup_info.txt");
+			Path logDir = Paths.get(LOG_DIR_NAME);
+			if (!Files.exists(logDir)) {
+				Files.createDirectories(logDir);
+			}
+			
+			Path logFilePath = logDir.resolve(LOG_FILE_NAME);
+			
 			LocalDateTime backupExecutionTime = LocalDateTime.now();
 			DateTimeFormatter logTimestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 			String backupTimestampStr = backupExecutionTime.format(logTimestampFormatter);
 			String latestRecordTimestampStr = "N/A";
 			
-			// DTOのリストを使用
 			if (!historyList.isEmpty()) {
-				OperationHistory latestHistory = historyList.get(historyList.size() - 1); // ASCなので最後が最新
+				OperationHistory latestHistory = historyList.get(historyList.size() - 1);
 				latestRecordTimestampStr = latestHistory.getProcTime().format(logTimestampFormatter);
 			}
+			
 			try (BufferedWriter logWriter = new BufferedWriter(new FileWriter(logFilePath.toFile(), false))) {
 				logWriter.write("Last Backup Execution: " + backupTimestampStr);
 				logWriter.newLine();
 				logWriter.write("Latest Record Included: " + latestRecordTimestampStr);
 				logWriter.newLine();
 			}
+
+			try {
+				Files.setAttribute(logFilePath, "dos:hidden", true);
+			} catch (UnsupportedOperationException | IOException e) {
+				// ignore
+			}
+
 		} catch (IOException e) {
 			System.err.println("バックアップログファイルの書き込みに失敗しました: " + e.getMessage());
 			e.printStackTrace();
 		}
 
-		// ZIPファイルの絶対パスを返す
 		return finalZipPath.toAbsolutePath().toString();
 	}
 
@@ -419,7 +348,7 @@ public class DatabaseBackupService {
 	}
 
 	/**
-	 * バックアップログファイル (last_backup_info.txt) を読み込み、
+	 * バックアップログファイル (.last_backup_info) を読み込み、
 	 * 最終バックアップ日時と、バックアップに含まれる最新レコード日時を LocalDateTime として取得する
 	 * @return Map<String, LocalDateTime> キー: "lastBackupExecution", "latestRecordIncluded" (値は日時 or null)
 	 */
@@ -428,7 +357,8 @@ public class DatabaseBackupService {
 		logInfo.put("lastBackupExecution", null);
 		logInfo.put("latestRecordIncluded", null);
 
-		Path logFilePath = Paths.get("backup_log", "last_backup_info.txt");
+		// 隠しファイルを参照
+		Path logFilePath = Paths.get(LOG_DIR_NAME, LOG_FILE_NAME);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 		if (Files.exists(logFilePath)) {
