@@ -4,10 +4,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,18 +17,6 @@ public class UserAuthenticationController {
 
 	@Autowired
 	private UserAuthenticationService userAuthenticationService;
-
-	// application.propertiesから値を注入 (デフォルトはfalse)
-	@Value("${app.auth.test-mode-qr-auth:false}")
-	private boolean testModeQrAuth;
-
-	/**
-	 * フロントエンドに認証設定（テストモードの有無など）を提供するAPI
-	 */
-	@GetMapping("/api/auth-config")
-	public ResponseEntity<Map<String, Boolean>> getAuthConfig() {
-		return ResponseEntity.ok(Map.of("testModeQrAuth", testModeQrAuth));
-	}
 
 	@PostMapping("/api/verify-auth-code")
 	public ResponseEntity<?> verifyAuthCode(@RequestBody Map<String, String> payload) {
