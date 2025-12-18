@@ -1,9 +1,3 @@
-////////////////////////////////////////////////////////////////////////////////////////////////
-// テスト用モード設定：trueの場合、印刷エラーが発生してもデータのロールバックを行わず処理を完了します
-// (開発・テスト環境向け) 本番環境においては消去すること
-////////////////////////////////////////////////////////////////////////////////////////////////
-const TEST_MODE_IGNORE_ERROR = false;
-
 document.addEventListener('DOMContentLoaded', () => {
 
 	// 1. グリッドボタン住所テキスト設定
@@ -37,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	} catch (e) {
 		console.error("グリッドボタンの住所テキスト設定中にエラー:", e);
 	}
-	// グリッドボタン設定ここまで
+	// 1. グリッドボタン設定ここまで
 
 
 	// 2. ツール割当モーダルロジック
@@ -55,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			okButtonForSetup.classList.add('custom-btn-common--notselectable');
 		}
 
-		// --- 1. セグメント切り替えのロジック ---
+		// --- 2-1. セグメント切り替えのロジック ---
 		const segments = [
 			{ id: 'segmentA', title: 'セグメントA' },
 			{ id: 'segmentB', title: 'セグメントB' },
@@ -83,11 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			const newIndex = (currentSegment + 1) % segments.length;
 			showSegment(newIndex);
 		});
-		// --- 1. セグメント切り替えここまで ---
+		// --- 2-1. セグメント切り替えここまで ---
 
 
-		// --- 2. グリッドボタン選択のロジック ---
-		let requiredSelections = 0;	  
+		// --- 2-2. グリッドボタン選択のロジック ---
+		let requiredSelections = 0;   
 		let selectedAddresses = new Set(); 
 		let selectedButtons = new Map();   
 		const allGridButtons = toolAssignmentModalEl.querySelectorAll('.grid-button');
@@ -224,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						btn.style.opacity = 1.0; 
 						
 						// 使用数が 2 未満のボタンのみ disabled = false にする (赤ボタンは disabled = true のまま)
-						if ((storageUsageCounts[btnAddress] || 0) < 2) { // [変更] 3から2に変更
+						if ((storageUsageCounts[btnAddress] || 0) < 2) { 
 							btn.disabled = false;
 						}
 					});
@@ -233,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 
 
-		// --- 3. OKボタンのロジック ---
+		// --- 2-3. OKボタンのロジック ---
 		okButton.addEventListener('click', () => {
 			const storageLocationInput = document.getElementById('storageLocation');
 			if (storageLocationInput) {
@@ -243,10 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				console.error('ID "storageLocation" の input が見つかりません。');
 			}
 		});
-		// --- 3. OKボタンここまで ---
+		// --- 2-3. OKボタンここまで ---
 
 
-		// --- 4. モーダル表示時のリセット処理 ---
+		// --- 2-4. モーダル表示時のリセット処理 ---
 		toolAssignmentModalEl.addEventListener('show.bs.modal', () => {
 			showSegment(0);
 			selectedAddresses.clear();
@@ -307,20 +301,20 @@ document.addEventListener('DOMContentLoaded', () => {
 					button.style.backgroundColor = 'var(--color-orange)'; // 1個: 橙
 					button.style.color = 'var(--color-white)'; 
 					button.style.borderColor = 'var(--color-black)';
-				} else { // 2個以上 [変更] 3から2に変更
+				} else { // 2個以上
 					button.disabled = true;
-					button.style.backgroundColor = 'var(--color-red)'; // 2個以上: 赤 [変更] 3から2に変更
+					button.style.backgroundColor = 'var(--color-red)'; // 2個以上: 赤
 					button.style.color = 'var(--color-white)';
 					button.style.borderColor = 'var(--color-black)';
 				}
 			});
 		});
-		// --- 4. モーダル表示リセットここまで ---
+		// --- 2-4. モーダル表示リセットここまで ---
 	}
-	// モーダルロジックここまで
+	// 2. モーダルロジックここまで
 
 
-	// 3. 行選択処理
+	// 3. 基本工具一覧の行選択・操作ボタン制御
 			
 	let selectedToolId = (typeof initialSelectedId !== 'undefined' && initialSelectedId !== null) ? initialSelectedId : null;
 	const deleteButton = document.getElementById("deleteButton");
@@ -391,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			
 			const toolIdStr = clickedRow.dataset.toolId; 
 
-			// --- 1. 空行クリック時 (選択解除) ---
+			// --- 3-1. 空行クリック時 (選択解除) ---
 			if (!toolIdStr) {
 				if (selectedToolId === null) return; 
 
@@ -401,14 +395,14 @@ document.addEventListener('DOMContentLoaded', () => {
 				return;
 			}
 
-			// --- 2. データ行クリック時 ---
+			// --- 3-2. データ行クリック時 ---
 			const newSelectedId = parseInt(toolIdStr.trim(), 10);
 
 			if (selectedToolId === newSelectedId) {
 				return;
 			}
 
-			// --- 3. 選択状態の更新 (ちらつき無し) ---
+			// --- 3-3. 選択状態の更新 (ちらつき無し) ---
 			selectedToolId = newSelectedId;
 
 			toolsTable.querySelectorAll("tbody tr").forEach(r => r.classList.remove("custom-list--selected"));
@@ -462,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if(addMaterial) addMaterial.textContent = rowData.material;
 			
 			
-			// --- 4. Ajaxで個別工具詳細データを非同期取得 ---
+			// --- 3-4. Ajaxで個別工具詳細データを非同期取得 ---
 			fetch(`/tool/details?basicToolId=${selectedToolId}`)
 				.then(response => {
 					if (!response.ok) {
@@ -566,7 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if(addMaterial) addMaterial.textContent = rowData.material;
 		}
 	}
-	// 行選択処理ここまで
+	// 3. 行選択処理ここまで
 	
 	
 	// 4. 型番リアルタイム検索処理
@@ -596,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			adjustTableRows(12); 
 		});
 	}
-	// 型番検索処理ここまで
+	// 4. 型番検索処理ここまで
 	
 	// 5. 個別工具登録モーダルロジック (ToolManagementModals.html より移植)
 	const toolsAddModal = document.getElementById('toolsaddModal');
@@ -639,30 +633,25 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 				// 登録成功後、印刷を実行
 				if (result.uniqueToolId && typeof printQrCode === 'function') {
-                    try {
-                        await printQrCode('tool', result.uniqueToolId);
+					try {
+						// サーバーがテストモードなら物理印刷はスキップされ、正常終了する
+						await printQrCode('tool', result.uniqueToolId);
 						// 印刷成功時はリロード
 						location.reload();
-                    } catch (printErr) {
+					} catch (printErr) {
 						console.error("印刷失敗:", printErr);
 						
-						if (TEST_MODE_IGNORE_ERROR) {
-							// テストモード：エラーを無視して続行
-							console.log("テストモードのため、印刷エラーを無視して登録を完了します。");
-							location.reload();
-						} else {
-							// 通常モード：個別工具登録をロールバック（削除）
-							alert("QRコードの印刷に失敗したため、登録をキャンセルしました。");
-							
-							await fetch('/tool/deleteIndividual', {
-								method: 'POST',
-								headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-								body: new URLSearchParams({ uniqueToolId: result.uniqueToolId })
-							});
-							
-							// リロードせず、モーダルも閉じた状態
-						}
-                    }
+						// 印刷失敗時は常にロールバックを行う
+						alert("QRコードの印刷に失敗したため、登録をキャンセルしました。\n" + printErr.message);
+						
+						await fetch('/tool/deleteIndividual', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+							body: new URLSearchParams({ uniqueToolId: result.uniqueToolId })
+						});
+						
+						// リロードせず、モーダルも閉じた状態
+					}
 				} else {
 					console.warn('printQrCode関数が見つからないか、uniqueToolIdがレスポンスに含まれていません。');
 					location.reload(); // 印刷不要ならそのままリロード
@@ -737,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 		});
 	}
-	// 個別工具登録モーダルロジックここまで
+	// 5. 個別工具登録モーダルロジックここまで
 	
 	// 6. QRコード再印刷処理
 	const reprintModalEl = document.getElementById('printqrcodeModal');
@@ -770,47 +759,35 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			try {
-				// TEST_MODE_IGNORE_ERROR = false のとき、updateTimestamp = false (更新しない) となるようにパラメータを追加
-				const updateTimestamp = TEST_MODE_IGNORE_ERROR;
+				// タイムスタンプを常に更新する設定でリクエスト
+				const updateTimestamp = true;
 				
 				const response = await fetch('/tool/reprintQrAjax', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/x-www-form-urlencoded',
 					},
-					// updateTimestamp パラメータを追加
 					body: `qrNumber=${encodeURIComponent(qrNumber)}&updateTimestamp=${updateTimestamp}`
 				});
 
 				if (response.ok) {
 					const result = await response.json();
 					if (result.uniqueToolId) {
-						if (updateTimestamp) {
-							console.log(`タイムスタンプを更新しました。ID: ${result.uniqueToolId}`);
-						} else {
-							console.log(`タイムスタンプを更新せずに再印刷します。ID: ${result.uniqueToolId}`);
-						}
 						
 						// 印刷実行
 						if (typeof printQrCode === 'function') {
 							try {
-								// awaitを追加して印刷完了を待機し、エラーを捕捉できるようにする
+								// サーバーがテストモードなら物理印刷はスキップされ、正常終了する
 								await printQrCode('tool', result.uniqueToolId);
+								
 								// 印刷成功時はリロード
 								location.reload();
-								return true; // 成功 (リロードされるので到達しない場合もある)
+								return true; // 成功
 							} catch (printErr) {
 								console.error("再印刷時の印刷処理に失敗:", printErr);
 								
-								if (TEST_MODE_IGNORE_ERROR) {
-									// テストモード：エラーを無視して完了
-									console.log("テストモードのため、印刷エラーを無視して更新を完了します。");
-									location.reload();
-								} else {
-									// 通常モード：更新キャンセル扱い（実際には更新していないのでロールバック不要）
-									alert("QRコードの再印刷に失敗したため、更新をキャンセルしました。");
-									// リロードしない
-								}
+								// 印刷エラー時はアラートを出して終了（ロールバック不要または実装困難なため）
+								alert("QRコードの再印刷に失敗したため、更新をキャンセルしました。");
 								return false;
 							}
 						} else {
@@ -910,7 +887,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			qrScanInput.value = '';
 		});
 	}
-	// 再印刷処理ここまで
+	// 6. 再印刷処理ここまで
 
 	// 7. 新規登録モーダル UI制御 (新規追加)
 	const modelsAddModalEl = document.getElementById('modelsaddModal');
@@ -1029,7 +1006,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 			
 			// フォーム送信時の念押しバリデーション
-			// フォーム送信時の念押しバリデーション
 			if (addToolForm) {
 				addToolForm.addEventListener('submit', function(e) {
 					const locationVal = storageLocationInput.value.trim();
@@ -1050,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 	}
-	// 新規登録モーダル UI制御ここまで
+	// 7. 新規登録モーダル UI制御ここまで
 
 	// 8. モーダル閉鎖時のフォームリセット処理 (新規追加)
 	// 対象となるモーダルのIDを指定
@@ -1071,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-	// 7. 基本工具削除処理 (Ajax化)
+	// 9. 基本工具削除処理 (Ajax化)
 	const deleteToolForm = document.getElementById('deleteToolForm');
 	const executeDeleteBtn = document.getElementById('executeDeleteBtn');
 	const deleteModalEl = document.getElementById('modelsdelModal');
@@ -1112,4 +1088,5 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		});
 	}
+	// 9. 基本工具削除処理ここまで
 });

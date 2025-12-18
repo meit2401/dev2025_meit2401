@@ -1,7 +1,5 @@
-// テスト用モード設定：trueの場合、印刷エラーが発生してもデータのロールバックを行わず処理を完了します
-const TEST_MODE_IGNORE_ERROR = false;
-
 document.addEventListener("DOMContentLoaded", function () {
+	// 1. 変数定義とDOM要素の取得
 	let selectedLineId = null;
 	let selectedLineName = null;
 	let selectedProgramId = null;
@@ -20,6 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	const toolTable = document.getElementById("tools-table");
 	const programTableBody = document.getElementById("programs-table-body");
 
+	// 2. テーブル更新・制御関数群
 	function updateProgramTable(programs = []) {
 		programTableBody.innerHTML = '';
 
@@ -51,9 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			if (!toolNumCell) return;
 			
 			const toolNumText = toolNumCell.textContent.trim();
-			
 			const lookupKey = toolNumText; 
-			
 			const assignment = assignmentMap.get(lookupKey); 
 
 			if (assignment) {
@@ -234,6 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		updateButtonStates();
 	}
 	
+	// 3. イベントリスナー設定（メインテーブル）
 	[lineTable, programTable, toolTable].forEach(table => {
 		if (table) {
 			table.addEventListener("click", function (event) {
@@ -249,6 +247,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	const toolCandidatesTable = document.getElementById("tool-candidates-table");
 	const assignToolConfirmButton = document.getElementById("assign-tool-confirm-btn");
 
+	// 4. 工具割当関連（フィルタリング、候補選択、割当実行）
 	if (filterToolsButton) {
 		filterToolsButton.addEventListener("click", async function () {
 			const category = document.getElementById("filterCategory").value;
@@ -340,6 +339,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		});
 	}
 
+	// 5. モーダル表示時のテキスト設定等
 	function setupModalTextUpdates() {
 		const linedelModal = document.getElementById('linedelModal');
 		if (linedelModal) {
@@ -410,6 +410,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		}
 	}
 
+	// 6. 各種操作ボタン（登録、削除、インポート、印刷）
 	const addOkButton = document.querySelector("#lineaddModal .btn-danger");
 	if (addOkButton) {
 		addOkButton.addEventListener("click", async function (event) {
@@ -498,26 +499,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
 				// 印刷実行と失敗時のロールバック処理
 				try {
+					// サーバーがテストモードなら物理印刷はスキップされ、正常終了する
 					await printQrCode('program', newProgram.programId);
 					
 					await refreshProgramList(selectedLineId);
 				} catch (printErr) {
 					console.error("印刷失敗:", printErr);
 					
-					if (TEST_MODE_IGNORE_ERROR) {
-						// テストモード：エラーを無視して登録完了
-						console.log("テストモードのため、印刷エラーを無視して登録を完了します。");
-						await refreshProgramList(selectedLineId);
-					} else {
-						// 通常モード：ロールバック
-						alert("QRコードの印刷に失敗したため、登録をキャンセルしました。");
-						
-						await fetch("/line/program/delete", {
-							method: "POST",
-							headers: { "Content-Type": "application/x-www-form-urlencoded" },
-							body: new URLSearchParams({ programId: newProgram.programId })
-						});
-					}
+					// 印刷失敗時は常にロールバック
+					alert("QRコードの印刷に失敗したため、登録をキャンセルしました。");
+					
+					await fetch("/line/program/delete", {
+						method: "POST",
+						headers: { "Content-Type": "application/x-www-form-urlencoded" },
+						body: new URLSearchParams({ programId: newProgram.programId })
+					});
 				}
 
 			} catch (err) {
@@ -613,13 +609,8 @@ document.addEventListener("DOMContentLoaded", function () {
 						} catch (printErr) {
 							console.error(`プログラムID ${program.programId} の印刷に失敗:`, printErr);
 							
-							if (TEST_MODE_IGNORE_ERROR) {
-								// テストモード：ログのみ出力
-								console.log(`テストモード: プログラムID ${program.programId} の印刷エラーを無視して次へ進みます。`);
-							} else {
-								// 通常モード：アラート表示
-								alert(`プログラムID ${program.programId} の印刷中にエラーが発生しました。\n${printErr.message}\n\n次のプログラムの印刷に進みます。`);
-							}
+							// インポート時の印刷エラーは全体を止めるべきではないため、アラートのみで続行
+							alert(`プログラムID ${program.programId} の印刷中にエラーが発生しました。\n${printErr.message}\n\n次のプログラムの印刷に進みます。`);
 						}
 					}
 				} else {
@@ -712,25 +703,20 @@ document.addEventListener("DOMContentLoaded", function () {
 				} catch (printErr) {
 					console.error("印刷失敗:", printErr);
 					
-					if (TEST_MODE_IGNORE_ERROR) {
-						// テストモード：エラーを無視して完了
-						console.log("テストモードのため、印刷エラーを無視して更新を完了します。");
-					} else {
-						// 通常モード：ロールバック
-						alert("QRコードの再印刷に失敗したため、更新をキャンセルしました。");
+					// 印刷失敗時は常にロールバック
+					alert("QRコードの再印刷に失敗したため、更新をキャンセルしました。");
 
-						const restoreParams = new URLSearchParams();
-						restoreParams.append("programId", selectedProgramId);
-						if (oldTimestamp) {
-							restoreParams.append("oldTimestamp", oldTimestamp);
-						}
-						
-						await fetch("/line/program/restore-timestamp", {
-							method: "POST",
-							headers: { "Content-Type": "application/x-www-form-urlencoded" },
-							body: restoreParams
-						});
+					const restoreParams = new URLSearchParams();
+					restoreParams.append("programId", selectedProgramId);
+					if (oldTimestamp) {
+						restoreParams.append("oldTimestamp", oldTimestamp);
 					}
+					
+					await fetch("/line/program/restore-timestamp", {
+						method: "POST",
+						headers: { "Content-Type": "application/x-www-form-urlencoded" },
+						body: restoreParams
+					});
 				}
 
 			} catch (err) {
