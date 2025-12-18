@@ -317,10 +317,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	// 3. 基本工具一覧の行選択・操作ボタン制御
 			
 	let selectedToolId = (typeof initialSelectedId !== 'undefined' && initialSelectedId !== null) ? initialSelectedId : null;
+	// 修正: 装置外保管工具(stc, ropがnull)かどうかのフラグを追加
+	let isSelectedToolExternal = false;
+
 	const deleteButton = document.getElementById("deleteButton");
 	const editButton = document.getElementById("editButton");
 	const individualToolAddButton = document.getElementById("individualToolAddButton");
 	const individualToolDetailButton = document.getElementById("individualToolDetailButton");
+	// 修正: QRコード再印刷ボタンを取得
+	const reprintQrButton = document.getElementById("reprintQrButton");
+
 	const toolsTable = document.getElementById("toolsTable");
 	const toolsTableBody = toolsTable ? toolsTable.querySelector("tbody") : null;
 
@@ -335,21 +341,33 @@ document.addEventListener('DOMContentLoaded', () => {
 	 */
 	function updateButtonStates() {
 		const isToolSelected = selectedToolId !== null;
+		
+		// 装置外保管工具(stc/ropがnull)の場合は、編集・個別登録・詳細・再印刷を不可にする
+		// ※ 削除(deleteButton)については指定がないため、選択されていれば有効のままにします
+		const isActionAllowed = isToolSelected && !isSelectedToolExternal;
+
 		if (deleteButton) {
 			deleteButton.disabled = !isToolSelected;
 			deleteButton.classList.toggle("custom-btn-common--notselectable", !isToolSelected);
 		}
 		if (editButton) {
-			editButton.disabled = !isToolSelected;
-			editButton.classList.toggle("custom-btn-common--notselectable", !isToolSelected);
+			editButton.disabled = !isActionAllowed;
+			editButton.classList.toggle("custom-btn-common--notselectable", !isActionAllowed);
 		}
 		if (individualToolAddButton) {
-			individualToolAddButton.disabled = !isToolSelected;
-			individualToolAddButton.classList.toggle("custom-btn-common--notselectable", !isToolSelected);
+			individualToolAddButton.disabled = !isActionAllowed;
+			individualToolAddButton.classList.toggle("custom-btn-common--notselectable", !isActionAllowed);
 		}
 		if (individualToolDetailButton) {
-			individualToolDetailButton.disabled = !isToolSelected;
-			individualToolDetailButton.classList.toggle("custom-btn-common--notselectable", !isToolSelected);
+			individualToolDetailButton.disabled = !isActionAllowed;
+			individualToolDetailButton.classList.toggle("custom-btn-common--notselectable", !isActionAllowed);
+		}
+		// QRコード再印刷ボタン: 未選択時は有効、装置外工具選択時は無効
+		if (reprintQrButton) {
+			// 「選択されている かつ 装置外工具」の場合のみ無効化
+			const shouldDisableQr = isToolSelected && isSelectedToolExternal;
+			reprintQrButton.disabled = shouldDisableQr;
+			reprintQrButton.classList.toggle("custom-btn-common--notselectable", shouldDisableQr);
 		}
 	}
 
@@ -391,6 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 				toolsTable.querySelectorAll("tbody tr").forEach(r => r.classList.remove("custom-list--selected"));
 				selectedToolId = null;
+				isSelectedToolExternal = false; // フラグ・リセット
 				updateButtonStates(); 
 				return;
 			}
@@ -404,6 +423,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			// --- 3-3. 選択状態の更新 (ちらつき無し) ---
 			selectedToolId = newSelectedId;
+
+			// rop(5番目)とstc(6番目)のセルを取得して空文字(=null)判定
+			const ropCellText = clickedRow.cells[5].textContent.trim();
+			const stcCellText = clickedRow.cells[6].textContent.trim();
+			isSelectedToolExternal = (ropCellText === '' && stcCellText === '');
 
 			toolsTable.querySelectorAll("tbody tr").forEach(r => r.classList.remove("custom-list--selected"));
 			clickedRow.classList.add("custom-list--selected");
@@ -509,6 +533,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// --- 初期化処理 ---
+	// 初期選択IDがある場合の判定ロジック追加
+	if (selectedToolId !== null && toolsTableBody) {
+		const selectedRow = toolsTableBody.querySelector(`tr[data-tool-id="${selectedToolId}"]`);
+		if (selectedRow) {
+			const ropCellText = selectedRow.cells[5].textContent.trim();
+			const stcCellText = selectedRow.cells[6].textContent.trim();
+			isSelectedToolExternal = (ropCellText === '' && stcCellText === '');
+		}
+	}
+	
 	updateButtonStates(); 
 	adjustTableRows(12);
 	
@@ -584,6 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				
 			if (selectedToolId !== null) {
 				selectedToolId = null;
+				isSelectedToolExternal = false; // 検索時リセット
 				updateButtonStates();
 			}
 
