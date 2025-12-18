@@ -1,18 +1,15 @@
-// jp/ac/kinki_pc/repository/StorageAreaRepository.java
-
 package jp.ac.kinki_pc.repository;
 
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.data.jpa.repository.JpaRepository; // [変更]
-import org.springframework.data.jpa.repository.Query; // [追加]
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import jp.ac.kinki_pc.entity.StorageArea; // [追加]
+import jp.ac.kinki_pc.entity.StorageArea;
 
 @Repository
-// [修正] JpaRepository を継承するインターフェースに変更
 public interface StorageAreaRepository extends JpaRepository<StorageArea, Integer> {
 
 	/**
@@ -34,8 +31,12 @@ public interface StorageAreaRepository extends JpaRepository<StorageArea, Intege
 	List<Map<String, Object>> getStorageAddressCounts();
 
 	/**
-	 * 指定された基本工具IDで、在庫数(toolcase_stc_num)が指定数より大きいレコードが存在するかチェックする
-	 * (storageCondition のチェックはここではなく UniqueToolRepository で行います)
+	 * 指定した数より多いケース在庫数を持つレコードが存在するかチェック
 	 */
-	boolean existsByBasicToolIdAndToolcaseStcNumGreaterThan(Integer basicToolId, int toolcaseStcNum);
+	boolean existsByBasicToolIdAndToolcaseStcNumGreaterThan(Integer basicToolId, Integer toolcaseStcNum);
+
+	/**
+	 * 指定した数より多いケース在庫数を持つレコードを検索して取得する
+	 */
+	List<StorageArea> findByBasicToolIdAndToolcaseStcNumGreaterThan(Integer basicToolId, Integer toolcaseStcNum);
 }

@@ -1116,7 +1116,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			} catch (err) {
 				console.error("削除失敗:", err);
-				alert("削除中にエラーが発生しました。\n" + err.message);
+				alert(err.message.replace("削除に失敗しました: ", "削除に失敗しました:\n"));
 			} finally {
 				executeDeleteBtn.disabled = false;
 				executeDeleteBtn.textContent = '削除';

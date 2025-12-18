@@ -21,10 +21,15 @@ import jp.ac.kinki_pc.dto.AddressDto;
 import jp.ac.kinki_pc.dto.IndividualToolDto;
 import jp.ac.kinki_pc.dto.ToolDto;
 import jp.ac.kinki_pc.entity.Address;
+import jp.ac.kinki_pc.entity.Line;
+import jp.ac.kinki_pc.entity.Program;
 import jp.ac.kinki_pc.entity.StorageArea;
 import jp.ac.kinki_pc.entity.Tool;
+import jp.ac.kinki_pc.entity.ToolAssignment;
 import jp.ac.kinki_pc.entity.UniqueTool;
 import jp.ac.kinki_pc.repository.AddressRepository;
+import jp.ac.kinki_pc.repository.LineRepository;
+import jp.ac.kinki_pc.repository.ProgramRepository;
 import jp.ac.kinki_pc.repository.StorageAreaRepository;
 import jp.ac.kinki_pc.repository.ToolAssignmentRepository;
 import jp.ac.kinki_pc.repository.ToolRepository;
@@ -47,6 +52,12 @@ public class ToolManagementService {
 
     @Autowired
     private ToolAssignmentRepository toolAssignmentRepository;
+
+    @Autowired
+    private ProgramRepository programRepository;
+
+    @Autowired
+    private LineRepository lineRepository;
 
     /**
      * 検索条件に基づいて工具を検索する。
@@ -162,21 +173,63 @@ public class ToolManagementService {
      */
     @Transactional
 	public void disableTool(int basicToolId) {
+		List<String> errorMessages = new ArrayList<>();
+
 		// 1. ToolAssignment check
-		if (toolAssignmentRepository.existsByBasicToolId(basicToolId)) {
-			throw new RuntimeException("対象の工具は割り当てられているため、凍結できません。");
+		List<ToolAssignment> assignments = toolAssignmentRepository.findByBasicToolId(basicToolId);
+		if (!assignments.isEmpty()) {
+			errorMessages.add("対象の工具は割り当てられているため、凍結できません。");
+			for (ToolAssignment ta : assignments) {
+				String lineName = "不明なライン";
+				String programName = "不明なプログラム";
+				
+				Optional<Program> programOpt = programRepository.findById(ta.getProgramId());
+				if (programOpt.isPresent()) {
+					Program p = programOpt.get();
+					programName = p.getProgramName();
+					
+					if (p.getLineId() != null) {
+						Optional<Line> lineOpt = lineRepository.findById(p.getLineId());
+						if (lineOpt.isPresent()) {
+							lineName = lineOpt.get().getLineName();
+						}
+					}
+				}
+				errorMessages.add("・製造ライン" + lineName + "のプログラム" + programName + "において、ツール番号" + ta.getToolNum() + "に工具を割当中です。");
+			}
 		}
 		
 		// 2. UniqueTool check (保管中 check)
-		// ここは UniqueToolRepository を使います
-		if (uniqueToolRepository.existsByBasicToolIdAndStorageCondition(basicToolId, "保管中")) {
-			throw new RuntimeException("保管中の個体が存在するため、凍結できません。");
+		List<UniqueTool> allTools = uniqueToolRepository.findByBasicToolId(basicToolId);
+		List<UniqueTool> storedTools = allTools.stream()
+			.filter(t -> "保管中".equals(t.getStorageCondition()))
+			.collect(Collectors.toList());
+
+		if (!storedTools.isEmpty()) {
+			errorMessages.add("保管中の個体が存在するため、凍結できません。");
+			for (UniqueTool t : storedTools) {
+				String location = "不明な場所";
+				if (t.getStorageAreaId() != null) {
+					location = storageAreaRepository.findById(t.getStorageAreaId())
+						.map(StorageArea::getDisplayAddress)
+						.orElse("不明な場所");
+				}
+				errorMessages.add("・個別工具ID" + t.getUniqueToolId() + "が" + location + "に保管中です。");
+			}
 		}
 		
 		// 3. StorageArea check (toolcase_stc_num > 0)
-		// ここは StorageAreaRepository を使います
-		if (storageAreaRepository.existsByBasicToolIdAndToolcaseStcNumGreaterThan(basicToolId, 0)) {
-			throw new RuntimeException("保管場所の在庫数が0ではないため、凍結できません。");
+		List<StorageArea> nonEmptyAreas = storageAreaRepository.findByBasicToolIdAndToolcaseStcNumGreaterThan(basicToolId, 0);
+
+		if (!nonEmptyAreas.isEmpty()) {
+			errorMessages.add("保管場所の在庫数が0ではないため、凍結できません。");
+			for (StorageArea area : nonEmptyAreas) {
+				errorMessages.add("・" + area.getToolcaseStcNum() + "個の工具が" + area.getDisplayAddress() + "に保管中です。");
+			}
+		}
+		
+		if (!errorMessages.isEmpty()) {
+			throw new RuntimeException(String.join("\n", errorMessages));
 		}
 		
 		Tool tool = toolRepository.findById(basicToolId)
