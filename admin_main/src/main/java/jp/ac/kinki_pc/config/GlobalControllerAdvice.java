@@ -11,16 +11,21 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 @ControllerAdvice
 public class GlobalControllerAdvice {
 
-	// application.propertiesから値を注入 (デフォルトはfalse)
-	@Value("${app.auth.test-mode-qr-auth:false}")
+	// QRコード認証無効化の設定値
+	@Value("${app.test-mode.disable-qr-auth:false}")
 	private boolean testModeQrAuth;
 
+	// 印刷機能無効化の設定値
+	@Value("${app.test-mode.disable-qr-printing:false}")
+	private boolean testModeDisableQrPrinting;
+
 	/**
-	 * 全てのThymeleafテンプレートで ${testModeQrAuth} として参照可能にする
+	 * 全てのThymeleafテンプレートで値として参照可能にする
 	 * @param model モデル
 	 */
 	@ModelAttribute
 	public void addCommonAttributes(Model model) {
 		model.addAttribute("testModeQrAuth", testModeQrAuth);
+		model.addAttribute("testModeDisableQrPrinting", testModeDisableQrPrinting);
 	}
 }

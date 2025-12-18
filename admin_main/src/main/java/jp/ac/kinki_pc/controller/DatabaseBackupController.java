@@ -158,7 +158,7 @@ public class DatabaseBackupController {
 			RedirectAttributes redirectAttributes) {
 		try {
 			// 修正: Serviceのメソッド署名(6引数)に合わせて呼び出しを変更
-			String backupFilePath = databaseBackupService.performBackup(startYear, startMonth, startDay, endYear, endMonth, endDay);
+			//String backupFilePath = databaseBackupService.performBackup(startYear, startMonth, startDay, endYear, endMonth, endDay);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

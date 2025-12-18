@@ -1,5 +1,3 @@
-// QrCodePrinter.js
-
 /**
  * 指定されたタイプとIDのQRコードを印刷する
  * @param {string} type - 印刷対象のタイプ (例: 'user', 'tool')
@@ -12,6 +10,27 @@ async function printQrCode(type, id) {
 	}
 
 	try {
+		// 1. 先にデータを取得して、テストモードかどうかを確認する
+		//    (プリンター接続確認の前にチェックすることで、TEPRAアプリが起動していなくてもテスト完了できるようにする)
+
+		// URLにタイプとIDを含めるように変更
+		const csvResponse = await fetch(`/qrcodeprinter/data.csv?type=${type}&id=${id}`);
+		
+		if (!csvResponse.ok) {
+			const errorText = await csvResponse.text();
+			throw new Error(`サーバーエラー: ${csvResponse.statusText} - ${errorText}`);
+		}
+
+		// ★追加: テストモード信号の検知
+		// サーバーが印刷無効化モードの場合、このヘッダーが含まれる
+		if (csvResponse.headers.get("X-Test-Mode") === "true") {
+			console.log("テストモード(サーバー制御): 物理印刷をスキップします。");
+			// ここで正常終了とみなして処理を抜ける
+			return; 
+		}
+
+		// --- 以下、通常の印刷フロー (テストモードでない場合のみ実行) ---
+
 		const printersResult = await TepraPrint.getPrinter();
 		if (printersResult.errorCode !== TepraPrintError.SUCCESS) {
 			throw new Error("プリンターが見つかりません。");
@@ -31,14 +50,6 @@ async function printQrCode(type, id) {
 		const templateBlob = await templateResponse.blob();
 		const templateFile = new File([templateBlob], "qr_template.lw1");
 
-		// URLにタイプとIDを含めるように変更
-		const csvResponse = await fetch(`/qrcodeprinter/data.csv?type=${type}&id=${id}`);
-		
-		if (!csvResponse.ok) {
-			const errorText = await csvResponse.text();
-			throw new Error(`サーバーエラー: ${csvResponse.statusText} - ${errorText}`);
-		}
-		
 		const csvBlob = await csvResponse.blob();
 		const csvFile = new File([csvBlob], "qr_data.csv", {type: 'text/csv; charset=utf-8'});
 		
@@ -55,7 +66,6 @@ async function printQrCode(type, id) {
 				alert('QRコードの印刷要求を正常に送信しました。');
 			}
 		} else {
-			// --- ここから修正 ---
 			let errorMessage = "QRコードの印刷に失敗しました。";
 			switch(printResult.errorCode) {
 				case TepraPrintError.PRINTER_NOT_FOUND:
@@ -81,7 +91,6 @@ async function printQrCode(type, id) {
 			
 			// 【重要】ここでエラーを投げないと、呼び出し元は「成功した」と勘違いして進んでしまいます。
 			throw new Error(errorMessage); 
-			// --- ここまで修正 ---
 		}
 	} catch (e) {
 		// ここでキャッチして再スローすることで、UserManagement.js 側の catch に渡します

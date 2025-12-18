@@ -1,6 +1,3 @@
-// テスト用モード設定：trueの場合、印刷エラーが発生してもデータのロールバックを行わず処理を完了します
-const TEST_MODE_IGNORE_ERROR = false;
-
 // ページが完全に読み込まれた後に実行される処理
 document.addEventListener("DOMContentLoaded", function () {
 	// 選択されたユーザーIDを保持するグローバル変数（数値またはnull）
@@ -76,6 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	const usersTable = document.getElementById("users-table");
 	if (usersTable) {
 		usersTable.addEventListener("click", function (event) {
+			// 省略 (変更なし)
 			const clickedRow = event.target.closest("tr");
 			
 			if (!clickedRow || !clickedRow.closest("tbody")) return;
@@ -142,7 +140,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			const formData = new URLSearchParams(new FormData(form));
 
 			try {
-				const response = await fetch("/user/add", { // 修正: /users/add -> /user/add
+				const response = await fetch("/user/add", {
 					method: "POST",
 					headers: { "Content-Type": "application/x-www-form-urlencoded" },
 					body: formData
@@ -157,7 +155,7 @@ document.addEventListener("DOMContentLoaded", function () {
 				const modal = bootstrap.Modal.getInstance(addModal);
 				modal.hide();
 				
-				// 印刷実行
+				// 修正: 条件分岐を削除し、常に印刷処理を実行する
 				try {
 					await printQrCode('user', newUser.userId);
 					// 印刷成功時はリロード
@@ -165,22 +163,14 @@ document.addEventListener("DOMContentLoaded", function () {
 				} catch (printErr) {
 					console.error("印刷失敗:", printErr);
 					
-					if (TEST_MODE_IGNORE_ERROR) {
-						// テストモード：エラーを無視して続行
-						console.log("テストモードのため、印刷エラーを無視して登録を完了します。");
-						location.reload();
-					} else {
-						// 通常モード：ユーザー登録をロールバック（削除）
-						alert("QRコードの印刷に失敗したため、登録をキャンセルしました。");
-						
-						await fetch("/user/delete", {
-							method: "POST",
-							headers: { "Content-Type": "application/x-www-form-urlencoded" },
-							body: new URLSearchParams({ userId: newUser.userId })
-						});
-						
-						// リロードせず、モーダルも閉じた状態
-					}
+					// 印刷失敗時は必ずロールバック
+					alert("QRコードの印刷に失敗したため、登録をキャンセルしました。");
+					
+					await fetch("/user/delete", {
+						method: "POST",
+						headers: { "Content-Type": "application/x-www-form-urlencoded" },
+						body: new URLSearchParams({ userId: newUser.userId })
+					});
 				}
 
 			} catch (err) {
@@ -194,6 +184,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	const editOkButton = document.querySelector("#usereditModal .btn-danger");
 	if (editOkButton) {
 		editOkButton.addEventListener("click", function () {
+			// 省略 (変更なし)
 			if (selectedUserId === null) {
 				alert("編集するユーザーを選択してください。");
 				return;
@@ -217,7 +208,7 @@ document.addEventListener("DOMContentLoaded", function () {
 				perSetting: checkboxes[8].checked ? 1 : 0
 			};
 	
-			fetch("/user/edit", { // 修正: /users/edit -> /user/edit
+			fetch("/user/edit", {
 				method: "POST",
 				headers: { "Content-Type": "application/x-www-form-urlencoded" },
 				body: new URLSearchParams(payload)
@@ -241,6 +232,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	const delOkButton = document.querySelector("#userdelModal .btn-danger");
 	if (delOkButton) {
 		delOkButton.addEventListener("click", function () {
+			// 省略 (変更なし)
 			if (selectedUserId === null) {
 				alert("削除するユーザーを選択してください。");
 				return;
@@ -279,7 +271,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			modal.hide();
 
 			try {
-				const response = await fetch("/user/reprint-qr", { // 修正: /users/reprint-qr -> /user/reprint-qr
+				const response = await fetch("/user/reprint-qr", {
 					method: "POST",
 					headers: { "Content-Type": "application/x-www-form-urlencoded" },
 					body: new URLSearchParams({ userId: selectedUserId })
@@ -290,10 +282,10 @@ document.addEventListener("DOMContentLoaded", function () {
 				}
 
 				const responseData = await response.json();
-				// コントローラからの戻り値がMapになったため、構造に合わせて取得
 				const updatedUser = responseData.user;
 				const oldTimestamp = responseData.oldTimestamp;
 
+				// 修正: 条件分岐を削除し、常に印刷処理を実行する
 				try {
 					await printQrCode('user', updatedUser.userId);
 					// 印刷成功時はリロードして完了
@@ -301,26 +293,20 @@ document.addEventListener("DOMContentLoaded", function () {
 				} catch (printErr) {
 					console.error("印刷失敗:", printErr);
 					
-					if (TEST_MODE_IGNORE_ERROR) {
-						// テストモード：無視して完了扱い
-						console.log("テストモードのため、印刷エラーを無視して更新を完了します。");
-						location.reload();
-					} else {
-						// 通常モード：タイムスタンプをロールバック
-						alert("QRコードの再印刷に失敗したため、更新をキャンセルしました。");
-						
-						const restoreParams = new URLSearchParams();
-						restoreParams.append("userId", selectedUserId);
-						if (oldTimestamp) {
-							restoreParams.append("oldTimestamp", oldTimestamp);
-						}
-						
-						await fetch("/user/restore-timestamp", {
-							method: "POST",
-							headers: { "Content-Type": "application/x-www-form-urlencoded" },
-							body: restoreParams
-						});
+					// 印刷失敗時は必ずロールバック
+					alert("QRコードの再印刷に失敗したため、更新をキャンセルしました。");
+					
+					const restoreParams = new URLSearchParams();
+					restoreParams.append("userId", selectedUserId);
+					if (oldTimestamp) {
+						restoreParams.append("oldTimestamp", oldTimestamp);
 					}
+					
+					await fetch("/user/restore-timestamp", {
+						method: "POST",
+						headers: { "Content-Type": "application/x-www-form-urlencoded" },
+						body: restoreParams
+					});
 				}
 
 			} catch (err) {
@@ -334,7 +320,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	const userNameSearchInput = document.getElementById("userName-search");
     
 	if (userNameSearchInput && usersTableBody && usersTable) {
-		
+		// 省略 (変更なし)
 		// 'input' イベントでリアルタイム検索を実行
 		userNameSearchInput.addEventListener("input", function () { 
 			

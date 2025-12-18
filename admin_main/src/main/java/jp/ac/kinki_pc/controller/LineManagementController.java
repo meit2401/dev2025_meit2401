@@ -48,7 +48,7 @@ public class LineManagementController {
 	@PostMapping("/delete")
 	@ResponseBody
 	public ResponseEntity<String> deleteLine(@RequestParam("lineId") Integer lineId) {
-		lineManagementService.deleteLine(lineId);
+		lineManagementService.disableLine(lineId);
 		return ResponseEntity.ok("deleted");
 	}
 

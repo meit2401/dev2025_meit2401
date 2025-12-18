@@ -1,3 +1,5 @@
+// uploaded:LineManagementService.java
+
 package jp.ac.kinki_pc.service;
 
 import java.io.IOException;
@@ -60,8 +62,11 @@ public class LineManagementService {
 	// QRコード用のフォーマッタ
 	private static final DateTimeFormatter QR_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
+	/**
+	 * 有効なライン（isFrozen=false）のリストを取得する
+	 */
 	public List<LineDto> findAllLines() {
-		return lineRepository.findAll().stream()
+		return lineRepository.findByIsFrozenFalse().stream()
 			.map(this::convertToDto)
 			.collect(Collectors.toList());
 	}
@@ -164,7 +169,7 @@ public class LineManagementService {
 					rs.getInt("stc"),
 					rs.getInt("rop"),
 					rs.getString("buyer"),
-					rs.getBoolean("is_frozen") // [修正] isFrozen を追加
+					rs.getBoolean("is_frozen") 
 				);
 			}
 		};
@@ -178,19 +183,29 @@ public class LineManagementService {
 
 	@Transactional
 	public LineDto addLine(LineDto lineDto) {
-		// [修正] Lineエンティティのコンストラクタ変更に対応（isFrozen に false を設定）
 		Line line = new Line(null, lineDto.getLineName(), false);
 		Line savedLine = lineRepository.save(line);
 		return convertToDto(savedLine);
 	}
 
+	/**
+	 * ラインを無効化（論理削除）する
+	 * @param lineId ラインID
+	 */
 	@Transactional
-	public void deleteLine(Integer lineId) {
-		List<Integer> programIdsToDelete = programRepository.findIdsByLineId(lineId);
-		for (Integer programId : programIdsToDelete) {
-			this.deleteProgram(programId);
+	public void disableLine(Integer lineId) {
+		Optional<Line> lineOpt = lineRepository.findById(lineId);
+		if (lineOpt.isPresent()) {
+			Line line = lineOpt.get();
+			line.setIsFrozen(true);
+			lineRepository.save(line);
+
+			// 下位データ（プログラム）の削除
+			List<Integer> programIdsToDelete = programRepository.findIdsByLineId(lineId);
+			for (Integer programId : programIdsToDelete) {
+				this.deleteProgram(programId);
+			}
 		}
-		lineRepository.deleteById(lineId);
 	}
 
 	@Transactional
@@ -225,7 +240,7 @@ public class LineManagementService {
 	}
 	
 	/**
-	 * (新規) 印刷失敗時などにプログラムのタイムスタンプを元に戻す
+	 * 印刷失敗時などにプログラムのタイムスタンプを元に戻す
 	 * @param programId プログラムID
 	 * @param oldTimestampStr 戻したい日時文字列 ("yyyy-MM-dd HH:mm:ss")
 	 */
@@ -530,7 +545,7 @@ public class LineManagementService {
 					rs.getInt("stc"),
 					rs.getInt("rop"),
 					rs.getString("buyer"),
-					rs.getBoolean("is_frozen") // [修正] isFrozen を追加
+					rs.getBoolean("is_frozen") 
 				);
 			}
 		};
