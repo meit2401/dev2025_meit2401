@@ -12,17 +12,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import jp.ac.kinki_pc.dto.UserDto;
 import jp.ac.kinki_pc.entity.User;
 import jp.ac.kinki_pc.repository.UserRepository;
 
 @Service
+@Transactional
 public class UserManagementService {
 
 	@Autowired
 	private UserRepository userRepository;
 
+	@PersistenceContext
+    private EntityManager entityManager;
+	
 	private static final Logger logger = LoggerFactory.getLogger(UserManagementService.class);
 
 	// 日時フォーマット定義
@@ -255,28 +263,6 @@ public class UserManagementService {
 			}
 		}
 	}
-	
-	/**
-	 * QRコード印刷用のデータを取得する。
-	 * @param userId データを取得するユーザーID
-	 * @return 表示テキストとQRコードデータを含むマップ、ユーザーが見つからない場合はnull
-	 */
-	public Map<String, String> getQrDataForUser(Integer userId) {
-		Optional<User> userOptional = userRepository.findById(userId);
-		if (userOptional.isEmpty()) {
-			return null;
-		}
-		User user = userOptional.get();
-		
-		String displayText = user.getUserName();
-		String qrCodeData = generateQrCodeData(USER_ID_PREFIX, user.getUserId(), user.getUserPrintTime());
-
-		Map<String, String> qrData = new HashMap<>();
-		qrData.put("displayText", displayText);
-		qrData.put("qrCodeData", qrCodeData);
-		
-		return qrData;
-	}
 
 	/**
 	 * QRコード用のデータ文字列を生成する。
@@ -290,4 +276,59 @@ public class UserManagementService {
 		String formattedTimestamp = (timestamp != null) ? timestamp.format(QR_TIMESTAMP_FORMATTER) : "";
 		return formattedId + QR_DATA_SEPARATOR + formattedTimestamp;
 	}
+
+	/**
+     * 管理者ユーザー(ID:0)を強制的に復旧させます。
+     * SQLモードの設定に依存しないよう、INSERT後にIDを0に更新する手法をとります。
+     */
+    public void resetAdminUser() {
+        String nowStr = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now());
+
+        // 1. 既存のAdministrator(ID=0)がいれば削除
+        entityManager.createNativeQuery("DELETE FROM mst_user WHERE user_id = 0").executeUpdate();
+
+        // 2. 新規レコードを挿入 (IDは自動採番または一時的な値となる)
+        String insertSql = """
+            INSERT INTO mst_user (
+                user_name, user_print_time, 
+                per_add, per_inventory, per_user, per_tool, per_line, 
+                per_analysis, per_history, per_db, per_setting, is_frozen
+            ) VALUES (
+                'Administrator', :now, 
+                1, 1, 1, 1, 1, 
+                1, 1, 1, 1, 0
+            )
+        """;
+        entityManager.createNativeQuery(insertSql)
+                .setParameter("now", nowStr)
+                .executeUpdate();
+
+        // 3. 今挿入したAdministratorのIDを0に強制更新
+        // (user_name='Administrator' かつ ID!=0 のレコードを対象)
+        String updateSql = """
+            UPDATE mst_user 
+            SET user_id = 0 
+            WHERE user_name = 'Administrator' AND user_id <> 0
+        """;
+        entityManager.createNativeQuery(updateSql).executeUpdate();
+    }
+
+    /**
+     * 指定ユーザーのQRコード印刷用データを取得します。
+     * (MaintenanceControllerから呼ばれるヘルパーメソッド)
+     */
+    public Map<String, String> getQrDataForUser(Integer userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        
+        String displayText = user.getUserName();
+        // QRコードデータ生成ロジック (既存のメソッドがあればそれを呼ぶか、ここで再実装)
+        // ここでは generateQrCodeData と同等の処理を行います
+        String qrCodeData = "U" + String.format("%04d", user.getUserId()) + QR_DATA_SEPARATOR + 
+                            (user.getUserPrintTime() != null ? user.getUserPrintTime().format(QR_TIMESTAMP_FORMATTER) : "");
+
+        Map<String, String> data = new HashMap<>();
+        data.put("displayText", displayText);
+        data.put("qrCodeData", qrCodeData);
+        return data;
+    }
 }
